@@ -31,6 +31,7 @@ public static class ErrorMessages
         public const string UserIdRequired = "error.validation.user_id_required";
         public const string UserTagTotalDaysRequired = "error.validation.tag_total_days_required";
         public const string UserTagDailyPlanRequired = "error.validation.tag_daily_plan_required";
+        public const string UserUpdateRequired = "error.validation.user_update_required";
 
         public const string CommentIdRequired = "error.validation.comment_id_required";
 
@@ -64,7 +65,13 @@ public static class ErrorMessages
             public const string PhoneNumberDuplicated = "error.controller.user.register.phone_number_already_exists";
             public const string RegisterFailed = "error.controller.user.register.register_failed";
             public const string UserCheckInFailed = "error.controller.user.checkin.checkin_failed";
-            public const string UserListFailed = "error.controller.user.list.get_userlist_failed";
+        }
+        public static class Admin
+        {
+            public const string ProfileUpdateFailed = "error.controller.admin.profile.update_failed";
+            public const string UserLoginFailed = "error.controller.admin.login_failed";
+            public const string AdminNotFound = "error.controller.admin.not_found";
+            public const string UserListFailed = "error.controller.admin.list.get_userlist_failed";
         }
         public static class Article
         {

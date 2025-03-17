@@ -106,12 +106,20 @@ public class UserList
     public required string PhoneNumber { get; set; }
     public required Gender Gender { get; set; }
     public required string NickName { get; set; }
+    public required string? Description { get; set; }
+    public required DateTime LastCheckInTime { get; set; }
 }
 
-public sealed class UserListResp(int code, string message, List<UserList>? userList)
-    : BaseRespWithData<List<UserList>>(code, message, userList)
+public class UserListData
 {
-    public static UserListResp Success(string message, List<UserList> userList) 
+    public required List<UserList> List { get; set; }
+    public required int Total { get; set; }
+}
+
+public sealed class UserListResp(int code, string message, UserListData? userList)
+    : BaseRespWithData<UserListData>(code, message, userList)
+{
+    public static UserListResp Success(string message, UserListData userList) 
     {
         return new UserListResp(200, message, userList);
     }

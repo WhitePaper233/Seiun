@@ -55,3 +55,18 @@ public class UserUpdateProfile
     [MaxLength(Constants.User.MaxDescriptionLength, ErrorMessage = ErrorMessages.ValidationError.OverDescriptionLength)]
     public string? Description { get; set; }
 }
+
+public class UserUpdateByAdmin
+{
+    [Required(ErrorMessage = ErrorMessages.ValidationError.UserIdRequired)]
+    public required Guid UserId { get; set; }
+
+    [MaxLength(Constants.User.MaxNickNameLength, ErrorMessage = ErrorMessages.ValidationError.OverNickNameLength)]
+    public required string NickName { get; set; }
+        
+    public Gender? Gender { get; set; }
+
+
+    [MaxLength(Constants.User.MaxDescriptionLength, ErrorMessage = ErrorMessages.ValidationError.OverDescriptionLength)]
+    public string? Description { get; set; }
+}
