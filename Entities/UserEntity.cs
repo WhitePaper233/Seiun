@@ -15,7 +15,7 @@ public class UserEntity : BaseEntity
 
     [MaxLength(Constants.User.MaxDescriptionLength, ErrorMessage = ErrorMessages.ValidationError.OverDescriptionLength)]
     public string? Description { get; set; }
-    
+
     [RegularExpression(RegExp.User.UserNamePattern, ErrorMessage = ErrorMessages.ValidationError.InvalidUserName)]
     [MaxLength(Constants.User.MaxUserNameLength, ErrorMessage = ErrorMessages.ValidationError.OverUserNameLength)]
     public required string UserName { get; set; }
@@ -35,7 +35,8 @@ public class UserEntity : BaseEntity
     public required UserRole Role { get; set; }
     public required bool IsBanned { get; set; }
 
+    public DateTimeOffset CreatedAt { get; set; }
+
     public virtual ICollection<UserTagEntity> UserTags { get; set; } = [];
     public virtual ICollection<UserCheckInEntity> CheckIns { get; set; } = [];
 }
-

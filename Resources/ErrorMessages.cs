@@ -42,6 +42,9 @@ public static class ErrorMessages
         public const string WordIdRequired = "error.validation.word_id_required";
 
         public const string SessionIdRequired = "error.validation.session_id_required";
+        public const string OverArticleLength = "error.validation.over_article_length";
+        public const string OverCoverUrlLength = "error.validation.over_cover_url_length";
+        public const string OverPublicAnnouncementLength = "error.validation.over_public_announcement_length";
     }
 
     public static class Controller
@@ -75,7 +78,7 @@ public static class ErrorMessages
         }
         public static class Article
         {
-            public const string UserNotAuthorized = "error.controller.article.user_not_authorized";
+            public const string PermissonDeniedError = "error.controller.article.permission_denied";
             public const string CreateFailed = "error.controller.article.create.create_failed";
             public const string ArticleNotFound = "error.controller.article.not_found";
             public const string DeleteFailed = "error.controller.article.delete.delete_failed";
@@ -90,8 +93,8 @@ public static class ErrorMessages
             public const string LikeFailed = "error.controller.article.like.like_failed";
             public const string ArticleLiked = "error.controller.article.like.article_is_liked";
             public const string ArticleNotLiked = "error.controller.article.cancellike.article_not_liked";
-            public const string ArticleImgsUploadFailed = "error.controller.article.uploadarticleimage.upload_failed";
-            public const string AIArticleFailed = "error.controller.article.getaiarticle.get_aiarticle_failed";
+            public const string ArticleImgUploadFailed = "error.controller.article.uploadarticleimage.upload_failed";
+            public const string AiArticleNotFound = "error.controller.article.getaiarticle.aiarticle_not_found";
         }
 
         public static class PublicAnnouncement
@@ -106,7 +109,6 @@ public static class ErrorMessages
             public const string CreateFailed = "error.controller.comment.create_failed";
             public const string CommentNotFound = "error.controller.comment.not_found";
             public const string CommentDeleteFailed = "error.controller.comment.delete_failed";
-            public const string GetListFailed = "error.controller.comment.get_list_failed"; 
             public const string AlreadyLiked = "error.controller.comment.already_liked"; 
             public const string GetLikeFailed = "error.controller.comment.like_failed"; 
             public const string AlreadyCancelLiked = "error.controller.comment.already_cancel_liked"; 
@@ -129,6 +131,7 @@ public static class ErrorMessages
             public const string FinishedWordCreatFailed = "error.controller.word.finishedword.create_failed";
             public const string ErrorWordCreatFailed = "error.controller.word.errorword.create_failed";
             public const string WordNotFound = "error.controller.word.not_found";
+            public const string LatestWordNotFound = "error.controller.word.latest_word_not_found";
         }
 
         public static class Tag
@@ -141,13 +144,20 @@ public static class ErrorMessages
             public const string DeleteFailed = "error.controller.user_tag.delete_failed";
             public const string UserTagNotFound = "error.controller.user_tag.not_found";
         }
-        public static class Session
+        public static class WordSession
         {
             public const string StartFailed = "error.controller.session.start_failed";
             public const string NotFoundSession = "error.controller.session.not_found_session";
             public const string GetNextWordFailed = "error.controller.session.get_next_word_failed";
-            public const string NotFindNextWord = "error.controller.session.not_find_next_word";
             public const string DeleteFailed = "error.controller.session.delete_failed";
+            public const string CreateAiArticleFailed = "error.controller.session.create_ai_article_failed";
+            public const string CreateAiCoverFailed = "error.controller.session.create_ai_cover_failed";
+        }
+
+        public static class Question
+        {
+            public const string NoWordsToQuestion = "error.controller.question.no_words_to_question";
+            public const string GetAiFillInBlankFailed = "error.controller.question.get_ai_fill_in_blank_failed";
         }
     }
 }

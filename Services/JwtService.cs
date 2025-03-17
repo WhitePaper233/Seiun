@@ -8,7 +8,7 @@ using JwtRegisteredClaimNames = Microsoft.IdentityModel.JsonWebTokens.JwtRegiste
 
 namespace Seiun.Services;
 
-public class JwtService(IConfiguration configuration) : IJwtService 
+public class JwtService(IConfiguration configuration) : IJwtService
 {
     private readonly string _secret =
         configuration["Jwt:Secret"] ?? throw new ArgumentException(configuration["Jwt:Secret"]);
@@ -24,14 +24,15 @@ public class JwtService(IConfiguration configuration) : IJwtService
         // token payload
         Claim[] claims =
         [
-            new Claim(ClaimTypes.Name, userEntity.UserName),
-            new Claim(ClaimTypes.NameIdentifier, userEntity.Id.ToString()),
-            new Claim(ClaimTypes.Role, userEntity.Role.ToString()),
-            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+            new(ClaimTypes.Name, userEntity.UserName),
+            new(ClaimTypes.NameIdentifier, userEntity.Id.ToString()),
+            new(ClaimTypes.Role, userEntity.Role.ToString()),
+            new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
         ];
 
         // set token expiration time
         var expiration = DateTime.UtcNow.AddHours(Constants.Token.TokenExpirationTime);
+        // var expiration = DateTime.UtcNow.AddSeconds(60); // only test code
 
         // sign token
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_secret));
@@ -39,9 +40,9 @@ public class JwtService(IConfiguration configuration) : IJwtService
 
         // create token
         var token = new JwtSecurityToken(
-            issuer: _issuer,
-            audience: _audience,
-            claims: claims,
+            _issuer,
+            _audience,
+            claims,
             expires: expiration,
             signingCredentials: creds
         );

@@ -49,21 +49,13 @@ public class ArticleRepository(SeiunDbContext dbContext, IMinioClient minioClien
 		return articleIds;
 	}
 
-	public async Task<string> UploadArticleImgAsync(Stream articleimgData, string articleImgExtension)
+	public async Task<string> UploadArticleImgAsync(Stream articleimgData, string BucketName)
 	{
-		string articleImgType = articleImgExtension switch
-        {
-            ".jpg" => MediaTypeNames.Image.Jpeg,
-            ".jpeg" => MediaTypeNames.Image.Jpeg,
-            ".png" => MediaTypeNames.Image.Png,
-            ".webp" => MediaTypeNames.Image.Webp,
-            _ => MediaTypeNames.Application.Octet 
-        };
-		var articleImgName = $"{Guid.NewGuid()}{articleImgExtension}";
+		var articleImgName = $"{Guid.NewGuid()}.webp";
 		var putObjectArgs = new PutObjectArgs()
-			.WithBucket(Constants.BucketNames.ArticleImages)
+			.WithBucket(BucketName)
 			.WithObject(articleImgName)
-			.WithContentType(articleImgType)
+			.WithContentType(MediaTypeNames.Image.Webp)
 			.WithStreamData(articleimgData)
 			.WithObjectSize(articleimgData.Length);
 		await MinioCl.PutObjectAsync(putObjectArgs);
@@ -71,14 +63,14 @@ public class ArticleRepository(SeiunDbContext dbContext, IMinioClient minioClien
 		return articleImgName;
 	}
 
-	public async Task<bool> DeleteAticleImgAsync(List<string> articleImgNames)
+	public async Task<bool> DeleteAticleImgAsync(List<string> articleImgNames, string BucketName)
 	{
 		foreach(var articleImgName in articleImgNames)
 		{
 			try
 			{
 				var removeObjectArgs = new RemoveObjectArgs()
-					.WithBucket(Constants.BucketNames.ArticleImages)
+					.WithBucket(BucketName)
 					.WithObject(articleImgName);
 				
 				await MinioCl.RemoveObjectAsync(removeObjectArgs).ConfigureAwait(false);
@@ -92,11 +84,11 @@ public class ArticleRepository(SeiunDbContext dbContext, IMinioClient minioClien
 		return true;
 	}
 
-	public async Task<MemoryStream> GetArticleImgAsync(string fileName)
+	public async Task<MemoryStream> GetArticleImgAsync(string fileName, string BucketName)
 	{
 		var articleImgStream = new MemoryStream();
 		var getObjectArgs = new GetObjectArgs()
-			.WithBucket(Constants.BucketNames.ArticleImages)
+			.WithBucket(BucketName)
 			.WithObject(fileName)
 			.WithCallbackStream(data => data.CopyTo(articleImgStream));
 		await MinioCl.GetObjectAsync(getObjectArgs).ConfigureAwait(false);

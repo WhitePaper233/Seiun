@@ -5,26 +5,26 @@ namespace Seiun.Models.Responses;
 
 # region ArticleListResponse
 
-public class ArticleImgNameList
+public class ArticleImgDetail
 {
-	public required List<string> ArticleImgNames { get; set; }
+	public required string ArticleImgName { get; set; }
 }
 
-public sealed class ArticleImgNameListResp(int code, string message, ArticleImgNameList? articleImgNameList)
-	: BaseRespWithData<ArticleImgNameList>(code, message, articleImgNameList)
+public sealed class ArticleImgNameResp(int code, string message, ArticleImgDetail? articleImgNameList)
+	: BaseRespWithData<ArticleImgDetail>(code, message, articleImgNameList)
 {
-	public static ArticleImgNameListResp Success(List<string> articleImgNames)
+	public static ArticleImgNameResp Success(string articleImgName)
 	{
-		return new ArticleImgNameListResp(StatusCodes.Status200OK, SuccessMessages.Controller.Article.GetArticleImgNameListSuccess,
-			new ArticleImgNameList
+		return new ArticleImgNameResp(StatusCodes.Status200OK, SuccessMessages.Controller.Article.GetArticleImgNameSuccess,
+			new ArticleImgDetail
 			{
-				ArticleImgNames = articleImgNames
+				ArticleImgName = articleImgName
 			});
 	}
 
-	public static ArticleImgNameListResp Fail(int code, string message)
+	public static ArticleImgNameResp Fail(int code, string message)
 	{
-		return new ArticleImgNameListResp(code, message, null);
+		return new ArticleImgNameResp(code, message, null);
 	}
 }
 
@@ -54,6 +54,29 @@ public sealed class ArticleListResp(int code, string message, ArticleList? artic
 	public static ArticleListResp Fail(int code, string message)
 	{
 		return new ArticleListResp(code, message, null);
+	}
+}
+
+public class ArticleCover
+{
+	public required string ArticleCoverName	{ get; set; }
+}
+
+public sealed class ArticleCoverResp(int code, string message, ArticleCover? articleCover)
+	: BaseRespWithData<ArticleCover>(code, message, articleCover)
+{
+	public static ArticleCoverResp Success(string articleCoverName)
+	{
+		return new ArticleCoverResp(StatusCodes.Status200OK, SuccessMessages.Controller.Article.GetArticleCoverNameSuccess,
+			new ArticleCover
+			{
+				ArticleCoverName = articleCoverName
+			});
+	}
+
+	public static ArticleCoverResp Fail(int code, string message)
+	{
+		return new ArticleCoverResp(code, message, null);
 	}
 }
 
@@ -103,29 +126,38 @@ public sealed class ArticleDetailResp(int code, string message, ArticleDetail? a
 
 # region GetAIArticle
 
-public class AIArticleDetail
+public class AiArticleList
 {	
-	public required string AIArticle { get; set; }
-	public required string AICoverURL{ get; set; }
+ public	required List<AiArticleDetail> AiArticles { get; set; }
 }
 
-public sealed class AIArticleDetailResp(int code, string message, AIArticleDetail? aiArticleDetail)
-	: BaseRespWithData<AIArticleDetail>(code, message, aiArticleDetail)
+public class AiArticleDetail
 {
-	public static AIArticleDetailResp Success(AIArticleEntity aiArticleEntity)
+	public required string AiArticle { get; set; }
+	public required string AiCoverUrl{ get; set; }
+}
+
+public sealed class AiArticleDetailResp(int code, string message, AiArticleList? aiArticleDetails)
+	: BaseRespWithData<AiArticleList>(code, message, aiArticleDetails)
+{
+	public static AiArticleDetailResp Success(List<AiArticleEntity> aiArticleEntities)
 	{
-		return new AIArticleDetailResp(StatusCodes.Status200OK, SuccessMessages.Controller.Article.GetArticleDetailSuccess,
-			new AIArticleDetail
+		return new AiArticleDetailResp(StatusCodes.Status200OK, SuccessMessages.Controller.Article.GetArticleDetailSuccess,
+			new AiArticleList
 			{
-				AIArticle = aiArticleEntity.Article,
-				AICoverURL = aiArticleEntity.CoverURL
+				AiArticles = aiArticleEntities.Select(aiArticleEntity => 
+				new AiArticleDetail
+				{
+					AiArticle = aiArticleEntity.Article, AiCoverUrl = aiArticleEntity.CoverUrl 
+					
+				}).ToList()
 			}
 		);
 	}
 
-	public static AIArticleDetailResp Fail(int code, string message)
+	public static AiArticleDetailResp Fail(int code, string message)
 	{
-		return new AIArticleDetailResp(code, message, null);
+		return new AiArticleDetailResp(code, message, null);
 	}
 }
 

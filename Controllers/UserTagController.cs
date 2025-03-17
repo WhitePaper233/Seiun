@@ -10,7 +10,7 @@ using Seiun.Utils;
 namespace Seiun.Controllers;
 
 
-[ApiController, Route("/api/usertag")]
+[ApiController, Route("/api/tag/user")]
 public class TagController(ILogger<UserController> logger, IRepositoryService repository)
     : ControllerBase
 {

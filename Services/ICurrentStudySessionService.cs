@@ -11,5 +11,5 @@ public interface ICurrentStudySessionService
 	public void DeleteCorrectWord(Guid SessionId, ILogger<WordSessionController> logger);
 	public void InsertErrorWord(Guid SessionId, ILogger<WordSessionController> logger);
 	public void RemoveSession(Guid SessionId, ILogger<WordSessionController> logger);
-	public Task ClearSessionAsync(ISessionRepository sessionRepository, ILogger logger);
+	public Task ClearSessionAsync(IWordSessionRepository sessionRepository, ILogger logger);
 }

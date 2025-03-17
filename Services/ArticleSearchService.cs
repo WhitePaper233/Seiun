@@ -4,7 +4,7 @@ using Seiun.Entities;
 namespace Seiun.Services;
 public class ArticleSearchService(IElasticClient elasticClient) : IArticleSearchService
 {
-    public async Task<List<Guid>> ArticleSearchAsync(string query, int page = 1, int pageSize = 10)
+    public async Task<List<Guid>?> ArticleSearchAsync(string query, int page = 1, int pageSize = 10)
     {
         // 构建搜索请求
         var response = await elasticClient.SearchAsync<ArticleSearchEntity>(s => s

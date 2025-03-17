@@ -6,6 +6,8 @@ public class ArticleEntity: BaseEntity
 	public required string Article { get; set; }
 	// 图片
 	public List<string>? ImageFileNames { get; set; }
+	// 封面
+	public string? CoverFileName { get; set; }
 	// 发布者ID
 	public required Guid CreatorId { get; set; }
 	// 发布时间

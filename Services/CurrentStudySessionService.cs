@@ -68,7 +68,7 @@ public class CurrentStudySessionService : ICurrentStudySessionService
 	}
 
 	// 定时清理Session
-	public async Task ClearSessionAsync(ISessionRepository sessionRepository, ILogger logger)
+	public async Task ClearSessionAsync(IWordSessionRepository sessionRepository, ILogger logger)
 	{
 		var endTime = DateTime.Now;
 		var clearingSessions = new List<Guid>();
@@ -79,7 +79,7 @@ public class CurrentStudySessionService : ICurrentStudySessionService
 				var userSession = await sessionRepository.GetByIdAsync(Session.Key);
 				if(userSession!=null)
 				{
-					TimeSpan hoursSpan = endTime - userSession.SessionAt;
+					TimeSpan hoursSpan = endTime - userSession.WordSessionAt;
 					if(hoursSpan.TotalHours>20)
 					{
 						clearingSessions.Add(Session.Key);

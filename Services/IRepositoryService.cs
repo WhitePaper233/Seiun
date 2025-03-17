@@ -14,10 +14,13 @@ public interface IRepositoryService
     IWordRepository WordRepository { get; }
     ITagRepository TagRepository { get; }
     IUserTagRepository UserTagRepository { get; }
-    ISessionRepository SessionRepository { get; }
+    IWordSessionRepository SessionRepository { get; }
     IErrorWordRepository ErrorWordRepository { get; }
     IFinishedWordRepository FinishedWordRepository { get; }
 
     IUserCheckInRepository UserCheckInRepository { get; }
     IAIArticleRepository AIArticleRepository { get; }
+    IFillInBlankRepository FillInBlankRepository { get; }
+    IFillInBlankAnswerRepository FillInBlankAnswerRepository { get; }
+    IFillInBlankWordRepository FillInBlankWordRepository { get; }
 }

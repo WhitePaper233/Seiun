@@ -5,13 +5,14 @@ using Seiun.Entities;
 namespace Seiun.Repositories;
 
 public class AIArticleRepository(SeiunDbContext dbContext, IMinioClient minioClient)
-    : BaseRepository<AIArticleEntity>(dbContext, minioClient), IAIArticleRepository
+    : BaseRepository<AiArticleEntity>(dbContext, minioClient), IAIArticleRepository
 {
-    public async Task<AIArticleEntity?> GetByUserIdAsync(Guid userId)
+    public async Task<List<AiArticleEntity>?> GetByUserIdAsync(Guid userId)
     {
-        return await DbContext.AIArticles
+        return await DbContext.AiArticles
             .Where(a => a.UserId == userId)
             .OrderByDescending(a => a.CreatedAt)
-            .FirstOrDefaultAsync();
+            .Take(5)
+            .ToListAsync();
     }
 }

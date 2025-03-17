@@ -21,7 +21,7 @@ public class WordRepository(SeiunDbContext dbContext, IMinioClient minioClient)
 
     public async Task<List<WordEntity>> GetWordsByTagAsync(string tagName, Guid userId, int num)
     {
-        var finishedWords = await DbContext.UserWordRecords
+        var finishedWords = await DbContext.FinishedWords
             .Where(a => a.UserId == userId)
             .ToListAsync();
 

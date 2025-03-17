@@ -2,7 +2,7 @@ using Seiun.Entities;
 
 namespace Seiun.Repositories;
 
-public interface IAIArticleRepository : IBaseRepository<AIArticleEntity>
+public interface IAIArticleRepository : IBaseRepository<AiArticleEntity>
 {
-	Task<AIArticleEntity?> GetByUserIdAsync(Guid userId);
+	Task<List<AiArticleEntity>?> GetByUserIdAsync(Guid userId);
 }

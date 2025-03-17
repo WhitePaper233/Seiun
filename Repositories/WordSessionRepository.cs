@@ -4,8 +4,8 @@ using Seiun.Entities;
 
 namespace Seiun.Repositories;
 
-public class SessionRepository(SeiunDbContext dbContext, IMinioClient minioClient)
-	: BaseRepository<WordSessionEntity>(dbContext, minioClient), ISessionRepository
+public class WordSessionRepository(SeiunDbContext dbContext, IMinioClient minioClient)
+	: BaseRepository<WordSessionEntity>(dbContext, minioClient), IWordSessionRepository
 {
 	public Task<WordSessionEntity?> GetSessionByUserIdAsync(Guid userId)
 	{

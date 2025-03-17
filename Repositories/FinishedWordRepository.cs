@@ -18,4 +18,13 @@ public class FinishedWordRepository(SeiunDbContext dbContext, IMinioClient minio
 			.GroupBy(x => x.SessionId)
 			.FirstOrDefault();
 	}
+
+	public async Task<List<FinishedWordRecordEntity>?> GetWordsToQuestionAsync(Guid userId)
+	{
+		return await DbContext.FinishedWords
+			.Where(w => w.UserId == userId)
+			.OrderByDescending(w => w.Id)
+			.Take(15)
+			.ToListAsync();
+	}
 }

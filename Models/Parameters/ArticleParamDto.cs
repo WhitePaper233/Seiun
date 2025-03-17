@@ -11,4 +11,7 @@ public class ArticleCreate
 
 	// 图片
 	public List<string>? ImageNames { get; set; }
+
+	// 封面
+	public string? CoverFileName { get; set; }
 }

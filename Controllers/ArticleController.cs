@@ -8,26 +8,26 @@ using Seiun.Models.Parameters;
 using SixLabors.ImageSharp;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using SixLabors.ImageSharp.Processing;
 using Seiun.Utils;
 using Nest;
-using OpenAI;
-using System.ClientModel;
-using OpenAI.Chat;
-using System.Text.Json;
 
 namespace Seiun.Controllers;
 /// <summary>
 /// 文章控制器
 /// </summary>
 /// <param name="logger">日志</param>
-/// <param name="repository">仓库服务</param>
+/// <param name="repository">日志</param>
+/// <param name="elasticClient">Elasticsearch 搜索客户端</param>
+/// <param name="articleSearch">文章搜索服务</param>
+/// <param name="aiRequest">AI请求服务</param>
 [ApiController,Route("/api/article")]
 public class ArticleController(ILogger<ArticleController> logger, IRepositoryService repository, IElasticClient elasticClient, IArticleSearchService articleSearch, IAIRequestService aiRequest) : ControllerBase{
 	
 	/// <summary>
 	/// 上传文章
 	/// </summary>
-	/// <param name="postCreate">文章信息DTO</param>
+	/// <param name="articleCreate">文章信息DTO</param>
 	/// <returns>上传结果</returns>
 	[HttpPost("create", Name = "CreateArticle")]
 	[Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
@@ -59,6 +59,7 @@ public class ArticleController(ILogger<ArticleController> logger, IRepositorySer
 		{
 			Article = articleCreate.Article,
 			ImageFileNames = articleCreate.ImageNames,
+			CoverFileName = articleCreate.CoverFileName,
 			CreatorId = userId.Value,
 			CreateTime = DateTime.Now,
 			IsPinned = false
@@ -67,7 +68,7 @@ public class ArticleController(ILogger<ArticleController> logger, IRepositorySer
 		repository.ArticleRepository.Create(article);
 		if(await repository.ArticleRepository.SaveAsync())
 		{
-			var articleSearch = new ArticleSearchEntity
+			var articleSearchEntity = new ArticleSearchEntity
 			{
 				Article = article.Article,
 				CreatorUserName = user.UserName,
@@ -76,8 +77,8 @@ public class ArticleController(ILogger<ArticleController> logger, IRepositorySer
 				ArticleId = article.Id
 			};
 
-			var indexResponse = await elasticClient.IndexAsync(articleSearch, i => i
-				.Id(articleSearch.ArticleId.ToString()));
+			var indexResponse = await elasticClient.IndexAsync(articleSearchEntity, i => i
+				.Id(articleSearchEntity.ArticleId.ToString()));
 			if(indexResponse.IsValid)
 			{
 				return Ok(ResponseFactory.NewSuccessBaseResponse(SuccessMessages.Controller.Article.CreateSuccess));
@@ -95,16 +96,16 @@ public class ArticleController(ILogger<ArticleController> logger, IRepositorySer
 	/// <summary>
 	/// 上传文章图片
 	/// </summary>
-	/// <param name="articleImgFiles">文章图片文件</param>
+	/// <param name="articleImgFile">文章图片文件</param>
 	/// <returns>图片名称</returns>
 	[HttpPost("upload-img", Name = "UploadArticleImg")]
 	[Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
 	[Authorize(Roles = $"{nameof(UserRole.Creator)},{nameof(UserRole.Admin)},{nameof(UserRole.SuperAdmin)}")]
-	[ProducesResponseType(typeof(ArticleImgNameListResp), StatusCodes.Status200OK)]
+	[ProducesResponseType(typeof(ArticleImgNameResp), StatusCodes.Status200OK)]
 	[ProducesResponseType(typeof(BaseResp), StatusCodes.Status400BadRequest)]
 	[ProducesResponseType(typeof(BaseResp), StatusCodes.Status403Forbidden)]
 	[ProducesResponseType(typeof(BaseResp), StatusCodes.Status500InternalServerError)]
-	public async Task<IActionResult> UploadArticleImg([FromForm] List<IFormFile>? articleImgFiles)
+	public async Task<IActionResult> UploadArticleImg(IFormFile? articleImgFile)
 	{
 		var userId = User.GetUserId();
 		if(userId == null)
@@ -115,82 +116,75 @@ public class ArticleController(ILogger<ArticleController> logger, IRepositorySer
 			));
 		}
 
-		if(articleImgFiles == null || articleImgFiles.Count == 0)
+		if(articleImgFile == null)
 		{
 			return BadRequest(ResponseFactory.NewFailedBaseResponse(
                 StatusCodes.Status400BadRequest,
                 ErrorMessages.Controller.Any.FileNotUploaded
             ));
 		}
-
-		List<string> articleImgNames = [];
-
-		foreach(var articleimgFile in articleImgFiles)
-		{	
-			if(articleimgFile.Length > Constants.Article.MaxArticleImageSize)
-			{
-				return BadRequest(ResponseFactory.NewFailedBaseResponse(
-					StatusCodes.Status400BadRequest,
-					ErrorMessages.Controller.Any.FileTooLarge
-				));
-			}
-
-			var fileExtension = Path.GetExtension(articleimgFile.FileName).ToLower();
-			if(!Constants.Article.AllowedArticleImageExtensions.Contains(fileExtension))
-			{
-				return BadRequest(ResponseFactory.NewFailedBaseResponse(
-					StatusCodes.Status400BadRequest,
-					ErrorMessages.Controller.Any.FileFormatNotSupported
-				));
-			}
-
-			await using var articleimgStream = articleimgFile.OpenReadStream();
-			Image image;
-			try
-			{
-				image = await Image.LoadAsync(articleimgStream);
-			}
-			catch
-			{
-				return BadRequest(ResponseFactory.NewFailedBaseResponse(
-					StatusCodes.Status400BadRequest,
-					ErrorMessages.Controller.Any.FileFormatNotSupported
-				));
-			}
-
-			if (image.Width > Constants.Article.ArticleImageMaxWidth || image.Height > Constants.Article.ArticleImageMaxHeight)
-			{
-				return BadRequest(ResponseFactory.NewFailedBaseResponse(
-					StatusCodes.Status400BadRequest,
-					ErrorMessages.Controller.Any.ImageSizeTooLarge
-				));
-			}
-
-			try
-			{
-				await using var processedImageStream = new MemoryStream();
-				await articleimgFile.CopyToAsync(processedImageStream);
-				processedImageStream.Seek(0, SeekOrigin.Begin);
-			    var articleImgName = await repository.ArticleRepository.UploadArticleImgAsync(processedImageStream, fileExtension);
-			    articleImgNames.Add(articleImgName);
-			}
-			catch (Exception e)
-			{
-				logger.LogError(e, "Fail to upload article image");
-				return StatusCode(StatusCodes.Status500InternalServerError, ResponseFactory.NewFailedBaseResponse(
-					StatusCodes.Status500InternalServerError,
-					ErrorMessages.Controller.Article.ArticleImgsUploadFailed
-				));
-			}
+		
+		if(articleImgFile.Length > Constants.Article.MaxArticleImageSize)
+		{
+			return BadRequest(ResponseFactory.NewFailedBaseResponse(
+				StatusCodes.Status400BadRequest,
+				ErrorMessages.Controller.Any.FileTooLarge
+			));
 		}
 
-		return Ok(ArticleImgNameListResp.Success(articleImgNames));
+		var fileExtension = Path.GetExtension(articleImgFile.FileName).ToLower();
+		if(!Constants.Article.AllowedArticleImageExtensions.Contains(fileExtension))
+		{
+			return BadRequest(ResponseFactory.NewFailedBaseResponse(
+				StatusCodes.Status400BadRequest,
+				ErrorMessages.Controller.Any.FileFormatNotSupported
+			));
+		}
+
+		await using var articleImgStream = articleImgFile.OpenReadStream();
+		Image image;
+		try
+		{
+			image = await Image.LoadAsync(articleImgStream);
+		}
+		catch
+		{
+			return BadRequest(ResponseFactory.NewFailedBaseResponse(
+				StatusCodes.Status400BadRequest,
+				ErrorMessages.Controller.Any.FileFormatNotSupported
+			));
+		}
+
+		if (image.Width > Constants.Article.ArticleImageMaxWidth || image.Height > Constants.Article.ArticleImageMaxHeight)
+		{
+			return BadRequest(ResponseFactory.NewFailedBaseResponse(
+				StatusCodes.Status400BadRequest,
+				ErrorMessages.Controller.Any.ImageSizeTooLarge
+			));
+		}
+
+		try
+		{
+			await using var processedImageStream = new MemoryStream();
+			await image.SaveAsWebpAsync(processedImageStream);
+			processedImageStream.Seek(0, SeekOrigin.Begin);
+		    var articleImgName = await repository.ArticleRepository.UploadArticleImgAsync(processedImageStream, Constants.BucketNames.ArticleImages);
+		    return Ok(ArticleImgNameResp.Success(articleImgName));
+		}
+		catch (Exception e)
+		{
+			logger.LogError(e, "User {} fail to upload article image", userId);
+			return StatusCode(StatusCodes.Status500InternalServerError, ResponseFactory.NewFailedBaseResponse(
+				StatusCodes.Status500InternalServerError,
+				ErrorMessages.Controller.Article.ArticleImgUploadFailed
+			));
+		}
 	}
 
 	/// <summary>
 	/// 删除文章
 	/// </summary>
-	/// <param name="postId">文章ID</param>
+	/// <param name="articleId">文章ID</param>
 	/// <returns>删除结果</returns>
 	[HttpDelete("delete/{articleId:Guid}", Name = "DeleteArticle")]
 	[Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
@@ -227,7 +221,7 @@ public class ArticleController(ILogger<ArticleController> logger, IRepositorySer
 			{
 				return StatusCode(StatusCodes.Status403Forbidden, ResponseFactory.NewFailedBaseResponse(
 					StatusCodes.Status403Forbidden,
-					ErrorMessages.Controller.Article.UserNotAuthorized
+					ErrorMessages.Controller.Article.PermissonDeniedError
 				));
 			}
 		}
@@ -236,7 +230,7 @@ public class ArticleController(ILogger<ArticleController> logger, IRepositorySer
 		repository.ArticleRepository.Delete(article);
 		if(await repository.ArticleRepository.SaveAsync()&&deleteResponse.IsValid)
 		{	
-			if(article.ImageFileNames != null&&await repository.ArticleRepository.DeleteAticleImgAsync(article.ImageFileNames))
+			if(article.ImageFileNames != null&&await repository.ArticleRepository.DeleteAticleImgAsync(article.ImageFileNames, Constants.BucketNames.ArticleImages))
 			{
 				return Ok(ResponseFactory.NewSuccessBaseResponse(SuccessMessages.Controller.Article.DeleteSuccess));
 			}
@@ -278,7 +272,7 @@ public class ArticleController(ILogger<ArticleController> logger, IRepositorySer
 		{
 			return StatusCode(StatusCodes.Status403Forbidden, ResponseFactory.NewFailedBaseResponse(
 				StatusCodes.Status403Forbidden,
-				ErrorMessages.Controller.Article.UserNotAuthorized
+				ErrorMessages.Controller.Article.PermissonDeniedError
 			));
 		}
 		
@@ -333,7 +327,7 @@ public class ArticleController(ILogger<ArticleController> logger, IRepositorySer
 		{
 			return StatusCode(StatusCodes.Status403Forbidden, ResponseFactory.NewFailedBaseResponse(
 				StatusCodes.Status403Forbidden,
-				ErrorMessages.Controller.Article.UserNotAuthorized
+				ErrorMessages.Controller.Article.PermissonDeniedError
 			));
 		}
 
@@ -595,8 +589,11 @@ public class ArticleController(ILogger<ArticleController> logger, IRepositorySer
 	/// <returns>AI文章</returns>
 	[HttpGet("get-ai-article", Name = "GetAIArticle")]
 	[Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-	[Authorize(Roles = $"{nameof(UserRole.User)},{nameof(UserRole.Creator)}{nameof(UserRole.Admin)},{nameof(UserRole.SuperAdmin)}")]
-	public async Task<IActionResult> GetAIArticle()
+	[Authorize(Roles = $"{nameof(UserRole.User)},{nameof(UserRole.Creator)},{nameof(UserRole.Admin)},{nameof(UserRole.SuperAdmin)}")]
+	[ProducesResponseType(typeof(AiArticleDetailResp), StatusCodes.Status200OK)]
+	[ProducesResponseType(typeof(AiArticleDetailResp), StatusCodes.Status403Forbidden)]
+	[ProducesResponseType(typeof(AiArticleDetailResp), StatusCodes.Status404NotFound)] 
+	public async Task<IActionResult> GetAiArticle()
 	{
 		var userId = User.GetUserId();
 		if(userId == null)
@@ -606,59 +603,16 @@ public class ArticleController(ILogger<ArticleController> logger, IRepositorySer
 				ErrorMessages.Controller.Any.InvalidJwtToken
 			));
 		}
-
-		var LatestFinishedWordGroup = await repository.FinishedWordRepository.GetLatestFinishedWordIdAsync(userId.Value);
-		if(LatestFinishedWordGroup == null)
+	
+		var aiArticleEntities = await repository.AIArticleRepository.GetByUserIdAsync(userId.Value);
+		if (aiArticleEntities == null)
 		{
-			return NotFound(AIArticleDetailResp.Fail(
+			return NotFound(AiArticleDetailResp.Fail(
 				StatusCodes.Status404NotFound,
-				ErrorMessages.Controller.Word.WordNotFound
+				ErrorMessages.Controller.Article.AiArticleNotFound
 			));
 		}
-
-		var aIArticleEntity = await repository.AIArticleRepository.GetByUserIdAsync(userId.Value);
-		if(aIArticleEntity != null&&aIArticleEntity.SessionId==LatestFinishedWordGroup.Key)
-		{	
-			return Ok(AIArticleDetailResp.Success(aIArticleEntity));
-		}
-
-		var LatestFinishedWordRecord = LatestFinishedWordGroup.ToList();
-		var LatestFinishedWords = await repository.WordRepository.GetByGuidsAsync([.. LatestFinishedWordRecord.Select(x => x.WordId)]);
-		if(LatestFinishedWords == null)
-		{
-			return NotFound(AIArticleDetailResp.Fail(
-				StatusCodes.Status404NotFound,
-				ErrorMessages.Controller.Word.WordNotFound
-			));
-		}
-
-		string? aiArticle = await aiRequest.GetAIArticleAsync([.. LatestFinishedWords.Select(x => x.WordText)]);
-		if(aiArticle != null)
-		{
-			string? aiCover = await aiRequest.GetAICoverAsync(aiArticle);
-			if(aiCover != null && aiCover != string.Empty)
-			{
-				aIArticleEntity = new AIArticleEntity
-				{
-					UserId = userId.Value,
-					SessionId = LatestFinishedWordGroup.Key,
-					Article = aiArticle,
-					CoverURL = aiCover,
-					CreatedAt = DateTime.UtcNow
-				};
-				repository.AIArticleRepository.Create(aIArticleEntity);
-				if(await repository.AIArticleRepository.SaveAsync())
-				{
-					return Ok(AIArticleDetailResp.Success(aIArticleEntity));
-				}
-			}
-		}
-
-		logger.LogWarning("User {} failed to get AI article", userId.Value);
-		return StatusCode(StatusCodes.Status500InternalServerError,AIArticleDetailResp.Fail(
-			StatusCodes.Status500InternalServerError,
-			ErrorMessages.Controller.Article.AIArticleFailed
-		));
+		return Ok(AiArticleDetailResp.Success(aiArticleEntities));
 	}
 }
 

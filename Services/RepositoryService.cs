@@ -34,8 +34,8 @@ public class RepositoryService(SeiunDbContext seiunDbContext, IMinioClient minio
     private readonly Lazy<IUserTagRepository> _userTagRepository = new(() => new UserTagRepository(seiunDbContext, minioClient));
     public IUserTagRepository UserTagRepository => _userTagRepository.Value;
 
-    private readonly Lazy<ISessionRepository> _sessionRepository = new(() => new SessionRepository(seiunDbContext, minioClient));
-    public ISessionRepository SessionRepository => _sessionRepository.Value;
+    private readonly Lazy<IWordSessionRepository> _sessionRepository = new(() => new WordSessionRepository(seiunDbContext, minioClient));
+    public IWordSessionRepository SessionRepository => _sessionRepository.Value;
 
     private readonly Lazy<IErrorWordRepository> _errorWordRepository = new(() => new ErrorWordRepository(seiunDbContext, minioClient));
     public IErrorWordRepository ErrorWordRepository => _errorWordRepository.Value;
@@ -48,4 +48,13 @@ public class RepositoryService(SeiunDbContext seiunDbContext, IMinioClient minio
 
     private readonly Lazy<IUserCheckInRepository> _userCheckInRepository = new(() => new UserCheckInRepository(seiunDbContext, minioClient));
     public IUserCheckInRepository UserCheckInRepository => _userCheckInRepository.Value;
+    
+    private readonly Lazy<IFillInBlankRepository> _fillInBlankRepository = new(() => new FillInBlankRepository(seiunDbContext, minioClient));
+    public IFillInBlankRepository FillInBlankRepository => _fillInBlankRepository.Value;
+    
+    private readonly Lazy<IFillInBlankAnswerRepository> _fillInBlankAnswerRepository = new(() => new FillInBlankAnswerRepository(seiunDbContext, minioClient));
+    public IFillInBlankAnswerRepository FillInBlankAnswerRepository => _fillInBlankAnswerRepository.Value;
+    
+    private readonly Lazy<IFillInBlankWordRepository> _fillInBlankWordRepository = new(() => new FillInBlankWordRepository(seiunDbContext, minioClient));
+    public IFillInBlankWordRepository FillInBlankWordRepository => _fillInBlankWordRepository.Value;
 }   

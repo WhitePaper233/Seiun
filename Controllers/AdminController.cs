@@ -10,14 +10,11 @@ using Seiun.Utils.Enums;
 
 namespace Seiun.Controllers;
 
-
-
 [ApiController]
 [Route("/admin")]
-public class AdminController(ILogger<AdminController> logger, IRepositoryService repository,IJwtService jwt)
+public class AdminController(ILogger<AdminController> logger, IRepositoryService repository, IJwtService jwt)
     : ControllerBase
 {
-
     [HttpGet("user-list", Name = "GetUserList")]
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     [Authorize(Roles = $"{nameof(UserRole.SuperAdmin)}")]
@@ -27,7 +24,7 @@ public class AdminController(ILogger<AdminController> logger, IRepositoryService
     [ProducesResponseType(typeof(BaseResp), StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> GetUserList()
     {
-        try 
+        try
         {
             var users = await repository.UserRepository.GetAllAsync();
 
@@ -63,12 +60,13 @@ public class AdminController(ILogger<AdminController> logger, IRepositoryService
         catch (Exception e)
         {
             logger.LogError(e, "Get user list failed");
-            return StatusCode(StatusCodes.Status500InternalServerError, 
+            return StatusCode(StatusCodes.Status500InternalServerError,
                 UserListResp.Fail(StatusCodes.Status500InternalServerError,
-                ErrorMessages.Controller.Admin.UserListFailed
-            ));
+                    ErrorMessages.Controller.Admin.UserListFailed
+                ));
         }
     }
+
     /// <summary>
     /// 管理员登录
     /// </summary>
@@ -93,28 +91,25 @@ public class AdminController(ILogger<AdminController> logger, IRepositoryService
         };
 
         if (user == null)
-        {
             return StatusCode(StatusCodes.Status403Forbidden, UserLoginResp.Fail(
                 StatusCodes.Status403Forbidden,
                 ErrorMessages.Controller.Admin.AdminNotFound
             ));
-        }
 
         if (!PasswordUtils.VerifyPasswordHash(userLogin.Password, user.PasswordHash, user.PasswordSalt))
-        {
             return StatusCode(StatusCodes.Status403Forbidden, UserLoginResp.Fail(
                 StatusCodes.Status403Forbidden,
                 ErrorMessages.Controller.Admin.UserLoginFailed
             ));
-        }
 
         var token = jwt.GenerateToken(user);
         var tokenInfo = new TokenInfo
         {
             Token = token,
+            UserId = user.Id.ToString(),
             ExpireAt = DateTimeOffset.Now.AddHours(Constants.Token.TokenExpirationTime).ToUnixTimeSeconds()
         };
-        return Ok(UserLoginResp.Success(SuccessMessages.Controller.User.LoginSuccess, tokenInfo));
+        return Ok(UserLoginResp.Success(tokenInfo));
     }
 
     /// <summary>

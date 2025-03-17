@@ -14,17 +14,18 @@ using SixLabors.ImageSharp.Processing;
 namespace Seiun.Controllers;
 
 /// <summary>
-/// 用户相关接口
+///     用户相关接口
 /// </summary>
 /// <param name="logger">日志</param>
 /// <param name="repository">仓库服务</param>
 /// <param name="jwt">JWT服务</param>
-[ApiController, Route("/api/user")]
+[ApiController]
+[Route("/api/user")]
 public class UserController(ILogger<UserController> logger, IRepositoryService repository, IJwtService jwt)
     : ControllerBase
 {
     /// <summary>
-    /// 用户注册
+    ///     用户注册
     /// </summary>
     /// <param name="userRegister">用户注册信息DTO</param>
     /// <returns>注册结果DTO</returns>
@@ -36,12 +37,10 @@ public class UserController(ILogger<UserController> logger, IRepositoryService r
     {
         var user = await repository.UserRepository.GetByPhoneNumberAsync(userRegister.PhoneNumber);
         if (user != null)
-        {
             return Conflict(ResponseFactory.NewFailedBaseResponse(
                 StatusCodes.Status409Conflict,
                 ErrorMessages.Controller.User.PhoneNumberDuplicated
             ));
-        }
 
         var (passwordHash, passwordSalt) = PasswordUtils.CreatePasswordHash(userRegister.Password);
         user = new UserEntity
@@ -53,14 +52,13 @@ public class UserController(ILogger<UserController> logger, IRepositoryService r
             PasswordSalt = passwordSalt,
             Role = UserRole.User,
             Gender = Gender.Unknown,
+            CreatedAt = DateTimeOffset.UtcNow,
             IsBanned = false
         };
 
         repository.UserRepository.Create(user);
         if (await repository.UserRepository.SaveAsync())
-        {
             return Ok(ResponseFactory.NewSuccessBaseResponse(SuccessMessages.Controller.User.RegisterSuccess));
-        }
 
         logger.LogError("User {} register failed", user.PhoneNumber);
         return StatusCode(StatusCodes.Status500InternalServerError, ResponseFactory.NewFailedBaseResponse(
@@ -70,7 +68,7 @@ public class UserController(ILogger<UserController> logger, IRepositoryService r
     }
 
     /// <summary>
-    /// 用户登录
+    ///     用户登录
     /// </summary>
     /// <param name="userLogin">用户登录信息DTO</param>
     /// <returns>登录结果DTO</returns>
@@ -92,32 +90,66 @@ public class UserController(ILogger<UserController> logger, IRepositoryService r
         };
 
         if (user == null)
-        {
             return StatusCode(StatusCodes.Status403Forbidden, UserLoginResp.Fail(
                 StatusCodes.Status403Forbidden,
                 ErrorMessages.Controller.User.UserNotFound
             ));
-        }
 
         if (!PasswordUtils.VerifyPasswordHash(userLogin.Password, user.PasswordHash, user.PasswordSalt))
-        {
             return StatusCode(StatusCodes.Status403Forbidden, UserLoginResp.Fail(
                 StatusCodes.Status403Forbidden,
                 ErrorMessages.Controller.User.UserLoginFailed
             ));
-        }
 
         var token = jwt.GenerateToken(user);
         var tokenInfo = new TokenInfo
         {
             Token = token,
+            UserId = user.Id.ToString(),
             ExpireAt = DateTimeOffset.Now.AddHours(Constants.Token.TokenExpirationTime).ToUnixTimeSeconds()
+            // ExpireAt = DateTimeOffset.Now.AddSeconds(60).ToUnixTimeSeconds() // only test code
         };
-        return Ok(UserLoginResp.Success(SuccessMessages.Controller.User.LoginSuccess, tokenInfo));
+        return Ok(UserLoginResp.Success(tokenInfo));
     }
 
     /// <summary>
-    /// 更新用户信息
+    ///     续签 JWT Token
+    /// </summary>
+    /// <returns>新 Token</returns>
+    [HttpGet("refresh-token", Name = "RefreshToken")]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    [ProducesResponseType(typeof(BaseResp), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(BaseResp), StatusCodes.Status403Forbidden)]
+    public async Task<IActionResult> RefreshToken()
+    {
+        var userId = User.GetUserId();
+        if (userId == null)
+            return StatusCode(StatusCodes.Status403Forbidden, TokenRefreshResp.Fail(
+                StatusCodes.Status403Forbidden,
+                ErrorMessages.Controller.Any.InvalidJwtToken
+            ));
+
+        var user = await repository.UserRepository.GetByIdAsync(userId.Value);
+        if (user == null)
+            return StatusCode(StatusCodes.Status403Forbidden, TokenRefreshResp.Fail(
+                StatusCodes.Status403Forbidden,
+                ErrorMessages.Controller.User.UserNotFound
+            ));
+
+        var token = jwt.GenerateToken(user);
+        var tokenInfo = new TokenInfo
+        {
+            Token = token,
+            UserId = user.Id.ToString(),
+            ExpireAt = DateTimeOffset.Now.AddHours(Constants.Token.TokenExpirationTime).ToUnixTimeSeconds()
+            // ExpireAt = DateTimeOffset.Now.AddSeconds(60).ToUnixTimeSeconds() // only test code
+        };
+        return Ok(TokenRefreshResp.Success(tokenInfo));
+    }
+
+
+    /// <summary>
+    ///     更新用户信息
     /// </summary>
     /// <param name="userUpdateProfile">更新信息DTO</param>
     /// <returns>更新结果</returns>
@@ -130,21 +162,17 @@ public class UserController(ILogger<UserController> logger, IRepositoryService r
     {
         var userId = User.GetUserId();
         if (userId == null)
-        {
             return StatusCode(StatusCodes.Status403Forbidden, ResponseFactory.NewFailedBaseResponse(
                 StatusCodes.Status403Forbidden,
                 ErrorMessages.Controller.Any.InvalidJwtToken
             ));
-        }
 
         var user = await repository.UserRepository.GetByIdAsync(userId.Value);
         if (user == null)
-        {
             return StatusCode(StatusCodes.Status403Forbidden, ResponseFactory.NewFailedBaseResponse(
                 StatusCodes.Status403Forbidden,
                 ErrorMessages.Controller.User.UserNotFound
             ));
-        }
 
         user.NickName = string.IsNullOrWhiteSpace(userUpdateProfile.NickName)
             ? user.NickName
@@ -156,18 +184,16 @@ public class UserController(ILogger<UserController> logger, IRepositoryService r
 
         repository.UserRepository.Update(user);
         if (!await repository.UserRepository.SaveAsync())
-        {
             return StatusCode(StatusCodes.Status500InternalServerError, ResponseFactory.NewFailedBaseResponse(
                 StatusCodes.Status500InternalServerError,
                 ErrorMessages.Controller.User.ProfileUpdateFailed
             ));
-        }
 
         return Ok(ResponseFactory.NewSuccessBaseResponse(SuccessMessages.Controller.User.ProfileUpdateSuccess));
     }
 
     /// <summary>
-    /// 更新用户头像
+    ///     更新用户头像
     /// </summary>
     /// <param name="avatarFile">头像文件</param>
     /// <returns>更新结果</returns>
@@ -181,50 +207,40 @@ public class UserController(ILogger<UserController> logger, IRepositoryService r
     {
         // 判断是否上传了头像
         if (avatarFile == null || avatarFile.Length == 0)
-        {
             return BadRequest(ResponseFactory.NewFailedBaseResponse(
                 StatusCodes.Status400BadRequest,
                 ErrorMessages.Controller.Any.FileNotUploaded
             ));
-        }
 
         // 判断头像文件大小
         if (avatarFile.Length > Constants.User.MaxAvatarSize)
-        {
             return BadRequest(ResponseFactory.NewFailedBaseResponse(
                 StatusCodes.Status400BadRequest,
                 ErrorMessages.Controller.Any.FileTooLarge
             ));
-        }
 
         // 判断头像文件类型
         var fileExtension = Path.GetExtension(avatarFile.FileName).ToLower();
         if (!Constants.User.AllowedAvatarExtensions.Contains(fileExtension))
-        {
             return BadRequest(ResponseFactory.NewFailedBaseResponse(
                 StatusCodes.Status400BadRequest,
                 ErrorMessages.Controller.Any.FileFormatNotSupported
             ));
-        }
 
         // 获取用户信息
         var userId = User.GetUserId();
         if (userId == null)
-        {
             return StatusCode(StatusCodes.Status403Forbidden, ResponseFactory.NewFailedBaseResponse(
                 StatusCodes.Status403Forbidden,
                 ErrorMessages.Controller.Any.InvalidJwtToken
             ));
-        }
 
         var user = await repository.UserRepository.GetByIdAsync(userId.Value);
         if (user == null)
-        {
             return StatusCode(StatusCodes.Status403Forbidden, ResponseFactory.NewFailedBaseResponse(
                 StatusCodes.Status403Forbidden,
                 ErrorMessages.Controller.User.UserNotFound
             ));
-        }
 
         // 处理头像文件
         // 读取头像文件
@@ -244,12 +260,10 @@ public class UserController(ILogger<UserController> logger, IRepositoryService r
 
         // 判断头像文件尺寸
         if (image.Width > Constants.User.AvatarMaxWidth || image.Height > Constants.User.AvatarMaxHeight)
-        {
             return BadRequest(ResponseFactory.NewFailedBaseResponse(
                 StatusCodes.Status400BadRequest,
                 ErrorMessages.Controller.Any.ImageSizeTooLarge
             ));
-        }
 
         // 处理头像文件
         await using var processedImageStream = new MemoryStream();
@@ -292,7 +306,7 @@ public class UserController(ILogger<UserController> logger, IRepositoryService r
     }
 
     /// <summary>
-    /// 获取用户信息
+    ///     获取用户信息
     /// </summary>
     /// <param name="userId">用户ID</param>
     /// <returns>用户信息</returns>
@@ -303,18 +317,16 @@ public class UserController(ILogger<UserController> logger, IRepositoryService r
     {
         var user = await repository.UserRepository.GetByIdAsync(userId);
         if (user == null)
-        {
             return NotFound(UserProfileResp.Fail(
                 StatusCodes.Status404NotFound,
                 ErrorMessages.Controller.User.UserNotFound
             ));
-        }
 
         return Ok(UserProfileResp.Success(user));
     }
-    
+
     /// <summary>
-    /// 获取今日用户打卡状态
+    ///     获取今日用户打卡状态
     /// </summary>
     /// <param name="userId">用户ID</param>
     /// <returns>打卡状态</returns>
@@ -325,23 +337,19 @@ public class UserController(ILogger<UserController> logger, IRepositoryService r
     {
         var user = await repository.UserRepository.GetByIdAsync(userId);
         if (user == null)
-        {
             return NotFound(UserProfileResp.Fail(
                 StatusCodes.Status404NotFound,
                 ErrorMessages.Controller.User.UserNotFound
             ));
-        }
 
         if (await repository.UserCheckInRepository.CheckInTodayAsync(userId))
-        {
             return Ok(ResponseFactory.NewSuccessBaseResponse(SuccessMessages.Controller.User.CheckInToday));
-        }
 
         return Ok(ResponseFactory.NewSuccessBaseResponse(SuccessMessages.Controller.User.NoCheckInToday));
     }
 
     /// <summary>
-    /// 获取用户的连续打卡天数
+    ///     获取用户的连续打卡天数
     /// </summary>
     /// <param name="userId">用户ID</param>
     /// <returns>连续打卡天数</returns>
@@ -352,47 +360,40 @@ public class UserController(ILogger<UserController> logger, IRepositoryService r
     {
         var user = await repository.UserRepository.GetByIdAsync(userId);
         if (user == null)
-        {
             return NotFound(UserProfileResp.Fail(
                 StatusCodes.Status404NotFound,
                 ErrorMessages.Controller.User.UserNotFound
             ));
-        }
 
         var checkInRecords = await repository.UserCheckInRepository.GetUserCheckInsAsync(userId);
         var userCheckInDay = new UserCheckInDay
         {
             ContinuousDays = 0,
-            TodayCheckInStatus = CheckIn.None,  
+            TodayCheckInStatus = CheckIn.None
         };
 
         if (checkInRecords.Count == 0)
-        {
             return Ok(UserCheckInDayResp.Success(SuccessMessages.Controller.User.NoCheckInHistory, userCheckInDay));
-        }
 
         if (await repository.UserCheckInRepository.CheckInTodayAsync(userId))
-        {
             userCheckInDay.TodayCheckInStatus = CheckIn.Checked;
-        }
 
-        DateTime lastCheckInDate = checkInRecords.First().CheckInDate.Date;
+        var lastCheckInDate = checkInRecords.First().CheckInDate.Date;
         foreach (var record in checkInRecords.Skip(1))
         {
-            DateTime currentCheckInDate = record.CheckInDate.Date;
-            if (lastCheckInDate == currentCheckInDate.AddDays(-1))  
+            var currentCheckInDate = record.CheckInDate.Date;
+            if (lastCheckInDate == currentCheckInDate.AddDays(-1))
             {
                 userCheckInDay.ContinuousDays++;
                 lastCheckInDate = currentCheckInDate;
             }
             else
             {
-                break;  
+                break;
             }
         }
 
-        return Ok(UserCheckInDayResp.Success(SuccessMessages.Controller.User.GetConsecutiveCheckInDays, userCheckInDay));
+        return Ok(UserCheckInDayResp.Success(SuccessMessages.Controller.User.GetConsecutiveCheckInDays,
+            userCheckInDay));
     }
-
-
 }
