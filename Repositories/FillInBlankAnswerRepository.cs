@@ -14,4 +14,12 @@ public class FillInBlankAnswerRepository(SeiunDbContext dbContext, IMinioClient 
     { 
         DbContext.FillInBlankAnswers.AddRange(answers);
     }
+
+    public async Task<List<FillInBlankAnswerEntity>?> GetByQuestionIdAsync(Guid questionId)
+    {
+        return await DbContext.FillInBlankAnswers
+            .Where(a => a.QuestionId == questionId)
+            .OrderBy(a => a.Key)
+            .ToListAsync();
+    }
 }

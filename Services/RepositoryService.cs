@@ -1,3 +1,4 @@
+using System.Runtime.Intrinsics.X86;
 using Minio;
 using Seiun.Entities;
 using Seiun.Repositories;
@@ -28,9 +29,6 @@ public class RepositoryService(SeiunDbContext seiunDbContext, IMinioClient minio
     private readonly Lazy<IWordRepository> _wordRepository = new(() => new WordRepository(seiunDbContext, minioClient));
     public IWordRepository WordRepository => _wordRepository.Value;
 
-    private readonly Lazy<ITagRepository> _tagRepository = new(() => new TagRepository(seiunDbContext, minioClient));
-    public ITagRepository TagRepository => _tagRepository.Value;
-
     private readonly Lazy<IUserTagRepository> _userTagRepository = new(() => new UserTagRepository(seiunDbContext, minioClient));
     public IUserTagRepository UserTagRepository => _userTagRepository.Value;
 
@@ -44,7 +42,7 @@ public class RepositoryService(SeiunDbContext seiunDbContext, IMinioClient minio
     public IFinishedWordRepository FinishedWordRepository => _finishedWordRepository.Value;
     
     private readonly Lazy<IAIArticleRepository> _aiArticleRepository = new(() => new AIArticleRepository(seiunDbContext, minioClient));
-    public IAIArticleRepository AIArticleRepository => _aiArticleRepository.Value;
+    public IAIArticleRepository AiArticleRepository => _aiArticleRepository.Value;
 
     private readonly Lazy<IUserCheckInRepository> _userCheckInRepository = new(() => new UserCheckInRepository(seiunDbContext, minioClient));
     public IUserCheckInRepository UserCheckInRepository => _userCheckInRepository.Value;
@@ -57,4 +55,19 @@ public class RepositoryService(SeiunDbContext seiunDbContext, IMinioClient minio
     
     private readonly Lazy<IFillInBlankWordRepository> _fillInBlankWordRepository = new(() => new FillInBlankWordRepository(seiunDbContext, minioClient));
     public IFillInBlankWordRepository FillInBlankWordRepository => _fillInBlankWordRepository.Value;
+    
+    private readonly Lazy<IWordDistractorRepository> _wordDistractorRepository = new(() => new WordDistractorRepository(seiunDbContext, minioClient));
+    public IWordDistractorRepository WordDistractorRepository => _wordDistractorRepository.Value;
+    
+    private readonly Lazy<IUserQuestionRepository> _userQuestionRepository = new(() => new UserQuestionRepository(seiunDbContext, minioClient));
+    public IUserQuestionRepository UserQuestionRepository => _userQuestionRepository.Value;
+    
+    private readonly Lazy<IClozeTestSelectionRepository> _clozeTestSelectionRepository = new(() => new ClozeTestSelectionRepository(seiunDbContext, minioClient));
+    public IClozeTestSelectionRepository ClozeTestSelectionRepository => _clozeTestSelectionRepository.Value;
+    
+    private readonly Lazy<IClozeTestRepository> _clozeTestRepository = new(() => new ClozeTestRepository(seiunDbContext, minioClient));
+    public IClozeTestRepository ClozeTestRepository => _clozeTestRepository.Value;
+    
+    private readonly Lazy<IClozeTestAnswerRepository> _clozeTestAnswerRepository = new(() => new ClozeTestAnswerRepository(seiunDbContext, minioClient));
+    public IClozeTestAnswerRepository ClozeTestAnswerRepository => _clozeTestAnswerRepository.Value;
 }   

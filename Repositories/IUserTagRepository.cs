@@ -1,11 +1,13 @@
 using Seiun.Entities;
+using Seiun.Utils.Enums;
 
 namespace Seiun.Repositories;
 
 public interface IUserTagRepository : IBaseRepository<UserTagEntity>
 {
-    Task<List<TagEntity>> GetUnselectedTagsAsync(Guid userId);
-    Task<List<UserTagEntity>> GetSelectedTagsAsync(Guid userId);
-    Task CancelTagAsync(Guid userId, Guid tagId);
-    Task<UserTagEntity?> GetStudyingTagByUserIdAsync(Guid userId);
+    Task<List<UserTagEntity>?> GetUserTagOfAllWordBankAsync(Guid userId);
+    
+    Task<UserTagEntity?> GetTagByUserIdAndWordLevelAsync(Guid userId, WordLevel wordLevel);
+    
+    Task<UserTagEntity?> GetCurrentUserTagAsync(Guid userId);
 }

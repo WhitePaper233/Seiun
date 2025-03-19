@@ -11,7 +11,7 @@ public class UserCheckInRepository(SeiunDbContext dbContext, IMinioClient minioC
     public async Task<bool> CheckInTodayAsync(Guid userId)
     {
         // 本地时间
-        var today = DateTime.Today; 
+        var today = DateTime.Today;
         // 明天的 
         var tomorrow = today.AddDays(1); 
 

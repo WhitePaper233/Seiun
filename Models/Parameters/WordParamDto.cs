@@ -5,7 +5,8 @@ using Seiun.Resources;
 public class WordResultDto
 {
     [Required(ErrorMessage = ErrorMessages.ValidationError.WordIdRequired)]
-    public required Guid WordId;
+    public required Guid WordId { get; set; }
+
     [Required(ErrorMessage = ErrorMessages.ValidationError.SessionIdRequired)]
-    public required Guid SessionId;
+    public required Guid SessionId { get; set; }
 }

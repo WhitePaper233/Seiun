@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using Seiun.Utils;
 using Seiun.Resources;
 
@@ -13,7 +14,10 @@ public class PublicAnnouncementEntity : BaseEntity
 	[MaxLength(Constants.PublicAnnotation.MaxAnnotationLength, ErrorMessage = ErrorMessages.ValidationError.OverPublicAnnouncementLength)]
 	public required string Content { get; set; }
 	// 发布时间
-	public required DateTime PublishTime { get; set; }
+	public required DateTimeOffset PublishTime { get; set; }
 	// 发布人
 	public required Guid AdminId { get; set; }
+
+	[ForeignKey(nameof(this.AdminId))]
+	public virtual UserEntity Admin { get; set; } = null!;
 }

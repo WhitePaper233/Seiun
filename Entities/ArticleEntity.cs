@@ -1,3 +1,6 @@
+using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
+
 namespace Seiun.Entities;
 
 public class ArticleEntity: BaseEntity
@@ -11,11 +14,20 @@ public class ArticleEntity: BaseEntity
 	// 发布者ID
 	public required Guid CreatorId { get; set; }
 	// 发布时间
-	public required DateTime CreateTime { get; set; }
+	public required DateTimeOffset CreateTime { get; set; }
 	// 置顶
 	public required bool IsPinned { get; set; }
 	// 置顶时间
-	public DateTime? PinTime { get; set; }
+	public DateTimeOffset? PinTime { get; set; }
+	
+	[ForeignKey(nameof(this.CreatorId))]
+	public virtual UserEntity Creator { get; set; } = null!;
+
+	[JsonIgnore]
+	public virtual ICollection<ArticleLikeEntity> Likes { get; set; } = [];
+	
+	[JsonIgnore]	
+	public virtual ICollection<CommentEntity> Comments { get; set; } = [];
 }
 
 public class ArticleLikeEntity: BaseEntity
@@ -25,5 +37,8 @@ public class ArticleLikeEntity: BaseEntity
 	// 文章ID
 	public required Guid LikedArticleId {get; set; }
 	// 点赞时间
-	public required DateTime LikedTime {get; set; }
+	public required DateTimeOffset LikedTime {get; set; }
+	
+	[ForeignKey(nameof(this.LikedArticleId))]
+	public virtual ArticleEntity LikedArticle { get; set; } = null!;
 }

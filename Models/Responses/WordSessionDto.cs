@@ -60,12 +60,12 @@ public class AnswerDetail
 public sealed class GetNextWordResp(int code, string message, NextWordDetail? nextWordDetail)
 	: BaseRespWithData<NextWordDetail>(code, message, nextWordDetail)
 {
-	public static GetNextWordResp Success(WordEntity nextWord)
+	public static GetNextWordResp Success(WordEntity nextWord, List<WordEntity> distractorWords)
 	{
-		var distractedWords = nextWord.Distractors.Select(d => d.DistractedWord).ToList();
-		var options = distractedWords.Select(d => 
+		var options = distractorWords.Select(d => 
 			new OptionDetail { WordId = d.Id, Word = d.WordText, Pronunciation = d.Pronunciation, Definition = d.Definition })
 		.ToList();
+		options.Add(new OptionDetail { WordId = nextWord.Id, Word = nextWord.WordText, Pronunciation = nextWord.Pronunciation, Definition = nextWord.Definition});
 		var answer = new AnswerDetail { WordId = nextWord.Id, Word = nextWord.WordText };
 		
 		return new GetNextWordResp(StatusCodes.Status200OK, SuccessMessages.Controller.StudySession.GetNextWordSuccess,

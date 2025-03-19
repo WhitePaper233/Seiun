@@ -61,7 +61,7 @@ public class CommentController(ILogger<CommentController> logger, IRepositorySer
             PostId = commentCreate.ArticleId,
             LikeCount = 0,
             DislikeCount = 0,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = DateTimeOffset.UtcNow
         };
         repository.CommentRepository.Create(comment);
         if (await repository.CommentRepository.SaveAsync())
