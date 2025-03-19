@@ -1,60 +1,93 @@
+using Seiun.Entities;
+using Seiun.Utils.Enums;
+using Seiun.Resources;
+using Seiun.Utils;
+
 namespace Seiun.Models.Responses;
 
-public class UserUnSelectTagRespDto
+# region GetAllWordBank 
+
+public class WordBank
 {
-    public required string TagName { get; set; }
-    public required int WordCount { get; set; }
-}
-
-public sealed class UserUnSelectTagListResp(int code, string message, List<UserUnSelectTagRespDto>? userUnselectedTagList)
-    : BaseRespWithData<List<UserUnSelectTagRespDto>>(code, message, userUnselectedTagList)
-{
-    public static UserUnSelectTagListResp Success(string message, List<UserUnSelectTagRespDto> userUnselectedTagList)
-    {
-        return new UserUnSelectTagListResp(200, message, userUnselectedTagList);
-    }
-
-    public static UserUnSelectTagListResp Fail(int code, string message)
-    {
-        return new UserUnSelectTagListResp(code, message, null);
-    }
-
-}
-
-public class UserSelectedTagRespDto
-{
-    public required string TagName { get; set; }
-    public required int LearnedCount { get; set; }
-    public required int TotalCount { get; set; }
-}
-
-public sealed class UserSelectedTagListResp(int code, string message, List<UserSelectedTagRespDto>? userSelectedTagList)
-    : BaseRespWithData<List<UserSelectedTagRespDto>>(code, message, userSelectedTagList)
-{
-    public static UserSelectedTagListResp Success(string message, List<UserSelectedTagRespDto> userSeletedTagList)
-    {
-        return new UserSelectedTagListResp(200, message, userSeletedTagList);
-    }
-
-    public static UserSelectedTagListResp Fail(int code, string message)
-    {
-        return new UserSelectedTagListResp(code, message, null);
-    }
-
-}
-
-public sealed class SeletedTagDetailResp(int code, string message, UserSelectedTagRespDto? userSelectedTag)
-    : BaseRespWithData<UserSelectedTagRespDto>(code, message, userSelectedTag)
-{
-    public static SeletedTagDetailResp Success(string message, UserSelectedTagRespDto userSelectedTag)
-    {
-        return new SeletedTagDetailResp(200, message, userSelectedTag);
-    }
-
-    public static SeletedTagDetailResp Fail(int code, string message)
-    {
-        return new SeletedTagDetailResp(code, message, null);
-    }
+    public required WordLevel WordLevel { get; set; }
     
+    public required int WordCount { get; set; }
+
+    public int LearnedWordCount { get; set; } = 0;
+
+    public int DailyPlan { get; set; } = 0;
+
+    public int RemainingDays { get; set; } = 0;
+
+    public DateTimeOffset? LastStudyAt { get; set; } = null;
 }
 
+public class AllWordBankDetail
+{
+    public required List<WordBank> WordBanks { get; set; }
+}
+
+public sealed class WordBanksResp(int code, string message, AllWordBankDetail? wordBanks)
+    : BaseRespWithData<AllWordBankDetail>(code, message, wordBanks)
+{
+    public static WordBanksResp Success(List<WordBank> wordBanks)
+    {
+        return new WordBanksResp(StatusCodes.Status200OK, SuccessMessages.Controller.UserTag.GetWordBanksSuccess,
+            new AllWordBankDetail
+            {
+                WordBanks = wordBanks
+            });
+    }
+
+    public static WordBanksResp Fail(int code, string message)
+    {
+        return new WordBanksResp(code, message, null);
+    }
+}
+
+# endregion
+
+# region GetCurrentWordBank
+
+public class CurrentWordBankDetail
+{
+    public required WordLevel WordLevel { get; set; }
+
+    public required int SetDailyPlan { get; set; }
+
+    public required int SetTotalDays { get; set; }
+    
+    public required int RemainingDays { get; set; }
+
+    public required int LearnedCount { get; set; }
+    
+    public required DateTimeOffset ExpectedCompletionAt { get; set; }
+    
+    public required DateTimeOffset? LastStudyAt { get; set; }
+}
+
+public sealed class CurrentWordBankResp(int code, string message, CurrentWordBankDetail? wordBanks)
+    : BaseRespWithData<CurrentWordBankDetail>(code, message, wordBanks)
+{
+    public static CurrentWordBankResp Success(UserTagEntity userTag)
+    {
+        return new CurrentWordBankResp(StatusCodes.Status200OK, SuccessMessages.Controller.UserTag.GetCurrentWordBankSuccess,
+            new CurrentWordBankDetail
+            {
+                WordLevel = userTag.WordLevel,
+                SetDailyPlan = userTag.SetDailyPlan,
+                SetTotalDays = userTag.SetTotalDays,
+                RemainingDays = userTag.RemainingDays,
+                LearnedCount = userTag.LearnedCount,
+                ExpectedCompletionAt = userTag.ExpectedCompletionAt,
+                LastStudyAt = userTag.LastStudyAt,
+            });
+    }
+
+    public static CurrentWordBankResp Fail(int code, string message)
+    {
+        return new CurrentWordBankResp(code, message, null);
+    }
+}
+
+# endregion

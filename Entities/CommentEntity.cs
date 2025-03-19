@@ -1,4 +1,6 @@
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 using Seiun.Resources;
 using Seiun.Utils.Enums;
 
@@ -18,7 +20,16 @@ public class CommentEntity : BaseEntity
     [Range(0, int.MaxValue, ErrorMessage = ErrorMessages.ValidationError.InvalidDisLikeCount)]
     public int DislikeCount { get; set; } = 0;
 
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
+    
+    [JsonIgnore]
+    public virtual ICollection<CommentLikeEntity> CommentLikes { get; set; } = [];
+    
+    [ForeignKey(nameof(this.PostId))]
+    public virtual ArticleEntity Article { get; set; } = null!;
+    
+    [JsonIgnore]
+    public virtual ICollection<ReplyEntity> Replies { get; set; } = [];
 }
 
 public class CommentLikeEntity : BaseEntity
@@ -29,5 +40,8 @@ public class CommentLikeEntity : BaseEntity
 
     public ActionType Action { get; set; } 
 
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow; 
+    public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow; 
+    
+    [ForeignKey(nameof(this.UserId))]
+    public virtual CommentEntity Comment { get; set; } = null!;
 }

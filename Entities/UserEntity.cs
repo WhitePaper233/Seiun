@@ -2,6 +2,7 @@ using System.ComponentModel.DataAnnotations;
 using Seiun.Resources;
 using Seiun.Utils;
 using Seiun.Utils.Enums;
+using System.Text.Json.Serialization;
 
 namespace Seiun.Entities;
 
@@ -36,7 +37,31 @@ public class UserEntity : BaseEntity
     public required bool IsBanned { get; set; }
 
     public DateTimeOffset CreatedAt { get; set; }
+    
+    [JsonIgnore]
+    public virtual ICollection<ArticleEntity> Articles { get; set; } = [];
+    
+    [JsonIgnore]
+    public virtual ICollection<AiArticleEntity> AiArticles { get; set; } = []; 
+    
+    [JsonIgnore]
+    public virtual ICollection<ErrorWordRecordEntity> ErrorWordRecords { get; set; } = [];
+    
+    [JsonIgnore]
+    public virtual ICollection<FinishedWordRecordEntity> FinishedWordRecords { get; set; } = [];
+    
+    [JsonIgnore]
+    public virtual ICollection<PublicAnnouncementEntity> PublicAnnouncements { get; set; } = [];
+    
+    [JsonIgnore]
+    public virtual ICollection<UserQuestionEntity> UserQuestions { get; set; } = [];
 
-    public virtual ICollection<UserTagEntity> UserTags { get; set; } = [];
+    [JsonIgnore]
+    public virtual ICollection<UserTagEntity> UserTags { get; set; } = null!;
+
+    [JsonIgnore] 
+    public virtual WordSessionEntity WordSession { get; set; } = null!;
+    
+    [JsonIgnore]
     public virtual ICollection<UserCheckInEntity> CheckIns { get; set; } = [];
 }

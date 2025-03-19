@@ -40,12 +40,7 @@ public static class Constants
         public const int MaxArticleImageSize = 8 * 1024 * 1024; // 8MB
         public const int ArticleImageMaxWidth = 3 * 1024;
         public const int ArticleImageMaxHeight = 3 * 1024;
-        public const int ArticleImgStorageWidth = 512;
         public static readonly string[] AllowedArticleImageExtensions = [".jpg", ".jpeg", ".png", "webp"];
-        public const int MaxArticleCoverSize = 5 * 1024 * 1024;
-        public const int MaxArticleCoverHeight = 1024;
-        public const int MaxArticleCoverWidth = 1024;
-        public const int ArticleCoverStorageSize = 256;
         public const int MaxArticleLength = 5000;
         public const int MaxCoverUrlLength = 1000;
     }
@@ -61,5 +56,7 @@ public static class Constants
         public const int MaxWordTextLength = 50;
         public const int MaxWordPronunciationLength = 50;
         public const int MaxWordDefinitionLength = 50;
+        public const int FourLevelWordCount = 4428;
+        public const int SixLevelWordCount = 5523;
     }
 }

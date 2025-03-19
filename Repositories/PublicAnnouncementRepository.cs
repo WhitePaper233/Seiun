@@ -10,7 +10,7 @@ public class PublicAnnouncementRepository(SeiunDbContext dbContext, IMinioClient
 {
 	public async Task<List<PublicAnnouncementEntity>?> GetRecentlyPublicAnnouncement()
 	{
-		DateTime sevenDaysAgo = DateTime.UtcNow.AddDays(-7);
+		DateTimeOffset sevenDaysAgo = DateTimeOffset.UtcNow.AddDays(-7);
 
 		return await DbContext.PublicAnnouncements
 		.Where(a => a.PublishTime >= sevenDaysAgo)

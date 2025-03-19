@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using Seiun.Resources;
 
 namespace Seiun.Entities
@@ -16,6 +17,9 @@ namespace Seiun.Entities
 
         public Guid? ParentReplyId { get; set; }
 
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
+        
+        [ForeignKey(nameof(this.CommentId))]
+        public virtual CommentEntity Comment { get; set; } = null!;
     }
 }

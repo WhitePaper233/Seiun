@@ -11,16 +11,16 @@ using Seiun.Entities;
 namespace Seiun.Controllers;
 
 [ApiController,Route("api/session")]
-public class WordSessionController(ILogger<WordSessionController> logger, IRepositoryService repository, ICurrentStudySessionService currentStudySession, IAIRequestService aiRequest)
+public class WordSessionController(ILogger<WordSessionController> logger, IRepositoryService repository, ICurrentStudySessionService currentStudySession, IAiRequestService aiRequest)
 	: ControllerBase
 {
 	/// <summary>
 	/// 开始学习单词会话
 	/// </summary>
 	/// <returns>会话信息</returns>
-	[HttpPost("start", Name = "StartStudy")]
+	[HttpPost("init", Name = "InitStudy")]
 	[Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-	[Authorize(Roles = $"{nameof(UserRole.User)},{nameof(UserRole.Creator)}{nameof(UserRole.Admin)},{nameof(UserRole.SuperAdmin)}")]
+	[Authorize(Roles = $"{nameof(UserRole.User)},{nameof(UserRole.Creator)},{nameof(UserRole.Admin)},{nameof(UserRole.SuperAdmin)}")]
 	[ProducesResponseType(typeof(StartStudyResp), StatusCodes.Status200OK)]
 	[ProducesResponseType(typeof(BaseResp), StatusCodes.Status403Forbidden)]
 	[ProducesResponseType(typeof(BaseResp), StatusCodes.Status404NotFound)]
@@ -36,7 +36,7 @@ public class WordSessionController(ILogger<WordSessionController> logger, IRepos
 			));
 		}
 
-		var selectedTag = await repository.UserTagRepository.GetStudyingTagByUserIdAsync(userId.Value);
+		var selectedTag = await repository.UserTagRepository.GetCurrentUserTagAsync(userId.Value);
 		if(selectedTag==null)
 		{
 			return NotFound(StartStudyResp.Fail(
@@ -44,43 +44,49 @@ public class WordSessionController(ILogger<WordSessionController> logger, IRepos
 				ErrorMessages.Controller.UserTag.UserTagNotFound
 			));
 		}
-	    
+		
 		var session = new WordSessionEntity
 		{
             UserId = userId.Value,
-			WordSessionAt = DateTime.Now,
+			WordSessionAt = DateTimeOffset.UtcNow
 		};
-		var wordQUeue = new Queue<WordEntity>();
+		var wordQueue = new Queue<WordEntity>();
 
-		int reviewingWordCount = 0;
-		var reviewingWords = await repository.ErrorWordRepository.GetErrorWordIdsByUserIdAsync(userId.Value);
-		if(reviewingWords!=null&&reviewingWords.Count>0)
+		var reviewingWordCount = 0;
+		var reviewingWordIds = await repository.ErrorWordRepository.GetErrorWordIdsByUserIdAsync(userId.Value);
+		if(reviewingWordIds != null)
 		{
-			reviewingWordCount = reviewingWords.Count;
-			foreach(var wordId in reviewingWords)
+			reviewingWordCount = reviewingWordIds.Count;
+			var reviewingWords = (await repository.WordRepository.GetByGuidsAsync(reviewingWordIds)).ToList();
+			
+			foreach (var studyingWord in reviewingWords)
 			{
-				var word = await repository.WordRepository.GetByIdAsync(wordId);
-				if(word!=null)
-				{
-					wordQUeue.Enqueue(word);
-				}
+				wordQueue.Enqueue(studyingWord);
 			}
 		}
-
-		int studyingWordCount = 0;
-	    var studyWords = await repository.WordRepository.GetWordsByTagAsync(selectedTag.Tag.Name, userId.Value, selectedTag.DailyPlan);
-		if(studyWords!=null&&studyWords.Count>0)
+	    var studyWords = await repository.WordRepository.GetWordsByTagAsync(selectedTag.WordLevel, userId.Value, selectedTag.SetDailyPlan);
+		if(studyWords == null || studyWords.Count == 0)
 		{
-			studyingWordCount = studyWords.Count;
-			foreach(var word in studyWords)
-			{
-				wordQUeue.Enqueue(word);
-			}
+			logger.LogWarning("No studying words found for {}", selectedTag.WordLevel);
+			return StatusCode(StatusCodes.Status500InternalServerError, StartStudyResp.Fail(
+				StatusCodes.Status404NotFound,
+				ErrorMessages.Controller.WordSession.NotFoundStudyingWords
+			));
 		}
-
+		var studyingWordCount = studyWords.Count;
+		foreach(var word in studyWords)
+		{
+			wordQueue.Enqueue(word);
+		}
+		
+		// // 额外线程开始生成题目
+		// var words = studyWords.Select(x => x.WordText).ToList();
+		// _ = Task.Run(() => aiRequest.GenerateAiFillInBlankAsync(words, userId.Value, repository, logger));
+		// _ = Task.Run(() => aiRequest.GenerateAiClozeTest(words, userId.Value, repository, logger));
+		
 		repository.SessionRepository.Create(session);
-		var NewSessionResult = currentStudySession.AddSession(session.Id, wordQUeue, logger);
-		if(NewSessionResult && await repository.SessionRepository.SaveAsync())
+		var newSessionResult = currentStudySession.AddSession(session.Id, wordQueue, logger);
+		if(newSessionResult && await repository.SessionRepository.SaveAsync())
 		{
 			return Ok(StartStudyResp.Success(session.Id, reviewingWordCount, studyingWordCount));
 		}
@@ -97,14 +103,15 @@ public class WordSessionController(ILogger<WordSessionController> logger, IRepos
 	/// </summary>
 	/// <param name="sessionId">会话ID</param>
 	/// <returns>下一个单词信息</returns>
-	[HttpGet("nextword", Name = "GetNextWord")]
+	[HttpGet("next-word", Name = "GetNextWord")]
 	[Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-	[Authorize(Roles = $"{nameof(UserRole.User)},{nameof(UserRole.Creator)}{nameof(UserRole.Admin)},{nameof(UserRole.SuperAdmin)}")]
+	[Authorize(Roles = $"{nameof(UserRole.User)},{nameof(UserRole.Creator)},{nameof(UserRole.Admin)},{nameof(UserRole.SuperAdmin)}")]
 	[ProducesResponseType(typeof(BaseResp), StatusCodes.Status200OK)]
 	[ProducesResponseType(typeof(BaseResp), StatusCodes.Status403Forbidden)]
 	[ProducesResponseType(typeof(GetNextWordResp), StatusCodes.Status404NotFound)]
 	[ProducesResponseType(typeof(BaseResp), StatusCodes.Status500InternalServerError)]
-	public async Task<IActionResult> GetNextWord([FromQuery] Guid sessionId){
+	public async Task<IActionResult> GetNextWord([FromQuery] Guid sessionId)
+	{
         var userId = User.GetUserId();
 		if (userId == null)
 		{
@@ -131,103 +138,56 @@ public class WordSessionController(ILogger<WordSessionController> logger, IRepos
 				ErrorMessages.Controller.WordSession.NotFoundSession
 			));
 		}
-
-		try
+		var word = currentStudySession.GetNextWord(sessionId, logger);
+		if(word != null)
 		{
-			var word = currentStudySession.GetNextWord(sessionId, logger);
-			if(word != null)
+			var distractorWordIds = word.WordDistractors.Select(d => d.DistractorId).ToList();
+			var distractorWords = (await repository.WordRepository.GetByGuidsAsync(distractorWordIds)).ToList();
+			if (distractorWords.Count != 0)
 			{
-				return Ok(GetNextWordResp.Success(word));
+				return Ok(GetNextWordResp.Success(word, distractorWords));	
 			}
-			
-			var latestFinishedWordGroup = await repository.FinishedWordRepository.GetLatestFinishedWordIdAsync(userId.Value);
-			if(latestFinishedWordGroup == null)
-			{
-				return NotFound(AiArticleDetailResp.Fail(
-					StatusCodes.Status404NotFound,
-					ErrorMessages.Controller.Word.LatestWordNotFound
-				));
-			}
-			
-			var latestFinishedWordEntities = latestFinishedWordGroup.ToList();
-			var latestFinishedWords =
-				(await repository.WordRepository.GetByGuidsAsync([.. latestFinishedWordEntities.Select(x => x.WordId)]))
-				.ToList(); 
-			if(latestFinishedWords.Count == 0)
-			{
-				return NotFound(AiArticleDetailResp.Fail(
-					StatusCodes.Status404NotFound,
-					ErrorMessages.Controller.Word.LatestWordNotFound
-				));
-			}
-
-			var aiArticle = await aiRequest.GetAIArticleAsync([.. latestFinishedWords.Select(x => x.WordText)]);
-			if (aiArticle == null)
-			{
-				logger.LogError("AI Article is null");
-				return StatusCode(StatusCodes.Status500InternalServerError, ResponseFactory.NewFailedBaseResponse(
-					StatusCodes.Status500InternalServerError,
-					ErrorMessages.Controller.WordSession.CreateAiArticleFailed
-				));
-			}
-
-			var aiCover = await aiRequest.GetAICoverAsync(aiArticle);
-			if (string.IsNullOrEmpty(aiCover))
-			{
-				logger.LogError("AI Cover is null");
-				return StatusCode(StatusCodes.Status500InternalServerError, ResponseFactory.NewFailedBaseResponse(
-					StatusCodes.Status500InternalServerError,
-					ErrorMessages.Controller.WordSession.CreateAiCoverFailed
-				));
-			}
-
-			var aIArticleEntity = new AiArticleEntity
-			{
-				UserId = userId.Value,
-				SessionId = latestFinishedWordGroup.Key,
-				Article = aiArticle,
-				CoverUrl = aiCover,
-				CreatedAt = DateTime.UtcNow
-			};
-			repository.AIArticleRepository.Create(aIArticleEntity);
-			if(!await repository.AIArticleRepository.SaveAsync())
-			{
-				logger.LogWarning("User {} failed to Create AI article entity.", userId.Value);
-				return StatusCode(StatusCodes.Status500InternalServerError, ResponseFactory.NewFailedBaseResponse(
-					StatusCodes.Status500InternalServerError,
-					ErrorMessages.Controller.WordSession.CreateAiArticleFailed
-				));				
-			}
-			
+			logger.LogWarning("User {} get next word failed", userId);
+			return StatusCode(StatusCodes.Status500InternalServerError, GetNextWordResp.Fail(
+				StatusCodes.Status500InternalServerError,
+				ErrorMessages.Controller.WordSession.GetNextWordFailed
+			));
+		}
+		
+		try 
+		{
 			// 下一个单词为空，表示会话已经结束
-			var userCheckInEntity = new UserCheckInEntity
-			{
-				UserId = userId.Value,
-				CheckInDate = DateTime.Now,
-				User = user
-			};
+			// 生成AI文章
+			// _ = Task.Run(() => aiRequest.GenerateAiArticleAsync(userId.Value, repository, logger));
+			
 			// 打卡
-			if (await repository.UserCheckInRepository.CheckInTodayAsync(userId.Value))
-			{
-				repository.UserCheckInRepository.Create(userCheckInEntity);
-			}
-			else
-			{
-				repository.UserCheckInRepository.Update(userCheckInEntity);
-			}
+			// var userCheckInEntity = new UserCheckInEntity
+			// {
+			// 	UserId = userId.Value,
+			// 	CheckInDate = DateTimeOffset.UtcNow,
+			// 	User = user
+			// };
+			// if (await repository.UserCheckInRepository.CheckInTodayAsync(userId.Value))
+			// {
+			// 	repository.UserCheckInRepository.Create(userCheckInEntity);
+			// }
+			// else
+			// {
+			// 	repository.UserCheckInRepository.Update(userCheckInEntity);
+			// }
 
 			// 删除会话
 			currentStudySession.RemoveSession(session.Id, logger);
 			// 删除会话记录表
 			repository.SessionRepository.Delete(session);
 
-			if(!await repository.UserCheckInRepository.SaveAsync())
-			{
-				return StatusCode(StatusCodes.Status500InternalServerError, ResponseFactory.NewFailedBaseResponse(
-					StatusCodes.Status500InternalServerError,
-					ErrorMessages.Controller.User.UserCheckInFailed
-				));
-			}
+			// if(!await repository.UserCheckInRepository.SaveAsync())
+			// {
+			// 	return StatusCode(StatusCodes.Status500InternalServerError, ResponseFactory.NewFailedBaseResponse(
+			// 		StatusCodes.Status500InternalServerError,
+			// 		ErrorMessages.Controller.User.UserCheckInFailed
+			// 	));
+			// }
 			if(!await repository.SessionRepository.SaveAsync())
 			{
 				return StatusCode(StatusCodes.Status500InternalServerError, ResponseFactory.NewFailedBaseResponse(
@@ -236,6 +196,32 @@ public class WordSessionController(ILogger<WordSessionController> logger, IRepos
 				));
 			}
 			
+			// 更新	UserTag
+			var userTag = await repository.UserTagRepository.GetCurrentUserTagAsync(userId.Value);
+			if (userTag == null)
+			{
+				return StatusCode(StatusCodes.Status404NotFound, ResponseFactory.NewFailedBaseResponse(
+					StatusCodes.Status404NotFound,
+					ErrorMessages.Controller.UserTag.CurrentUserTagNotFound
+				));
+			}
+
+			userTag.LearnedCount += userTag.SetDailyPlan;
+			userTag.RemainingDays = (userTag.WordLevel == WordLevel.FourLevel
+				? Constants.Word.FourLevelWordCount
+				: Constants.Word.SixLevelWordCount - userTag.LearnedCount) / userTag.SetDailyPlan;
+			userTag.ExpectedCompletionAt = DateTimeOffset.UtcNow.AddDays(userTag.RemainingDays);
+			userTag.LastStudyAt = DateTimeOffset.UtcNow;
+			
+			repository.UserTagRepository.Update(userTag);
+			if (!await repository.UserTagRepository.SaveAsync())
+			{
+				return StatusCode(StatusCodes.Status500InternalServerError, ResponseFactory.NewFailedBaseResponse(
+					StatusCodes.Status500InternalServerError,
+					ErrorMessages.Controller.UserTag.UpdateUserTagFailed
+				));
+			}
+
 			// 返回会话结束信息
 			return Ok(SuccessMessages.Controller.WordSession.WordSessionOver);
 		}
@@ -256,7 +242,7 @@ public class WordSessionController(ILogger<WordSessionController> logger, IRepos
 	/// <returns>操作结果</returns>
 	[HttpPost("correct", Name = "Correct")]
 	[Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-	[Authorize(Roles = $"{nameof(UserRole.User)},{nameof(UserRole.Creator)}{nameof(UserRole.Admin)},{nameof(UserRole.SuperAdmin)}")]
+	[Authorize(Roles = $"{nameof(UserRole.User)},{nameof(UserRole.Creator)},{nameof(UserRole.Admin)},{nameof(UserRole.SuperAdmin)}")]
 	[ProducesResponseType(typeof(BaseResp), StatusCodes.Status200OK)]
 	[ProducesResponseType(typeof(BaseResp), StatusCodes.Status403Forbidden)]
 	[ProducesResponseType(typeof(BaseResp), StatusCodes.Status404NotFound)]
@@ -275,12 +261,12 @@ public class WordSessionController(ILogger<WordSessionController> logger, IRepos
 		if(session==null || session.UserId!=userId.Value)
 		{
 			if(session==null || session.UserId!=userId.Value)
-		{
-			return StatusCode(StatusCodes.Status404NotFound, ResponseFactory.NewFailedBaseResponse(
-                StatusCodes.Status404NotFound,
-                ErrorMessages.Controller.WordSession.NotFoundSession
-            ));
-		}
+			{
+				return StatusCode(StatusCodes.Status404NotFound, ResponseFactory.NewFailedBaseResponse(
+	                StatusCodes.Status404NotFound,
+	                ErrorMessages.Controller.WordSession.NotFoundSession
+	            ));
+			}
 		}
 
 		var finishedRecord = new FinishedWordRecordEntity
@@ -311,7 +297,7 @@ public class WordSessionController(ILogger<WordSessionController> logger, IRepos
 	/// <returns>操作结果</returns>
 	[HttpPost("error", Name = "Error")]
 	[Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-	[Authorize(Roles = $"{nameof(UserRole.User)},{nameof(UserRole.Creator)}{nameof(UserRole.Admin)},{nameof(UserRole.SuperAdmin)}")]
+	[Authorize(Roles = $"{nameof(UserRole.User)},{nameof(UserRole.Creator)},{nameof(UserRole.Admin)},{nameof(UserRole.SuperAdmin)}")]
 	[ProducesResponseType(typeof(BaseResp), StatusCodes.Status200OK)]
 	[ProducesResponseType(typeof(BaseResp), StatusCodes.Status403Forbidden)]
 	[ProducesResponseType(typeof(BaseResp), StatusCodes.Status404NotFound)]

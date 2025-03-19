@@ -6,60 +6,61 @@ namespace Seiun.Services;
 
 public class CurrentStudySessionService : ICurrentStudySessionService
 {
-	private readonly Dictionary<Guid,Queue<WordEntity>> _CurrentStudySessions = [];
+	private Dictionary<Guid,Queue<WordEntity>> _currentStudySessions = [];
 
 	// 添加Session
     public bool AddSession(Guid SessionId, Queue<WordEntity> Words, ILogger<WordSessionController> logger)
 	{
-		if(_CurrentStudySessions.ContainsKey(SessionId))
+		if(_currentStudySessions.ContainsKey(SessionId))
 		{
 			logger.LogWarning("Session {} already exists",SessionId);
 			return false;
 		}
-		_CurrentStudySessions.Add(SessionId,Words);
+		_currentStudySessions.Add(SessionId,Words);
 		return true;
 	}
 
     // 获取下一个单词
 	public WordEntity? GetNextWord(Guid SessionId, ILogger<WordSessionController> logger)
 	{
-		if(_CurrentStudySessions.ContainsKey(SessionId)==false)
+		if(_currentStudySessions.ContainsKey(SessionId))
 		{
-			logger.LogWarning("Session {} does not exist",SessionId);
-			return null;
+			return _currentStudySessions[SessionId].Count == 0 ? null : _currentStudySessions[SessionId].Peek();
 		}
-		return _CurrentStudySessions[SessionId].Peek();
+		
+		logger.LogWarning("Session {} does not exist",SessionId);
+		return null;
 	}
 
 	// 删除正确单词
 	public void DeleteCorrectWord(Guid SessionId, ILogger<WordSessionController> logger)
 	{
-		if(_CurrentStudySessions.ContainsKey(SessionId)==false)
+		if(_currentStudySessions.ContainsKey(SessionId)==false)
 		{	
 			logger.LogWarning("Session {} does not exist",SessionId);
 			return;
 		}
-		_CurrentStudySessions[SessionId].Dequeue();
+		_currentStudySessions[SessionId].Dequeue();
 	}
 
     // 插入错误单词到队尾
 	public void InsertErrorWord(Guid SessionId, ILogger<WordSessionController> logger)
 	{
-		if(_CurrentStudySessions.ContainsKey(SessionId)==false)
+		if(_currentStudySessions.ContainsKey(SessionId)==false)
 		{	
 			logger.LogWarning("Session {} does not exist",SessionId);
 			return;
 		}
-		var Word = _CurrentStudySessions[SessionId].Dequeue();
-		_CurrentStudySessions[SessionId].Enqueue(Word);
+		var Word = _currentStudySessions[SessionId].Dequeue();
+		_currentStudySessions[SessionId].Enqueue(Word);
 	}
 
     // 会话结束，移除Session
 	public void RemoveSession(Guid SessionId, ILogger<WordSessionController> logger)
 	{
-		if(_CurrentStudySessions.ContainsKey(SessionId)&&_CurrentStudySessions[SessionId].Count==0)
+		if(_currentStudySessions.ContainsKey(SessionId)&&_currentStudySessions[SessionId].Count==0)
 		{
-			_CurrentStudySessions.Remove(SessionId);
+			_currentStudySessions.Remove(SessionId);
 		}
 		else
 		{
@@ -70,9 +71,9 @@ public class CurrentStudySessionService : ICurrentStudySessionService
 	// 定时清理Session
 	public async Task ClearSessionAsync(IWordSessionRepository sessionRepository, ILogger logger)
 	{
-		var endTime = DateTime.Now;
+		var endTime = DateTimeOffset.UtcNow;
 		var clearingSessions = new List<Guid>();
-		foreach(var Session in _CurrentStudySessions)
+		foreach(var Session in _currentStudySessions)
 		{
 			try
 			{
@@ -100,7 +101,7 @@ public class CurrentStudySessionService : ICurrentStudySessionService
 		
 		foreach(var SessionId in clearingSessions)
 		{
-			_CurrentStudySessions.Remove(SessionId);
+			_currentStudySessions.Remove(SessionId);
 		}
 
 		if(await sessionRepository.SaveAsync())

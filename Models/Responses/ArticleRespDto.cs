@@ -92,7 +92,7 @@ public class ArticleDetail
 	public required Guid CreatorId { get; set; }
 	public required string Article { get; set; }
 	public List<string>? ArticleImgURLs { get; set; }
-	public required DateTime CreateTime { get; set; }
+	public required DateTimeOffset CreateTime { get; set; }
 	public required int Like { get; set; }
 	public required bool IsPinned { get; set; }
 }

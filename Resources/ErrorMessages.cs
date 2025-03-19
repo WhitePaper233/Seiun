@@ -25,13 +25,16 @@ public static class ErrorMessages
         public const string OverDescriptionLength = "error.validation.over_description_length";
         public const string OverEmailLength = "error.validation.over_email_length";
         public const string OverContentLength = "error.validation.over_content_length";
-        public const string OverTagNameLength = "error.validation.over_tag_length";
+        public const string OverWordDefinitionLength = "error.validation.over_word_definition_length";
+        public const string OverWordTextLength= "error.validation.over_word_text_length";
         
         public const string AtLeastOnePropertyRequired = "error.validation.at_least_one_property_is_required";
         public const string UserIdRequired = "error.validation.user_id_required";
-        public const string UserTagTotalDaysRequired = "error.validation.tag_total_days_required";
-        public const string UserTagDailyPlanRequired = "error.validation.tag_daily_plan_required";
-
+        public const string UserTagSetTotalDaysRequired = "error.validation.tag_total_days_required";
+        public const string UserTagExpectedCompletionAtRequired = "error.validation.user_tag_expected_completion_at_required";
+        public const string UserTagWordLevelRequired = "error.validation.user_tag_word_level_required";
+        public const string UserTagSetDailyPlanRequired = "error.validation.user_tag_set_daily_plan_required";
+        
         public const string CommentIdRequired = "error.validation.comment_id_required";
 
         public const string ContentRequired = "error.validation.Content_required";
@@ -57,7 +60,7 @@ public static class ErrorMessages
             public const string ImageSizeTooLarge = "error.controller.any.image_size_too_large";
             public const string UnknownFileProcessingError = "error.controller.any.unknown_file_processing_error";
             public const string InvalidJwtToken = "error.controller.any.invalid_jwt_token";
-            public const string FileFormatNotJson = "error.controller.any.file_format_not_json";
+            public const string InvalidReqType = "error.controller.any.invalid_req_type";
         }
         public static class User
         {
@@ -123,19 +126,16 @@ public static class ErrorMessages
         {
             public const string FinishedWordCreatFailed = "error.controller.word.finishedword.create_failed";
             public const string ErrorWordCreatFailed = "error.controller.word.errorword.create_failed";
-            public const string WordNotFound = "error.controller.word.not_found";
-            public const string LatestWordNotFound = "error.controller.word.latest_word_not_found";
         }
-
-        public static class Tag
-        {
-            public const string TagNotFound = "error.controller.tag.not_found";
-        }
+        
         public static class UserTag
         {
-            public const string CreateFailed = "error.controller.user_tag.create_failed";
-            public const string DeleteFailed = "error.controller.user_tag.delete_failed";
             public const string UserTagNotFound = "error.controller.user_tag.not_found";
+            public const string GetAllWordBankFailed = "error.controller.user_tag.get_all_word_bank_failed";
+            public const string SelectWordBankFailed = "error.controller.user_tag.select_word_bank_failed";
+            public const string CurrentUserTagNotFound = "error.controller.user_tag.user_tag_not_found";
+            public const string UpdatePlanFailed = "error.controller.user_tag.update_plan_failed";
+            public const string UpdateUserTagFailed = "error.controller.user_tag.update_user_tag_failed";
         }
         public static class WordSession
         {
@@ -143,14 +143,14 @@ public static class ErrorMessages
             public const string NotFoundSession = "error.controller.session.not_found_session";
             public const string GetNextWordFailed = "error.controller.session.get_next_word_failed";
             public const string DeleteFailed = "error.controller.session.delete_failed";
-            public const string CreateAiArticleFailed = "error.controller.session.create_ai_article_failed";
-            public const string CreateAiCoverFailed = "error.controller.session.create_ai_cover_failed";
+            public const string NotFoundStudyingWords = "error.controller.session.not_found_studying_words";
         }
 
         public static class Question
         {
-            public const string NoWordsToQuestion = "error.controller.question.no_words_to_question";
-            public const string GetAiFillInBlankFailed = "error.controller.question.get_ai_fill_in_blank_failed";
+            public const string QuestionNotFound = "error.controller.question.not_found";
+            public const string QuestionWordNotFound = "error.controller.question.word_not_found";
+            public const string QuestionAnswerNotFound = "error.controller.question.answer_not_found";
         }
     }
 }

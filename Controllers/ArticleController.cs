@@ -22,7 +22,7 @@ namespace Seiun.Controllers;
 /// <param name="articleSearch">文章搜索服务</param>
 /// <param name="aiRequest">AI请求服务</param>
 [ApiController,Route("/api/article")]
-public class ArticleController(ILogger<ArticleController> logger, IRepositoryService repository, IElasticClient elasticClient, IArticleSearchService articleSearch, IAIRequestService aiRequest) : ControllerBase{
+public class ArticleController(ILogger<ArticleController> logger, IRepositoryService repository, IElasticClient elasticClient, IArticleSearchService articleSearch, IAiRequestService aiRequest) : ControllerBase{
 	
 	/// <summary>
 	/// 上传文章
@@ -61,7 +61,7 @@ public class ArticleController(ILogger<ArticleController> logger, IRepositorySer
 			ImageFileNames = articleCreate.ImageNames,
 			CoverFileName = articleCreate.CoverFileName,
 			CreatorId = userId.Value,
-			CreateTime = DateTime.Now,
+			CreateTime = DateTimeOffset.UtcNow,
 			IsPinned = false
 		};
 
@@ -382,7 +382,7 @@ public class ArticleController(ILogger<ArticleController> logger, IRepositorySer
 
 		try
 		{
-			List<Guid>? articleIds = null;
+			List<Guid>? articleIds;
 			switch (reqType)
 			{
 				case "":
@@ -486,14 +486,14 @@ public class ArticleController(ILogger<ArticleController> logger, IRepositorySer
 			));
 		}
 
-		var UserArticleStatus = new ArticleLikeEntity
+		var userArticleStatus = new ArticleLikeEntity
 		{
 			UserId = userId.Value,
 			LikedArticleId = articleId,
 			LikedTime = DateTime.UtcNow
 		};
 
-		repository.ArticleLikeRepository.Create(UserArticleStatus);
+		repository.ArticleLikeRepository.Create(userArticleStatus);
 		if(await repository.ArticleLikeRepository.SaveAsync())
 		{
 			return Ok(ResponseFactory.NewSuccessBaseResponse(SuccessMessages.Controller.Article.LikeSuccess));
@@ -604,7 +604,7 @@ public class ArticleController(ILogger<ArticleController> logger, IRepositorySer
 			));
 		}
 	
-		var aiArticleEntities = await repository.AIArticleRepository.GetByUserIdAsync(userId.Value);
+		var aiArticleEntities = await repository.AiArticleRepository.GetByUserIdAsync(userId.Value);
 		if (aiArticleEntities == null)
 		{
 			return NotFound(AiArticleDetailResp.Fail(
