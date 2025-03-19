@@ -82,7 +82,7 @@ builder.Services.AddCors(options =>
               .AllowAnyHeader()  // 允许所有请求头，包括 Authorization 头
               .AllowAnyMethod()  // 允许 GET、POST、PUT、DELETE 等
               .AllowCredentials()); // 允许前端携带 Cookie 或 Authorization 头
-}
+})
 
 // Configure PostgreSQL database
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
