@@ -30,6 +30,7 @@ public static class ErrorMessages
         
         public const string AtLeastOnePropertyRequired = "error.validation.at_least_one_property_is_required";
         public const string UserIdRequired = "error.validation.user_id_required";
+
         public const string UserTagSetTotalDaysRequired = "error.validation.tag_total_days_required";
         public const string UserTagExpectedCompletionAtRequired = "error.validation.user_tag_expected_completion_at_required";
         public const string UserTagWordLevelRequired = "error.validation.user_tag_word_level_required";
@@ -70,7 +71,13 @@ public static class ErrorMessages
             public const string PhoneNumberDuplicated = "error.controller.user.register.phone_number_already_exists";
             public const string RegisterFailed = "error.controller.user.register.register_failed";
             public const string UserCheckInFailed = "error.controller.user.checkin.checkin_failed";
-            public const string UserListFailed = "error.controller.user.list.get_userlist_failed";
+        }
+        public static class Admin
+        {
+            public const string ProfileUpdateFailed = "error.controller.admin.profile.update_failed";
+            public const string UserLoginFailed = "error.controller.admin.login_failed";
+            public const string AdminNotFound = "error.controller.admin.not_found";
+            public const string UserListFailed = "error.controller.admin.list.get_userlist_failed";
         }
         public static class Article
         {
