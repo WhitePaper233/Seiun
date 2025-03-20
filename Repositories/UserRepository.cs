@@ -67,4 +67,12 @@ public class UserRepository(SeiunDbContext dbContext, IMinioClient minioClient)
         avatarStream.Seek(0, SeekOrigin.Begin);  // 重置流位置
         return avatarStream;
     }
+
+    public async Task<List<UserEntity>> GetUsersByUserNameAsync(string? keyword)
+    {
+        return await DbContext.Users
+            .Where(u => string.IsNullOrEmpty(keyword) || u.UserName.Contains(keyword))
+            .ToListAsync();
+    }
+
 }

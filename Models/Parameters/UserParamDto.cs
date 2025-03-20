@@ -70,3 +70,10 @@ public class UserUpdateByAdmin
     [MaxLength(Constants.User.MaxDescriptionLength, ErrorMessage = ErrorMessages.ValidationError.OverDescriptionLength)]
     public string? Description { get; set; }
 }
+
+public class GetUsersByAdmin
+{
+    public required int Index { get; set; }
+    public required int Size { get; set; }
+    public string? Keyword { get; set; }
+}

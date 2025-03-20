@@ -9,4 +9,5 @@ public interface IUserRepository : IBaseRepository<UserEntity>
     Task<UserEntity?> GetByEmailAsync(string email);
     Task UpdateAvatarAsync(UserEntity user, Stream avatarData);
     Task<MemoryStream> GetAvatarAsync(string fileName);
+    Task<List<UserEntity>> GetUsersByUserNameAsync(string? keyword);
 }

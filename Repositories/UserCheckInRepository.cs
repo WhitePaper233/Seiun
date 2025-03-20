@@ -38,4 +38,19 @@ public class UserCheckInRepository(SeiunDbContext dbContext, IMinioClient minioC
             .Select(x => x.CheckInDate)
             .FirstOrDefaultAsync();
     }
+
+    // 获取多个用户的最后一次打卡时间
+    public async Task<Dictionary<Guid, DateTime?>> GetLastCheckInTimesAsync(List<Guid> userIds)
+    {
+        return await DbContext.UserCheckIns
+            .Where(x => userIds.Contains(x.UserId))
+            .GroupBy(x => x.UserId)
+            .Select(g => new
+            {
+                UserId = g.Key,
+                LastCheckInTime = g.Max(x => x.CheckInDate) 
+            })
+            .ToDictionaryAsync(x => x.UserId, x => (DateTime?)x.LastCheckInTime);
+    }
+
 }

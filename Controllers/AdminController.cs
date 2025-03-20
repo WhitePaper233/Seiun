@@ -7,6 +7,7 @@ using Seiun.Resources;
 using Seiun.Services;
 using Seiun.Utils;
 using Seiun.Utils.Enums;
+using static Seiun.Models.Responses.UserList;
 
 namespace Seiun.Controllers;
 
@@ -16,22 +17,37 @@ public class AdminController(ILogger<AdminController> logger, IRepositoryService
     : ControllerBase
 {
     [HttpGet("user-list", Name = "GetUserList")]
-    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-    [Authorize(Roles = $"{nameof(UserRole.SuperAdmin)}")]
+    // [Authorize(Roles = $"{nameof(UserRole.SuperAdmin)}")]
+    // [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     [ProducesResponseType(typeof(BaseResp), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(BaseResp), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(BaseResp), StatusCodes.Status403Forbidden)]
     [ProducesResponseType(typeof(BaseResp), StatusCodes.Status500InternalServerError)]
-    public async Task<IActionResult> GetUserList()
+    public async Task<IActionResult> GetUserList([FromQuery] GetUsersByAdmin parameters)
     {
         try
         {
-            var users = await repository.UserRepository.GetAllAsync();
+            // 获取所有符合条件的用户
+            var users = await repository.UserRepository.GetUsersByUserNameAsync(parameters.Keyword);
 
-            var userList = new List<UserList>();
-            foreach (var user in users)
+            // 如果没有找到用户，返回空列表和总数为0
+            if (users.Count == 0)
             {
-                userList.Add(new UserList
+                return Ok(UserListResp.Success(
+                    SuccessMessages.Controller.Admin.GetUserListSuccess,
+                    new UserListData
+                    {
+                        List = [], // 空列表
+                        Total = 0  // 总数为0
+                    }
+                ));
+            }
+
+            // 对结果进行分页
+            var pagedUsers = users
+                .Skip((parameters.Index - 1) * parameters.Size) // 跳过前面的页数
+                .Take(parameters.Size) // 获取当前页的数据
+                .Select(user => new UserList
                 {
                     UserId = user.Id,
                     Role = user.Role,
@@ -41,17 +57,20 @@ public class AdminController(ILogger<AdminController> logger, IRepositoryService
                     Gender = user.Gender,
                     NickName = user.NickName,
                     Description = user.Description,
-                    LastCheckInTime = await repository.UserCheckInRepository.GetLastCheckInTimeAsync(user.Id) 
-                });
-            }
+                })
+                .ToList();
 
+            // 获取用户总数用于分页信息
+            var totalUsers = users.Count();
 
+            // 构建返回的分页数据
             var responseData = new UserListData
             {
-                List = [.. userList],
-                Total = userList.Count
+                List = pagedUsers,
+                Total = totalUsers
             };
 
+            // 返回成功响应
             return Ok(UserListResp.Success(
                 SuccessMessages.Controller.Admin.GetUserListSuccess,
                 responseData
@@ -63,9 +82,10 @@ public class AdminController(ILogger<AdminController> logger, IRepositoryService
             return StatusCode(StatusCodes.Status500InternalServerError,
                 UserListResp.Fail(StatusCodes.Status500InternalServerError,
                     ErrorMessages.Controller.Admin.UserListFailed
-                ));
+            ));
         }
     }
+
 
     /// <summary>
     /// 管理员登录
@@ -73,7 +93,7 @@ public class AdminController(ILogger<AdminController> logger, IRepositoryService
     /// <param name="userLogin">管理员登录信息DTO</param>
     /// <returns>登录结果DTO</returns>
     [HttpPost("login", Name = "AdminLogin")]
-    [Authorize(Roles = $"{nameof(UserRole.SuperAdmin)}")]
+    // [Authorize(Roles = $"{nameof(UserRole.SuperAdmin)}")]
     [ProducesResponseType(typeof(UserLoginResp), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(UserLoginResp), StatusCodes.Status403Forbidden)]
     [ProducesResponseType(typeof(UserLoginResp), StatusCodes.Status500InternalServerError)]
@@ -95,7 +115,13 @@ public class AdminController(ILogger<AdminController> logger, IRepositoryService
                 StatusCodes.Status403Forbidden,
                 ErrorMessages.Controller.Admin.AdminNotFound
             ));
-
+        if (user.Role != UserRole.SuperAdmin)
+        {
+            return StatusCode(StatusCodes.Status401Unauthorized, UserLoginResp.Fail(
+                StatusCodes.Status401Unauthorized,
+                ErrorMessages.Controller.Admin.NotAdmin
+            ));
+        }
         if (!PasswordUtils.VerifyPasswordHash(userLogin.Password, user.PasswordHash, user.PasswordSalt))
             return StatusCode(StatusCodes.Status403Forbidden, UserLoginResp.Fail(
                 StatusCodes.Status403Forbidden,

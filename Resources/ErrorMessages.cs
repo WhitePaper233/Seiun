@@ -75,6 +75,7 @@ public static class ErrorMessages
             public const string UserLoginFailed = "error.controller.admin.login_failed";
             public const string AdminNotFound = "error.controller.admin.not_found";
             public const string UserListFailed = "error.controller.admin.list.get_userlist_failed";
+            public const string NotAdmin = "error.controller.admin.not_admin";
         }
         public static class Article
         {
