@@ -17,7 +17,7 @@ namespace Seiun.Entities
 
         public Guid? ParentReplyId { get; set; }
 
-        public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
+        // public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
         
         [ForeignKey(nameof(this.CommentId))]
         public virtual CommentEntity Comment { get; set; } = null!;

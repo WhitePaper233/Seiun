@@ -20,7 +20,7 @@ public class CommentEntity : BaseEntity
     [Range(0, int.MaxValue, ErrorMessage = ErrorMessages.ValidationError.InvalidDisLikeCount)]
     public int DislikeCount { get; set; } = 0;
 
-    public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
+    // public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
     
     [JsonIgnore]
     public virtual ICollection<CommentLikeEntity> CommentLikes { get; set; } = [];
@@ -40,7 +40,7 @@ public class CommentLikeEntity : BaseEntity
 
     public ActionType Action { get; set; } 
 
-    public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow; 
+    // public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow; 
     
     [ForeignKey(nameof(this.UserId))]
     public virtual CommentEntity Comment { get; set; } = null!;

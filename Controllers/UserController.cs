@@ -52,7 +52,6 @@ public class UserController(ILogger<UserController> logger, IRepositoryService r
             PasswordSalt = passwordSalt,
             Role = UserRole.User,
             Gender = Gender.Unknown,
-            CreatedAt = DateTimeOffset.UtcNow,
             IsBanned = false
         };
 

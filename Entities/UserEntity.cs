@@ -35,8 +35,6 @@ public class UserEntity : BaseEntity
 
     public required UserRole Role { get; set; }
     public required bool IsBanned { get; set; }
-
-    public DateTimeOffset CreatedAt { get; set; }
     
     [JsonIgnore]
     public virtual ICollection<ArticleEntity> Articles { get; set; } = [];

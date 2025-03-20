@@ -117,7 +117,7 @@ public class AiRequestService : IAiRequestService
 			SessionId = latestFinishedWordGroup.Key,
 			Article = aiArticle,
 			CoverUrl = aiCoverUrl,
-			CreatedAt = DateTimeOffset.UtcNow
+			// CreatedAt = DateTimeOffset.UtcNow
 		};
 		repository.AiArticleRepository.Create(aIArticleEntity);
 		if (!await repository.AiArticleRepository.SaveAsync())
