@@ -30,7 +30,7 @@ public class UserCheckInRepository(SeiunDbContext dbContext, IMinioClient minioC
     }
 
     // 获取用户最后一次打卡时间
-    public async Task<DateTime> GetLastCheckInTimeAsync(Guid userId)
+    public async Task<DateTimeOffset> GetLastCheckInTimeAsync(Guid userId)
     {
         return await DbContext.UserCheckIns
             .Where(x => x.UserId == userId)
@@ -40,7 +40,7 @@ public class UserCheckInRepository(SeiunDbContext dbContext, IMinioClient minioC
     }
 
     // 获取多个用户的最后一次打卡时间
-    public async Task<Dictionary<Guid, DateTime?>> GetLastCheckInTimesAsync(List<Guid> userIds)
+    public async Task<Dictionary<Guid, DateTimeOffset?>> GetLastCheckInTimesAsync(List<Guid> userIds)
     {
         return await DbContext.UserCheckIns
             .Where(x => userIds.Contains(x.UserId))
@@ -50,7 +50,7 @@ public class UserCheckInRepository(SeiunDbContext dbContext, IMinioClient minioC
                 UserId = g.Key,
                 LastCheckInTime = g.Max(x => x.CheckInDate) 
             })
-            .ToDictionaryAsync(x => x.UserId, x => (DateTime?)x.LastCheckInTime);
+            .ToDictionaryAsync(x => x.UserId, x => (DateTimeOffset?)x.LastCheckInTime);
     }
 
 }
