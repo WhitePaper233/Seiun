@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Seiun.Utils.Interceptors;
 
 namespace Seiun.Entities;
 
@@ -7,7 +8,7 @@ public class SeiunDbContext(DbContextOptions<SeiunDbContext> options) : DbContex
     public required DbSet<UserEntity> Users { get; init; }
     public required DbSet<ArticleEntity> Articles { get; init; }
     public required DbSet<ArticleLikeEntity> ArticleLikes { get; init; }
-    public required DbSet<PublicAnnouncementEntity> PublicAnnouncements {get; init;}
+    public required DbSet<PublicAnnouncementEntity> PublicAnnouncements { get; init; }
     public required DbSet<CommentEntity> Comments { get; set; }
     public required DbSet<CommentLikeEntity> CommentLike { get; set; }
     public required DbSet<ReplyEntity> Replies { get; set; }
@@ -26,10 +27,21 @@ public class SeiunDbContext(DbContextOptions<SeiunDbContext> options) : DbContex
     public required DbSet<ClozeTestEntity> ClozeTests { get; set; }
     public required DbSet<ClozeTestSelectionEntity> ClozeTestSelections { get; set; }
     public required DbSet<ClozeTestAnswerEntity> ClozeTestAnswers { get; set; }
+
+    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+    {
+        #region 拦截器
+
+        optionsBuilder.AddInterceptors(new TimeStampInterceptor());
+        base.OnConfiguring(optionsBuilder);
+
+        #endregion
+    }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         # region 添加配置
-        
+
         ConfigureUserEntity(modelBuilder);
         ConfigureArticleEntity(modelBuilder);
         ConfigureArticleLikeEntity(modelBuilder);
@@ -46,14 +58,14 @@ public class SeiunDbContext(DbContextOptions<SeiunDbContext> options) : DbContex
         ConfigureUserQuestionEntity(modelBuilder);
         ConfigureWordEntity(modelBuilder);
         ConfigureWordDistractorEntity(modelBuilder);
-        
+
         base.OnModelCreating(modelBuilder);
-        
+
         # endregion
     }
 
     # region 配置导航和级联删除
-    
+
     private static void ConfigureUserEntity(ModelBuilder modelBuilder)
     {
         // User - Article
@@ -62,49 +74,49 @@ public class SeiunDbContext(DbContextOptions<SeiunDbContext> options) : DbContex
             .WithOne(a => a.Creator)
             .HasForeignKey(a => a.CreatorId)
             .OnDelete(DeleteBehavior.Cascade);
-        
+
         // User - AiArticle
         modelBuilder.Entity<UserEntity>()
             .HasMany(u => u.AiArticles)
             .WithOne(a => a.User)
             .HasForeignKey(a => a.UserId)
             .OnDelete(DeleteBehavior.Cascade);
-        
+
         // user - ErrorWordRecord
         modelBuilder.Entity<UserEntity>()
             .HasMany(u => u.ErrorWordRecords)
             .WithOne(e => e.User)
             .HasForeignKey(e => e.UserId)
             .OnDelete(DeleteBehavior.Cascade);
-        
+
         // user - FinishedWordRecord
         modelBuilder.Entity<UserEntity>()
             .HasMany(u => u.FinishedWordRecords)
             .WithOne(f => f.User)
             .HasForeignKey(f => f.UserId)
             .OnDelete(DeleteBehavior.Cascade);
-        
+
         // user - PublicAnnouncements
         modelBuilder.Entity<UserEntity>()
             .HasMany(u => u.PublicAnnouncements)
             .WithOne(p => p.Admin)
             .HasForeignKey(p => p.AdminId)
             .OnDelete(DeleteBehavior.Cascade);
-        
+
         // user - UserQuestions
         modelBuilder.Entity<UserEntity>()
             .HasMany(u => u.UserQuestions)
             .WithOne(u => u.User)
             .HasForeignKey(u => u.UserId)
             .OnDelete(DeleteBehavior.Cascade);
-        
+
         // user - UserTag
         modelBuilder.Entity<UserEntity>()
             .HasMany(u => u.UserTags)
             .WithOne(u => u.User)
             .HasForeignKey(u => u.UserId)
             .OnDelete(DeleteBehavior.Cascade);
-            
+
         // user - CheckIns
         modelBuilder.Entity<UserEntity>()
             .HasMany(u => u.CheckIns)
@@ -120,14 +132,14 @@ public class SeiunDbContext(DbContextOptions<SeiunDbContext> options) : DbContex
             .HasOne(a => a.Creator)
             .WithMany(u => u.Articles)
             .HasForeignKey(a => a.CreatorId);
-        
+
         // Article - Like
         modelBuilder.Entity<ArticleEntity>()
             .HasMany(a => a.Likes)
             .WithOne(l => l.LikedArticle)
             .HasForeignKey(l => l.LikedArticleId)
             .OnDelete(DeleteBehavior.Cascade);
-        
+
         // Article - Comments
         modelBuilder.Entity<ArticleEntity>()
             .HasMany(a => a.Comments)
@@ -244,6 +256,6 @@ public class SeiunDbContext(DbContextOptions<SeiunDbContext> options) : DbContex
             .WithMany(w => w.WordDistractors)
             .HasForeignKey(d => d.WordId);
     }
-    
+
     #endregion
 }
