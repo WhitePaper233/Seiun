@@ -14,4 +14,11 @@ public class FillInBlankWordRepository(SeiunDbContext dbContext, IMinioClient mi
     {
         DbContext.FillInBlankWords.AddRange(words);
     }
+
+    public async Task<List<FillInBlankWordEntity>?> GetByQuestionIdAsync(Guid questionId)
+    {
+        return await DbContext.FillInBlankWords
+            .Where(w => w.QuestionId == questionId)
+            .ToListAsync();
+    }
 }

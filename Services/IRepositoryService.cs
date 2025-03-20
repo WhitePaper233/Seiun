@@ -12,15 +12,18 @@ public interface IRepositoryService
     ICommentLikeRepository CommentLikeRepository { get; }
     IReplyRepository ReplyRepository { get; }
     IWordRepository WordRepository { get; }
-    ITagRepository TagRepository { get; }
     IUserTagRepository UserTagRepository { get; }
     IWordSessionRepository SessionRepository { get; }
     IErrorWordRepository ErrorWordRepository { get; }
     IFinishedWordRepository FinishedWordRepository { get; }
 
     IUserCheckInRepository UserCheckInRepository { get; }
-    IAIArticleRepository AIArticleRepository { get; }
+    IAIArticleRepository AiArticleRepository { get; }
     IFillInBlankRepository FillInBlankRepository { get; }
     IFillInBlankAnswerRepository FillInBlankAnswerRepository { get; }
     IFillInBlankWordRepository FillInBlankWordRepository { get; }
+    IUserQuestionRepository UserQuestionRepository { get; }
+    IClozeTestRepository ClozeTestRepository { get; }
+    IClozeTestSelectionRepository ClozeTestSelectionRepository { get; }
+    IClozeTestAnswerRepository ClozeTestAnswerRepository { get; }
 }

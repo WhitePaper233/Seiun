@@ -52,7 +52,7 @@ var minioClient = new MinioClient().WithEndpoint(minioConfig["Endpoint"])
 builder.Services.AddSingleton(minioClient);
 
 // Inject AI request service
-builder.Services.AddSingleton<IAIRequestService, AIRequestService>();
+builder.Services.AddSingleton<IAiRequestService, AiRequestService>();
 
 // Inject repository service
 builder.Services.AddScoped<IRepositoryService, RepositoryService>();
@@ -67,6 +67,12 @@ builder.Services.AddControllers().AddJsonOptions(options =>
 {
     options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower;
     options.JsonSerializerOptions.DictionaryKeyPolicy = JsonNamingPolicy.SnakeCaseLower;
+});
+
+// 阻止循环引用
+builder.Services.AddControllers().AddJsonOptions(options =>
+{
+    options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
 });
 
 builder.Services.AddCors(options =>
@@ -91,7 +97,7 @@ Thread ClearSession = new(() =>
     {
         Interval = 3600000 * 20
     };
-    time.Elapsed += async (sender, args) =>
+    time.Elapsed += async (_, _) =>
     {
         var currentStudySession = app.Services.GetService<CurrentStudySessionService>();
         if (currentStudySession != null)

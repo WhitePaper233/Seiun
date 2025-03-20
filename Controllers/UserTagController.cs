@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Seiun.Entities;
 using Seiun.Models.Parameters;
@@ -7,27 +8,88 @@ using Seiun.Models.Responses;
 using Seiun.Resources;
 using Seiun.Services;
 using Seiun.Utils;
+using Seiun.Utils.Enums;
+
 namespace Seiun.Controllers;
 
 
 [ApiController, Route("/api/tag/user")]
-public class TagController(ILogger<UserController> logger, IRepositoryService repository)
-    : ControllerBase
+public class TagController(ILogger<UserController> logger, IRepositoryService repository) : ControllerBase
 {
-    
+    /// <summary>
+    /// 获取词库 
+    /// </summary>
+    /// <returns>获取词库结果</returns>
+    [HttpGet("word-bank", Name = "GetWordBank")]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    [Authorize(Roles = $"{nameof(UserRole.User)},{nameof(UserRole.Creator)},{nameof(UserRole.Admin)},{nameof(UserRole.SuperAdmin)}")]
+    [ProducesResponseType(typeof(WordBanksResp), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(BaseResp), StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(WordBanksResp), StatusCodes.Status500InternalServerError)]
+    public async Task<IActionResult> GetAllWordBank()
+    {
+        var userId = User.GetUserId();
+        if (userId == null)
+        {
+            return StatusCode(StatusCodes.Status403Forbidden, ResponseFactory.NewFailedBaseResponse(
+                StatusCodes.Status403Forbidden,
+                ErrorMessages.Controller.Any.InvalidJwtToken
+            ));
+        }
+
+        try
+        {
+            var userTagsOfAllWordBank = await repository.UserTagRepository.GetUserTagOfAllWordBankAsync(userId.Value);
+            var wordBanks = userTagsOfAllWordBank?.Select(u => new WordBank
+            {
+                WordLevel = u.WordLevel,
+                WordCount = u.WordLevel == WordLevel.FourLevel
+                    ? Constants.Word.FourLevelWordCount
+                    : Constants.Word.SixLevelWordCount,
+                LearnedWordCount = u.LearnedCount,
+                DailyPlan = u.SetDailyPlan,
+                RemainingDays = u.RemainingDays,
+                LastStudyAt = u.LastStudyAt
+            }).ToList() ?? [];
+
+            var existingLevels = new HashSet<WordLevel>(wordBanks.Select(w => w.WordLevel));
+            foreach (var (level, count) in new[]
+                     {
+                         (WordLevel.FourLevel, Constants.Word.FourLevelWordCount),
+                         (WordLevel.SixLevel, Constants.Word.SixLevelWordCount)
+                     })
+            {
+                if (!existingLevels.Contains(level))
+                {
+                    wordBanks.Add(new WordBank { WordLevel = level, WordCount = count });
+                }
+            }
+
+            return Ok(WordBanksResp.Success(wordBanks));
+        }
+        catch (Exception e)
+        {
+            logger.LogError(e,"User {} failed get all word bank", userId);
+            return StatusCode(StatusCodes.Status500InternalServerError,WordBanksResp.Fail(
+                StatusCodes.Status500InternalServerError,
+                ErrorMessages.Controller.UserTag.GetAllWordBankFailed
+            ));
+        }
+    }
+
     /// <summary>
     /// 选择词库
     /// </summary>
-    /// /// <param name="userSelectTag">用户选择的词库</param>
-    /// <returns>操作结果</returns>
-    [HttpPost("add", Name = "AddUserTag")]
+    /// <param name="selectedWordBank"></param>
+    /// <returns>选择结果</returns>
+    [HttpPost("select-word-bank", Name = "SelectWordBank")]
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    [Authorize(Roles = $"{nameof(UserRole.User)},{nameof(UserRole.Creator)},{nameof(UserRole.Admin)},{nameof(UserRole.SuperAdmin)}")]
     [ProducesResponseType(typeof(BaseResp), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(BaseResp), StatusCodes.Status403Forbidden)]
-    [ProducesResponseType(typeof(UserProfileResp), StatusCodes.Status404NotFound)]
     [ProducesResponseType(typeof(BaseResp), StatusCodes.Status500InternalServerError)]
-    public async Task<IActionResult> AddUserTag([FromBody] UserSelectTag userSelectTag)
-    {   
+    public async Task<IActionResult> SelectWordBank([FromBody] UserSelectWordBank selectedWordBank)
+    {
         var userId = User.GetUserId();
         if (userId == null)
         {
@@ -37,61 +99,100 @@ public class TagController(ILogger<UserController> logger, IRepositoryService re
             ));
         }
 
-        var user = await repository.UserRepository.GetByIdAsync(userId.Value);
-        if (user == null)
+        var userExistingTagEntity = await repository.UserTagRepository.GetTagByUserIdAndWordLevelAsync(userId.Value, selectedWordBank.WordLevel);
+        if (userExistingTagEntity == null)
         {
-            return NotFound(UserProfileResp.Fail(
-                StatusCodes.Status404NotFound,
-                ErrorMessages.Controller.User.UserNotFound
+            var userTagEntity = new UserTagEntity
+            {
+                UserId = userId.Value,
+                WordLevel = selectedWordBank.WordLevel,
+                SetDailyPlan = selectedWordBank.SetDailyPlan,
+                SetTotalDays = selectedWordBank.SetTotalDays,
+                RemainingDays = selectedWordBank.SetTotalDays,
+                LearnedCount = 0,
+                ExpectedCompletionAt = selectedWordBank.ExpectedCompletionAt,
+                LastStudyAt = null,
+                SettingAt = DateTimeOffset.UtcNow
+            };
+            repository.UserTagRepository.Create(userTagEntity);
+            if (await repository.UserTagRepository.SaveAsync())
+            {
+                return Ok(ResponseFactory.NewSuccessBaseResponse(SuccessMessages.Controller.UserTag.SelectWordBankSuccess));
+            }
+            
+            logger.LogWarning("User {} failed select word bank", userId);
+            return StatusCode(StatusCodes.Status500InternalServerError, ResponseFactory.NewFailedBaseResponse(
+                StatusCodes.Status500InternalServerError,
+                ErrorMessages.Controller.UserTag.SelectWordBankFailed
             ));
         }
-
-        var tag = await repository.TagRepository.GetByIdAsync(userSelectTag.TagId);
-        if (tag == null)
+        
+        userExistingTagEntity.SetDailyPlan = selectedWordBank.SetDailyPlan;
+        userExistingTagEntity.SetTotalDays = selectedWordBank.SetTotalDays;
+        userExistingTagEntity.RemainingDays = selectedWordBank.SetTotalDays;
+        userExistingTagEntity.ExpectedCompletionAt = selectedWordBank.ExpectedCompletionAt;
+        userExistingTagEntity.SettingAt = DateTimeOffset.UtcNow;
+        
+        repository.UserTagRepository.Update(userExistingTagEntity);
+        if (await repository.UserTagRepository.SaveAsync())
         {
-            return NotFound(UserProfileResp.Fail(
-                StatusCodes.Status404NotFound,
-                ErrorMessages.Controller.Tag.TagNotFound
-            ));
+            return Ok(ResponseFactory.NewSuccessBaseResponse(SuccessMessages.Controller.UserTag.SelectWordBankSuccess));
         }
-        var totalWords = tag.Words.Count;
-
-        var remainingDays = totalWords / userSelectTag.DailyPlan;
-        var userTag = new UserTagEntity{
-            UserId = userId.Value,
-            TagId = userSelectTag.TagId,
-            DailyPlan = userSelectTag.DailyPlan,
-            TotalDays = userSelectTag.TotalDays,
-            RemainingDays = remainingDays,
-            LearnedCount = 0,
-            SettingAt = DateTime.Now,
-            User = user,
-            Tag = tag
-        };
-        repository.UserTagRepository.Create(userTag);
-        if(await repository.UserTagRepository.SaveAsync())
-        {
-            return Ok(ResponseFactory.NewSuccessBaseResponse(SuccessMessages.Controller.UserTag.CreateSuccess));
-        }
-        logger.LogError("Failed to create user tag");
+            
+        logger.LogWarning("User {} failed select word bank", userId);
         return StatusCode(StatusCodes.Status500InternalServerError, ResponseFactory.NewFailedBaseResponse(
             StatusCodes.Status500InternalServerError,
-            ErrorMessages.Controller.UserTag.CreateFailed
+            ErrorMessages.Controller.UserTag.SelectWordBankFailed
         ));
     }
-
     
     /// <summary>
-    /// 获取未选择的词库
+    /// 获取当前选择的词库
     /// </summary>
-    /// <returns>未选择的词库列表</returns>
-    [HttpGet("unselected-tags", Name = "GetUnselectedTags")]
+    /// <returns>获取结果</returns>
+    [HttpPost("current-word-bank", Name = "GetCurrentWordBank")]
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-    [ProducesResponseType(typeof(List<UserUnSelectTagRespDto>), StatusCodes.Status200OK)]
+    [Authorize(Roles = $"{nameof(UserRole.User)},{nameof(UserRole.Creator)},{nameof(UserRole.Admin)},{nameof(UserRole.SuperAdmin)}")]
+    [ProducesResponseType(typeof(CurrentWordBankResp), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(CurrentWordBankResp), StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(CurrentWordBankResp), StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetCurrentWordBank()
+    {
+        var userId = User.GetUserId();
+        if (userId == null)
+        {
+            return StatusCode(StatusCodes.Status403Forbidden, CurrentWordBankResp.Fail(
+                StatusCodes.Status403Forbidden,
+                ErrorMessages.Controller.Any.InvalidJwtToken
+            ));
+        }
+
+        var currentWordBank = await repository.UserTagRepository.GetCurrentUserTagAsync(userId.Value);
+        if (currentWordBank == null)
+        {
+            return StatusCode(StatusCodes.Status404NotFound, CurrentWordBankResp.Fail(
+                StatusCodes.Status404NotFound,
+                ErrorMessages.Controller.UserTag.CurrentUserTagNotFound
+            ));
+        }
+        // ToDo
+        return Ok(currentWordBank);
+    }
+
+    /// <summary>
+    /// 更新计划
+    /// </summary>
+    /// <param name="userUpdatePlan"></param>
+    /// <returns>更新结果</returns>
+    [HttpPost("update-plan", Name = "UpdatePlan")]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    [Authorize(Roles = $"{nameof(UserRole.User)},{nameof(UserRole.Creator)},{nameof(UserRole.Admin)},{nameof(UserRole.SuperAdmin)}")]
+    [ProducesResponseType(typeof(BaseResp), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(BaseResp), StatusCodes.Status403Forbidden)]
     [ProducesResponseType(typeof(BaseResp), StatusCodes.Status404NotFound)]
     [ProducesResponseType(typeof(BaseResp), StatusCodes.Status500InternalServerError)]
-    public async Task<IActionResult> GetUnselectedTags()
+    public async Task<IActionResult> UpdatePlan([FromBody] UserUpdatePlan userUpdatePlan )
     {
         var userId = User.GetUserId();
         if (userId == null)
@@ -101,142 +202,31 @@ public class TagController(ILogger<UserController> logger, IRepositoryService re
                 ErrorMessages.Controller.Any.InvalidJwtToken
             ));
         }
-        var user = await repository.UserRepository.GetByIdAsync(userId.Value);
-        if (user == null)
+        
+        var userTagEntity = await repository.UserTagRepository.GetCurrentUserTagAsync(userId.Value);
+        if (userTagEntity == null)
         {
-            return NotFound(UserProfileResp.Fail(
+            return StatusCode(StatusCodes.Status404NotFound, ResponseFactory.NewFailedBaseResponse(
                 StatusCodes.Status404NotFound,
-                ErrorMessages.Controller.User.UserNotFound
+                ErrorMessages.Controller.UserTag.CurrentUserTagNotFound
             ));
         }
 
-        var unselectedTags = await repository.UserTagRepository.GetUnselectedTagsAsync(userId.Value);
-        var unselectedTagDtos = unselectedTags.Select(tag => new UserUnSelectTagRespDto
+        userTagEntity.SetDailyPlan = userUpdatePlan.SetDailyPlan;
+        userTagEntity.SetTotalDays = userUpdatePlan.SetTotalDays;
+        userTagEntity.RemainingDays = userUpdatePlan.SetTotalDays;
+        userTagEntity.SettingAt = DateTimeOffset.UtcNow;
+        
+        repository.UserTagRepository.Update(userTagEntity);
+        if (await repository.UserTagRepository.SaveAsync())
         {
-            TagName = tag.Name,
-            WordCount = tag.Words.Count
-        }).ToList();
-
-        return Ok(UserUnSelectTagListResp.Success(SuccessMessages.Controller.Comment.GetListSuccess, unselectedTagDtos));
-    }
-
-
-    /// <summary>
-    /// 获取已选择的词库
-    /// </summary>
-    /// <returns>已选择的词库列表</returns>
-    [HttpGet("selected-tags", Name = "GetSelectedTags")]
-    [ProducesResponseType(typeof(List<UserUnSelectTagRespDto>), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(BaseResp), StatusCodes.Status403Forbidden)]
-    [ProducesResponseType(typeof(UserProfileResp), StatusCodes.Status404NotFound)]
-    [ProducesResponseType(typeof(BaseResp), StatusCodes.Status500InternalServerError)]
-    public async Task<IActionResult> GetSelectedTags()
-    {   
-        var userId = User.GetUserId();
-        if (userId == null)
-        {
-            return StatusCode(StatusCodes.Status403Forbidden, ResponseFactory.NewFailedBaseResponse(
-                StatusCodes.Status403Forbidden,
-                ErrorMessages.Controller.Any.InvalidJwtToken
-            ));
+            return Ok(ResponseFactory.NewSuccessBaseResponse(SuccessMessages.Controller.UserTag.UpdatePlanSuccess));
         }
-        var user = await repository.UserRepository.GetByIdAsync(userId.Value);
-        if (user == null)
-        {
-            return NotFound(UserProfileResp.Fail(
-                StatusCodes.Status404NotFound,
-                ErrorMessages.Controller.User.UserNotFound
-            ));
-        }
-        var selectedTags = await repository.UserTagRepository.GetSelectedTagsAsync(userId.Value);
-        var selectedTagDtos = selectedTags.Select(tag => new UserSelectedTagRespDto
-        {
-            TagName = tag.Tag.Name,
-            TotalCount = tag.Tag.Words.Count,
-            LearnedCount = tag.LearnedCount,
-        }).ToList();
-        return Ok(UserSelectedTagListResp.Success(SuccessMessages.Controller.Comment.GetListSuccess, selectedTagDtos));
-    }
-
-    /// <summary>
-    /// 取消用户词库
-    /// </summary>
-    /// <param name="userId"></param>
-    /// <returns>操作结果</returns>
-    [HttpDelete("cancel", Name = "CancelUserTag")]
-    [ProducesResponseType(typeof(BaseResp), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(BaseResp), StatusCodes.Status403Forbidden)]
-    [ProducesResponseType(typeof(UserProfileResp), StatusCodes.Status404NotFound)]
-    [ProducesResponseType(typeof(BaseResp), StatusCodes.Status500InternalServerError)]
-
-    public async Task<IActionResult> CancelUserTag([FromQuery] Guid tagId)
-    {
-        var userId = User.GetUserId();
-        if (userId == null)
-        {
-            return StatusCode(StatusCodes.Status403Forbidden, ResponseFactory.NewFailedBaseResponse(
-                StatusCodes.Status403Forbidden,
-                ErrorMessages.Controller.Any.InvalidJwtToken
-            ));
-        }
-        var user = await repository.UserRepository.GetByIdAsync(userId.Value);
-        if (user == null)
-        {
-            return NotFound(UserProfileResp.Fail(
-                StatusCodes.Status404NotFound,
-                ErrorMessages.Controller.User.UserNotFound
-            ));
-        }
-        await repository.UserTagRepository.CancelTagAsync(userId.Value, tagId);
-        if(await repository.UserTagRepository.SaveAsync())
-        {
-           return Ok(SuccessMessages.Controller.UserTag.DeleteSuccess);
-        }
-        logger.LogError("Failed to delete user tag {userId} {tagId}", userId, tagId);
+        
+        logger.LogWarning("User {} failed update plan", userId);
         return StatusCode(StatusCodes.Status500InternalServerError, ResponseFactory.NewFailedBaseResponse(
             StatusCodes.Status500InternalServerError,
-            ErrorMessages.Controller.UserTag.DeleteFailed
+            ErrorMessages.Controller.UserTag.UpdatePlanFailed
         ));
-    }
-    
-
-    /// <summary>
-    /// 获取用户正在学习的词库详情
-    /// </summary>
-    /// <param name="userId"></param>
-    /// <returns>正在学习的词库详情</returns>
-    [HttpDelete("detail", Name = "UserTagDetial")]
-    [ProducesResponseType(typeof(BaseResp), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(BaseResp), StatusCodes.Status403Forbidden)]
-    [ProducesResponseType(typeof(UserProfileResp), StatusCodes.Status404NotFound)]
-    [ProducesResponseType(typeof(BaseResp), StatusCodes.Status500InternalServerError)]
-
-    public async Task<IActionResult> GetUserStudyingTagDetail()
-    {
-        var userId = User.GetUserId();
-        if (userId == null)
-        {
-            return StatusCode(StatusCodes.Status403Forbidden, ResponseFactory.NewFailedBaseResponse(
-                StatusCodes.Status403Forbidden,
-                ErrorMessages.Controller.Any.InvalidJwtToken
-            ));
-        }
-
-        // TODO: 应该在用户注册时，自动添加一个默认的词库
-        var selectedTag = await repository.UserTagRepository.GetStudyingTagByUserIdAsync(userId.Value);
-        if (selectedTag == null)
-        {
-            return NotFound(UserProfileResp.Fail(
-                StatusCodes.Status404NotFound,
-                ErrorMessages.Controller.User.UserNotFound
-            ));  
-        }
-        var selectedTagDetail = new UserSelectedTagRespDto
-        {
-            TagName = selectedTag.Tag.Name,
-            LearnedCount = selectedTag.LearnedCount,
-            TotalCount = selectedTag.Tag.Words.Count
-        };
-        return Ok(SeletedTagDetailResp.Success(SuccessMessages.Controller.UserTag.GetDetailSuccess, selectedTagDetail));
     }
 }

@@ -75,9 +75,10 @@ public static class SuccessMessages
 
         public static class UserTag
         {
-            public const string CreateSuccess = "controller.usertag.create.create_success";
-            public const string DeleteSuccess = "controller.usertag.delete.delete_success";
-            public const string GetDetailSuccess = "controller.usertag.get.detail_success";
+           public const string GetWordBanksSuccess = "controller.usertag.get_word_banks_success";
+           public const string SelectWordBankSuccess = "controller.usertag.select_word_bank_success";
+           public const string GetCurrentWordBankSuccess = "controller.usertag.get_current_word_bank_success";
+           public const string UpdatePlanSuccess = "controller.usertag.update_plan.success"; 
         }
 
         public static class StudySession
@@ -102,6 +103,8 @@ public static class SuccessMessages
         public static class Question
         {
             public const string GetFillInBlankSuccess = "controller.question.get.fill_in_blank_success";
+            public const string GetClozeTestSuccess = "controller.question.get.cloze_test.success";
+            public const string GetQuestionListSuccess = "controller.question.get.list_success";
         }
     }
 }

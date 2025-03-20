@@ -9,7 +9,7 @@ public class ArticleSearchEntity
 
 	public required string CreatorNickName {get; set;}
 
-	public required DateTime CreateTime {get; set;}
+	public required DateTimeOffset CreateTime {get; set;}
 	
 	public required Guid ArticleId {get; set;}
 }

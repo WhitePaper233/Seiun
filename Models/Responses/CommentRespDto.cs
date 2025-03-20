@@ -13,7 +13,7 @@ public class CommentInfo
     public required Guid PostId { get; set; }
     public required int LikeCount { get; set; }
     public required int DislikeCount { get; set; }
-    public required DateTime CreatedAt { get; set; }
+    public required DateTimeOffset CreatedAt { get; set; }
 }
 
 /// <summary>
