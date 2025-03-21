@@ -12,7 +12,7 @@ public class WordEntity : BaseEntity
     [MaxLength(Constants.Word.MaxWordTextLength, ErrorMessage = ErrorMessages.ValidationError.OverWordTextLength)]
     public required string WordText { get; set; }
 
-    [MaxLength(200)]
+    [MaxLength(Constants.Word.MaxWordPronunciationLength, ErrorMessage = ErrorMessages.ValidationError.OverPronunciationLength)]
     public string? Pronunciation { get; set; }
 
     [Required]

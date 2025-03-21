@@ -27,6 +27,7 @@ public static class ErrorMessages
         public const string OverContentLength = "error.validation.over_content_length";
         public const string OverWordDefinitionLength = "error.validation.over_word_definition_length";
         public const string OverWordTextLength= "error.validation.over_word_text_length";
+        public const string OverPronunciationLength = "error.validation.over_pronunciation_length";
         
         public const string AtLeastOnePropertyRequired = "error.validation.at_least_one_property_is_required";
         public const string UserIdRequired = "error.validation.user_id_required";
