@@ -14,4 +14,11 @@ public class ErrorWordRepository(SeiunDbContext dbContext, IMinioClient minioCli
 			.Select(a => a.WordId)
 			.ToListAsync();
 	}
+
+	public void BulkDelete(Guid userId)
+	{
+		DbContext.ErrorWords
+			.Where(x => x.UserId == userId)
+			.ExecuteDelete();
+	}
 }

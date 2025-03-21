@@ -13,8 +13,8 @@ public class PublicAnnouncementRepository(SeiunDbContext dbContext, IMinioClient
 		DateTimeOffset sevenDaysAgo = DateTimeOffset.UtcNow.AddDays(-7);
 
 		return await DbContext.PublicAnnouncements
-		.Where(a => a.PublishTime >= sevenDaysAgo)
-		.OrderByDescending(a => a.PublishTime)
+		.Where(a => a.CreatedAt >= sevenDaysAgo)
+		.OrderByDescending(a => a.CreatedAt)
 		.ToListAsync();
 	}
 }

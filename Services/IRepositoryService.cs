@@ -18,7 +18,7 @@ public interface IRepositoryService
     IFinishedWordRepository FinishedWordRepository { get; }
 
     IUserCheckInRepository UserCheckInRepository { get; }
-    IAIArticleRepository AiArticleRepository { get; }
+    IAiArticleRepository AiArticleRepository { get; }
     IFillInBlankRepository FillInBlankRepository { get; }
     IFillInBlankAnswerRepository FillInBlankAnswerRepository { get; }
     IFillInBlankWordRepository FillInBlankWordRepository { get; }
@@ -26,4 +26,6 @@ public interface IRepositoryService
     IClozeTestRepository ClozeTestRepository { get; }
     IClozeTestSelectionRepository ClozeTestSelectionRepository { get; }
     IClozeTestAnswerRepository ClozeTestAnswerRepository { get; }
+    IWordBookRepository WordBookRepository { get; }
+    IWordBankWordBookRepository WordBankWordBookRepository { get; }
 }

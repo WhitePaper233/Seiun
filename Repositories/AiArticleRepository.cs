@@ -4,8 +4,8 @@ using Seiun.Entities;
 
 namespace Seiun.Repositories;
 
-public class AIArticleRepository(SeiunDbContext dbContext, IMinioClient minioClient)
-    : BaseRepository<AiArticleEntity>(dbContext, minioClient), IAIArticleRepository
+public class AiArticleRepository(SeiunDbContext dbContext, IMinioClient minioClient)
+    : BaseRepository<AiArticleEntity>(dbContext, minioClient), IAiArticleRepository
 {
     public async Task<List<AiArticleEntity>?> GetByUserIdAsync(Guid userId)
     {

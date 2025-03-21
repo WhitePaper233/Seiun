@@ -23,9 +23,9 @@ public class TagController(ILogger<UserController> logger, IRepositoryService re
     [HttpGet("word-bank", Name = "GetWordBank")]
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     [Authorize(Roles = $"{nameof(UserRole.User)},{nameof(UserRole.Creator)},{nameof(UserRole.Admin)},{nameof(UserRole.SuperAdmin)}")]
-    [ProducesResponseType(typeof(WordBanksResp), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(WordBooksResp), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(BaseResp), StatusCodes.Status403Forbidden)]
-    [ProducesResponseType(typeof(WordBanksResp), StatusCodes.Status500InternalServerError)]
+    [ProducesResponseType(typeof(WordBooksResp), StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> GetAllWordBank()
     {
         var userId = User.GetUserId();
@@ -39,38 +39,49 @@ public class TagController(ILogger<UserController> logger, IRepositoryService re
 
         try
         {
-            var userTagsOfAllWordBank = await repository.UserTagRepository.GetUserTagOfAllWordBankAsync(userId.Value);
-            var wordBanks = userTagsOfAllWordBank?.Select(u => new WordBank
-            {
-                WordLevel = u.WordLevel,
-                WordCount = u.WordLevel == WordLevel.FourLevel
-                    ? Constants.Word.FourLevelWordCount
-                    : Constants.Word.SixLevelWordCount,
-                LearnedWordCount = u.LearnedCount,
-                DailyPlan = u.SetDailyPlan,
-                RemainingDays = u.RemainingDays,
-                LastStudyAt = u.LastStudyAt
-            }).ToList() ?? [];
+            var userTagsOfAllWordBook = await repository.UserTagRepository.GetUserTagOfAllWordBookAsync(userId.Value);
+            var wordBooks = (await repository.WordBookRepository.GetAllAsync()).ToList();
 
-            var existingLevels = new HashSet<WordLevel>(wordBanks.Select(w => w.WordLevel));
-            foreach (var (level, count) in new[]
-                     {
-                         (WordLevel.FourLevel, Constants.Word.FourLevelWordCount),
-                         (WordLevel.SixLevel, Constants.Word.SixLevelWordCount)
-                     })
-            {
-                if (!existingLevels.Contains(level))
+            // 使用 HashSet 提高查询效率
+            var userWordBookIds = userTagsOfAllWordBook?.Select(x => x.WordBookId).ToHashSet() ?? [];
+
+            // 获取用户的单词本
+            var userWordBooks = wordBooks.Where(u => userWordBookIds.Contains(u.Id)).ToList();
+
+            // 获取其他单词本
+            var otherWordBooks = wordBooks.Except(userWordBooks).ToList();
+
+            // 建立一个字典，快速查找 userTagsOfAllWordBook 对应的实体
+            var userTagDict = userTagsOfAllWordBook?.ToDictionary(x => x.WordBookId) ?? [];
+
+            // 生成最终结果
+            var result = userWordBooks
+                .Where(u => userTagDict.ContainsKey(u.Id)) // 过滤无效数据
+                .Select(u => new WordBook
                 {
-                    wordBanks.Add(new WordBank { WordLevel = level, WordCount = count });
-                }
-            }
+                    WordBookId = u.Id,
+                    WordBookName = u.WordBookName,
+                    WordCount = u.WordCount,
+                    LearnedWordCount = userTagDict[u.Id].LearnedCount,
+                    DailyPlan = userTagDict[u.Id].SetDailyPlan,
+                    RemainingDays = (u.WordCount - userTagDict[u.Id].LearnedCount) / userTagDict[u.Id].SetDailyPlan,
+                })
+                .ToList();
 
-            return Ok(WordBanksResp.Success(wordBanks));
+            // 添加其他单词本
+            result.AddRange(otherWordBooks.Select(x => new WordBook
+            {
+                WordBookId = x.Id,
+                WordBookName = x.WordBookName,
+                WordCount = x.WordCount,
+            }));
+            
+            return Ok(WordBooksResp.Success(result));
         }
         catch (Exception e)
         {
             logger.LogError(e,"User {} failed get all word bank", userId);
-            return StatusCode(StatusCodes.Status500InternalServerError,WordBanksResp.Fail(
+            return StatusCode(StatusCodes.Status500InternalServerError,WordBooksResp.Fail(
                 StatusCodes.Status500InternalServerError,
                 ErrorMessages.Controller.UserTag.GetAllWordBankFailed
             ));
@@ -99,20 +110,15 @@ public class TagController(ILogger<UserController> logger, IRepositoryService re
             ));
         }
 
-        var userExistingTagEntity = await repository.UserTagRepository.GetTagByUserIdAndWordLevelAsync(userId.Value, selectedWordBank.WordLevel);
+        var userExistingTagEntity = await repository.UserTagRepository.GetTagByUserIdAndWordLevelAsync(userId.Value, selectedWordBank.WordBookId);
         if (userExistingTagEntity == null)
         {
             var userTagEntity = new UserTagEntity
             {
                 UserId = userId.Value,
-                WordLevel = selectedWordBank.WordLevel,
+                WordBookId = selectedWordBank.WordBookId,
                 SetDailyPlan = selectedWordBank.SetDailyPlan,
-                SetTotalDays = selectedWordBank.SetTotalDays,
-                RemainingDays = selectedWordBank.SetTotalDays,
                 LearnedCount = 0,
-                ExpectedCompletionAt = selectedWordBank.ExpectedCompletionAt,
-                LastStudyAt = null,
-                SettingAt = DateTimeOffset.UtcNow
             };
             repository.UserTagRepository.Create(userTagEntity);
             if (await repository.UserTagRepository.SaveAsync())
@@ -128,10 +134,6 @@ public class TagController(ILogger<UserController> logger, IRepositoryService re
         }
         
         userExistingTagEntity.SetDailyPlan = selectedWordBank.SetDailyPlan;
-        userExistingTagEntity.SetTotalDays = selectedWordBank.SetTotalDays;
-        userExistingTagEntity.RemainingDays = selectedWordBank.SetTotalDays;
-        userExistingTagEntity.ExpectedCompletionAt = selectedWordBank.ExpectedCompletionAt;
-        userExistingTagEntity.SettingAt = DateTimeOffset.UtcNow;
         
         repository.UserTagRepository.Update(userExistingTagEntity);
         if (await repository.UserTagRepository.SaveAsync())
@@ -150,7 +152,7 @@ public class TagController(ILogger<UserController> logger, IRepositoryService re
     /// 获取当前选择的词库
     /// </summary>
     /// <returns>获取结果</returns>
-    [HttpPost("current-word-bank", Name = "GetCurrentWordBank")]
+    [HttpGet("current-word-bank", Name = "GetCurrentWordBank")]
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     [Authorize(Roles = $"{nameof(UserRole.User)},{nameof(UserRole.Creator)},{nameof(UserRole.Admin)},{nameof(UserRole.SuperAdmin)}")]
     [ProducesResponseType(typeof(CurrentWordBankResp), StatusCodes.Status200OK)]
@@ -167,16 +169,37 @@ public class TagController(ILogger<UserController> logger, IRepositoryService re
             ));
         }
 
-        var currentWordBank = await repository.UserTagRepository.GetCurrentUserTagAsync(userId.Value);
-        if (currentWordBank == null)
+        var currentWordBook = await repository.UserTagRepository.GetCurrentUserTagAsync(userId.Value);
+        if (currentWordBook == null)
         {
             return StatusCode(StatusCodes.Status404NotFound, CurrentWordBankResp.Fail(
                 StatusCodes.Status404NotFound,
                 ErrorMessages.Controller.UserTag.CurrentUserTagNotFound
             ));
         }
-        // ToDo
-        return Ok(currentWordBank);
+
+        var wordBook = await repository.WordBookRepository.GetByIdAsync(currentWordBook.WordBookId);
+        if (wordBook == null)
+        {
+            return StatusCode(StatusCodes.Status404NotFound, CurrentWordBankResp.Fail(
+                StatusCodes.Status404NotFound,
+                ErrorMessages.Controller.UserTag.CurrentUserTagNotFound
+            ));
+        }
+
+        var remainDays = (wordBook.WordCount - currentWordBook.LearnedCount) / currentWordBook.SetDailyPlan;
+
+        var currentWordBankDetail = new CurrentWordBankDetail
+        {
+            WordBookId = wordBook.Id,
+            WordBookName = wordBook.WordBookName,
+            SetDailyPlan = currentWordBook.SetDailyPlan,
+            RemainingDays = remainDays,
+            LearnedCount = currentWordBook.LearnedCount,
+            ExpectedCompletionAt = DateTimeOffset.UtcNow.AddDays(remainDays)
+        };
+        
+        return Ok(CurrentWordBankResp.Success(currentWordBankDetail));
     }
 
     /// <summary>
@@ -213,9 +236,6 @@ public class TagController(ILogger<UserController> logger, IRepositoryService re
         }
 
         userTagEntity.SetDailyPlan = userUpdatePlan.SetDailyPlan;
-        userTagEntity.SetTotalDays = userUpdatePlan.SetTotalDays;
-        userTagEntity.RemainingDays = userUpdatePlan.SetTotalDays;
-        userTagEntity.SettingAt = DateTimeOffset.UtcNow;
         
         repository.UserTagRepository.Update(userTagEntity);
         if (await repository.UserTagRepository.SaveAsync())

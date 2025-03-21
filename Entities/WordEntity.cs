@@ -19,9 +19,9 @@ public class WordEntity : BaseEntity
     [MaxLength(Constants.Word.MaxWordDefinitionLength, ErrorMessage = ErrorMessages.ValidationError.OverWordDefinitionLength)]
     public required string Definition { get; set; }
     
-    public required WordLevel Tag { get; set; }
-    
     public virtual ICollection<WordDistractorEntity> WordDistractors { get; set; } = [];
+    
+    public virtual ICollection<WordBankWordBookEntity> Books { get; set; } = [];
 }
 
 public class WordDistractorEntity : BaseEntity

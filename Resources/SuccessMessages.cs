@@ -75,9 +75,9 @@ public static class SuccessMessages
 
         public static class UserTag
         {
-           public const string GetWordBanksSuccess = "controller.usertag.get_word_banks_success";
+           public const string GetWordBooksSuccess = "controller.usertag.get_word_banks_success";
            public const string SelectWordBankSuccess = "controller.usertag.select_word_bank_success";
-           public const string GetCurrentWordBankSuccess = "controller.usertag.get_current_word_bank_success";
+           public const string GetCurrentWordBookSuccess = "controller.usertag.get_current_word_book_success";
            public const string UpdatePlanSuccess = "controller.usertag.update_plan.success"; 
         }
 
@@ -85,6 +85,7 @@ public static class SuccessMessages
         {
             public const string GetSessionDetailSuccess = "controller.studysession.get.detail_success";
             public const string GetNextWordSuccess = "controller.studysession.get.next_word_success";
+            public const string ContinueSessionSuccess = "controller.studysession.continue_session_success";
         }
 
         public static class Word
@@ -105,6 +106,12 @@ public static class SuccessMessages
             public const string GetFillInBlankSuccess = "controller.question.get.fill_in_blank_success";
             public const string GetClozeTestSuccess = "controller.question.get.cloze_test.success";
             public const string GetQuestionListSuccess = "controller.question.get.list_success";
+        }
+
+        public static class CheckIn
+        {
+            public const string GetCheckInStatusSuccess = "controller.checkin.get_check_in_status_success";
+            public const string GetCheckInDaysSuccess = "controller.checkin.get_check_in_days_success";
         }
     }
 }

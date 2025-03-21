@@ -5,21 +5,26 @@ using RestSharp;
 using System.Text.Json;
 using Seiun.Controllers;
 using Seiun.Entities;
+using SixLabors.ImageSharp;
 using Seiun.Utils.Enums;
+using Seiun.Utils;
 
 namespace Seiun.Services;
 
-public class AiRequestService : IAiRequestService
+public class AiRequestService(IServiceScopeFactory serviceScopeFactory, ILogger<WordSessionController> logger) : IAiRequestService
 {
 	private readonly IConfigurationRoot _config = new ConfigurationBuilder()
 		.SetBasePath(Directory.GetCurrentDirectory())
 		.AddJsonFile("secret.json", optional: false, reloadOnChange: true)
 		.Build();
-
+	
+	
 	// 生成文章和封面
-	public async Task GenerateAiArticleAsync(Guid userId, IRepositoryService repository,
-		ILogger<WordSessionController> logger)
+	public async Task GenerateAiArticleAsync(Guid userId)
 	{
+		using var scope = serviceScopeFactory.CreateScope();
+		var repository = scope.ServiceProvider.GetRequiredService<IRepositoryService>();
+		
 		var dApiKey = _config["DeepSeek:ApiKey"];
 		var cApiKey = _config["CA:ApiKey"];
 
@@ -37,7 +42,7 @@ public class AiRequestService : IAiRequestService
 			.ToList();
 		var words = latestFinishedWords.Select(x => x.WordText).ToList();
 
-		// 生成
+		// 生成文章
 		var prompt = string.Join(",", words);
 		var clientOptions = new OpenAIClientOptions
 		{
@@ -109,6 +114,43 @@ public class AiRequestService : IAiRequestService
 		var dataArray = root.GetProperty("data");
 		var firstElement = dataArray[0];
 		var aiCoverUrl = firstElement.GetProperty("url").GetString() ?? string.Empty;
+		if (aiCoverUrl != string.Empty)
+		{
+			logger.LogWarning("User {} failed generate ai cover", userId);
+			return;
+		}
+		
+		// 下载图片
+		var imageClient = new RestClient(aiCoverUrl);
+		var imageRequest = new RestRequest
+		{
+			Method = Method.Get
+		};
+		var imageResponse = await imageClient.ExecuteAsync(imageRequest);
+		if (imageResponse.RawBytes == null)
+		{
+			logger.LogWarning("User {} failed upload cover image", userId);
+			return;
+		}
+		
+		var imageBytes = imageResponse.RawBytes;
+		
+		// 处理图片
+		string articleImgName;
+		try
+		{
+			await using var imageStream = new MemoryStream(imageBytes);
+			var image = await Image.LoadAsync(imageStream);
+			await using var processedImageStream = new MemoryStream();
+			await image.SaveAsWebpAsync(processedImageStream);
+			processedImageStream.Seek(0, SeekOrigin.Begin);
+			articleImgName = await repository.ArticleRepository.UploadArticleImgAsync(processedImageStream, Constants.BucketNames.ArticleCover);
+		}
+		catch
+		{
+			logger.LogWarning("User {} failed upload cover image", userId);
+			return;
+		}
 
 		// 存储ai文章
 		var aIArticleEntity = new AiArticleEntity
@@ -116,8 +158,7 @@ public class AiRequestService : IAiRequestService
 			UserId = userId,
 			SessionId = latestFinishedWordGroup.Key,
 			Article = aiArticle,
-			CoverUrl = aiCoverUrl,
-			// CreatedAt = DateTimeOffset.UtcNow
+			CoverUrl = articleImgName,
 		};
 		repository.AiArticleRepository.Create(aIArticleEntity);
 		if (!await repository.AiArticleRepository.SaveAsync())
@@ -127,9 +168,11 @@ public class AiRequestService : IAiRequestService
 	}
 
 	// 生成选词填空
-	public async Task GenerateAiFillInBlankAsync(List<string> words, Guid userId, IRepositoryService repository,
-		ILogger<WordSessionController> logger)
+	public async Task GenerateAiFillInBlankAsync(List<string> words, Guid userId)
 	{
+		using var scope = serviceScopeFactory.CreateScope();
+		var repository = scope.ServiceProvider.GetRequiredService<IRepositoryService>();
+		
 		var apiKey = _config["CA:ApiKey"];
 
 		var client = new RestClient("https://api.chatanywhere.tech/v1/chat/completions");
@@ -305,7 +348,6 @@ public class AiRequestService : IAiRequestService
 			UserId = userId,
 			QuestionId = fillInBlank.Id,
 			Type = QuestionType.FillInBlank,
-			SettingAt = DateTimeOffset.UtcNow
 		};
 		repository.UserQuestionRepository.Create(userQuestion);
 		if (!await repository.UserQuestionRepository.SaveAsync())
@@ -315,9 +357,11 @@ public class AiRequestService : IAiRequestService
 	}
 
 	// 生成完形填空
-	public async Task GenerateAiClozeTest(List<string> words, Guid userId, IRepositoryService repository,
-		ILogger<WordSessionController> logger)
+	public async Task GenerateAiClozeTest(List<string> words, Guid userId)
 	{
+		using var scope = serviceScopeFactory.CreateScope();
+		var repository = scope.ServiceProvider.GetRequiredService<IRepositoryService>();
+		
 		var apiKey = _config["CA:ApiKey"];
 		
 		var client = new RestClient("https://api.chatanywhere.tech/v1/chat/completions");
@@ -492,7 +536,6 @@ public class AiRequestService : IAiRequestService
 			UserId = userId,
 			QuestionId = clozeTest.Id,
 			Type = QuestionType.ClozeTest,
-			SettingAt = DateTimeOffset.UtcNow
 		};
 		repository.UserQuestionRepository.Create(userQuestion);
 		if (!await repository.UserQuestionRepository.SaveAsync())

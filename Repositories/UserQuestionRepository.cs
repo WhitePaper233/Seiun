@@ -12,7 +12,7 @@ public class UserQuestionRepository(SeiunDbContext dbContext, IMinioClient minio
     {
         return await DbContext.UserQuestions
             .Where(u => u.UserId == userId && u.Type == questionType)
-            .OrderByDescending(u => u.SettingAt)
+            .OrderByDescending(u => u.CreatedAt)
             .ToListAsync();
     }
 
@@ -20,7 +20,7 @@ public class UserQuestionRepository(SeiunDbContext dbContext, IMinioClient minio
     {
         return await DbContext.UserQuestions
             .Where(u => u.UserId == userId)
-            .OrderByDescending(u => u.SettingAt)
+            .OrderByDescending(u => u.CreatedAt)
             .ToListAsync();
     }
 }

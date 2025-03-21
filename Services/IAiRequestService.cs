@@ -6,7 +6,7 @@ namespace Seiun.Services;
 
 public interface IAiRequestService
 {	
-	Task GenerateAiArticleAsync(Guid userId, IRepositoryService repository, ILogger<WordSessionController> logger);
-	Task GenerateAiFillInBlankAsync(List<string> words, Guid userId, IRepositoryService repository, ILogger<WordSessionController> logger);
-	Task GenerateAiClozeTest(List<string> words, Guid userId, IRepositoryService repository, ILogger<WordSessionController> logger);
+	Task GenerateAiArticleAsync(Guid userId);
+	Task GenerateAiFillInBlankAsync(List<string> words, Guid userId);
+	Task GenerateAiClozeTest(List<string> words, Guid userId);
 }

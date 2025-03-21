@@ -9,12 +9,12 @@ public class FinishedWordRepository(SeiunDbContext dbContext, IMinioClient minio
 {
     public async Task<IGrouping<Guid,FinishedWordRecordEntity>?> GetLatestFinishedWordIdAsync(Guid userId)
 	{	
-		var LatestFinishedWords = await DbContext.FinishedWords
+		var latestFinishedWords = await DbContext.FinishedWords
 			.Where(x => x.UserId == userId)
-			.OrderByDescending(x => x.FinishedAt)
+			.OrderByDescending(x => x.CreatedAt)
 			.ToListAsync();
 		
-		return LatestFinishedWords
+		return latestFinishedWords
 			.GroupBy(x => x.SessionId)
 			.FirstOrDefault();
 	}
