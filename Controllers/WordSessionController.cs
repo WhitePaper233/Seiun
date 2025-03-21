@@ -181,12 +181,11 @@ public class WordSessionController(ILogger<WordSessionController> logger, IRepos
 
 		// 打卡
 		var lastCheckIn = await repository.UserCheckInRepository.LastCheckInAsync(userId.Value);
-		if (lastCheckIn == null || DateTimeOffset.UtcNow.Date != lastCheckIn.CheckInAt.Date)
+		if (lastCheckIn == null || DateTimeOffset.UtcNow.Date != lastCheckIn.CreatedAt.Date)
 		{
 			var userCheckInEntity = new UserCheckInEntity
 			{
 				UserId = userId.Value,
-				CheckInAt = DateTimeOffset.UtcNow,
 			};
 
 			repository.UserCheckInRepository.Create(userCheckInEntity);

@@ -11,7 +11,7 @@ public class UserCheckInRepository(SeiunDbContext dbContext, IMinioClient minioC
     {
         return await DbContext.UserCheckIns
             .Where(x => x.UserId == userId)
-            .OrderByDescending(x => x.CheckInAt)
+            .OrderByDescending(x => x.CreatedAt)
             .FirstOrDefaultAsync();
     }
     
@@ -34,7 +34,7 @@ public class UserCheckInRepository(SeiunDbContext dbContext, IMinioClient minioC
             .Select(g => new
             {
                 UserId = g.Key,
-                LastCheckInTime = g.Max(x => x.CheckInAt) 
+                LastCheckInTime = g.Max(x => x.CreatedAt) 
             })
             .ToDictionaryAsync(x => x.UserId, x => (DateTimeOffset?)x.LastCheckInTime);
     }

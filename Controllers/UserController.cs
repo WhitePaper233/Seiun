@@ -364,7 +364,7 @@ public class UserController(ILogger<UserController> logger, IRepositoryService r
         }
 
         var lastCheckIn = await repository.UserCheckInRepository.LastCheckInAsync(userId);
-        if (lastCheckIn == null || DateTimeOffset.UtcNow.Date != lastCheckIn.CheckInAt.Date)
+        if (lastCheckIn == null || DateTimeOffset.UtcNow.Date != lastCheckIn.CreatedAt.Date)
         {
             var notCheckInStatus = new UserCheckInDetail
             {
