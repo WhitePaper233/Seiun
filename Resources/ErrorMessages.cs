@@ -158,5 +158,10 @@ public static class ErrorMessages
             public const string QuestionWordNotFound = "error.controller.question.word_not_found";
             public const string QuestionAnswerNotFound = "error.controller.question.answer_not_found";
         }
+
+        public static class CheckIn
+        {
+            public const string NotFoundCheckIn = "error.controller.checkin.not_fount_check_in";
+        }
     }
 }

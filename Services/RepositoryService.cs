@@ -41,8 +41,8 @@ public class RepositoryService(SeiunDbContext seiunDbContext, IMinioClient minio
     private readonly Lazy<IFinishedWordRepository> _finishedWordRepository = new(() => new FinishedWordRepository(seiunDbContext, minioClient));
     public IFinishedWordRepository FinishedWordRepository => _finishedWordRepository.Value;
     
-    private readonly Lazy<IAIArticleRepository> _aiArticleRepository = new(() => new AIArticleRepository(seiunDbContext, minioClient));
-    public IAIArticleRepository AiArticleRepository => _aiArticleRepository.Value;
+    private readonly Lazy<IAiArticleRepository> _aiArticleRepository = new(() => new AiArticleRepository(seiunDbContext, minioClient));
+    public IAiArticleRepository AiArticleRepository => _aiArticleRepository.Value;
 
     private readonly Lazy<IUserCheckInRepository> _userCheckInRepository = new(() => new UserCheckInRepository(seiunDbContext, minioClient));
     public IUserCheckInRepository UserCheckInRepository => _userCheckInRepository.Value;
@@ -70,4 +70,10 @@ public class RepositoryService(SeiunDbContext seiunDbContext, IMinioClient minio
     
     private readonly Lazy<IClozeTestAnswerRepository> _clozeTestAnswerRepository = new(() => new ClozeTestAnswerRepository(seiunDbContext, minioClient));
     public IClozeTestAnswerRepository ClozeTestAnswerRepository => _clozeTestAnswerRepository.Value;
+    
+    private readonly Lazy<IWordBookRepository> _wordBookRepository = new(() => new WordBookRepository(seiunDbContext, minioClient));
+    public IWordBookRepository WordBookRepository => _wordBookRepository.Value;
+    
+    private readonly Lazy<IWordBankWordBookRepository> _wordBankWordBookRepository = new(() => new WordBankWordBookRepository(seiunDbContext, minioClient));
+    public IWordBankWordBookRepository WordBankWordBookRepository => _wordBankWordBookRepository.Value;
 }   

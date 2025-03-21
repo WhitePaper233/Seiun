@@ -8,7 +8,6 @@ using Seiun.Models.Parameters;
 using SixLabors.ImageSharp;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using SixLabors.ImageSharp.Processing;
 using Seiun.Utils;
 using Nest;
 
@@ -20,9 +19,8 @@ namespace Seiun.Controllers;
 /// <param name="repository">日志</param>
 /// <param name="elasticClient">Elasticsearch 搜索客户端</param>
 /// <param name="articleSearch">文章搜索服务</param>
-/// <param name="aiRequest">AI请求服务</param>
 [ApiController,Route("/api/article")]
-public class ArticleController(ILogger<ArticleController> logger, IRepositoryService repository, IElasticClient elasticClient, IArticleSearchService articleSearch, IAiRequestService aiRequest) : ControllerBase{
+public class ArticleController(ILogger<ArticleController> logger, IRepositoryService repository, IElasticClient elasticClient, IArticleSearchService articleSearch) : ControllerBase{
 	
 	/// <summary>
 	/// 上传文章
@@ -61,7 +59,6 @@ public class ArticleController(ILogger<ArticleController> logger, IRepositorySer
 			ImageFileNames = articleCreate.ImageNames,
 			CoverFileName = articleCreate.CoverFileName,
 			CreatorId = userId.Value,
-			CreateTime = DateTimeOffset.UtcNow,
 			IsPinned = false
 		};
 
@@ -73,7 +70,7 @@ public class ArticleController(ILogger<ArticleController> logger, IRepositorySer
 				Article = article.Article,
 				CreatorUserName = user.UserName,
 				CreatorNickName = user.NickName,
-				CreateTime = article.CreateTime,
+				CreatedAt = article.CreatedAt,
 				ArticleId = article.Id
 			};
 

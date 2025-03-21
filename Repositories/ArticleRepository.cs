@@ -23,8 +23,8 @@ public class ArticleRepository(SeiunDbContext dbContext, IMinioClient minioClien
 		from ??= DateTimeOffset.UtcNow;
 
 		return await DbContext.Articles
-			.Where(a => a.CreateTime <= from )
-			.OrderByDescending(a => a.CreateTime)
+			.Where(a => a.CreatedAt <= from )
+			.OrderByDescending(a => a.CreatedAt)
 			.Take(queryLength)
 			.Select(a => a.Id)
 			.ToListAsync();
@@ -36,7 +36,7 @@ public class ArticleRepository(SeiunDbContext dbContext, IMinioClient minioClien
 			.Where(a => a.CreatorId == userId)
 			.OrderByDescending(a => a.IsPinned == true)
 			.ThenByDescending(a => a.PinTime)
-			.ThenByDescending(a => a.CreateTime)
+			.ThenByDescending(a => a.CreatedAt)
 			.Select(a => a.Id)
 			.ToListAsync();
 	}

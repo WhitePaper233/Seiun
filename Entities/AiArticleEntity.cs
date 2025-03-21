@@ -15,7 +15,6 @@ public class AiArticleEntity : BaseEntity
 	
 	[MaxLength(Constants.Article.MaxCoverUrlLength, ErrorMessage = ErrorMessages.ValidationError.OverCoverUrlLength)]
 	public required string CoverUrl { get; set; }
-	// public required DateTimeOffset CreatedAt { get; set; }
 	
 	[ForeignKey(nameof(this.UserId))]
 	public virtual UserEntity User { get; set; } = null!;

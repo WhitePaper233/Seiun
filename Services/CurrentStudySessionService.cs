@@ -5,7 +5,7 @@ namespace Seiun.Services;
 public class CurrentStudySessionService(IServiceScopeFactory serviceScopeFactory, ILogger<CurrentStudySessionService> logger) : ICurrentStudySessionService
 {
 	private  readonly Dictionary<Guid,Queue<WordEntity>> _currentStudySessions = [];
-
+	
 	// 添加Session
     public bool AddSession(Guid sessionId, Queue<WordEntity> words)
 	{
@@ -91,7 +91,7 @@ public class CurrentStudySessionService(IServiceScopeFactory serviceScopeFactory
 				logger.LogWarning("SessionEntity does not exist for Session {}",session.Key);
 				continue;
 			}
-			var hoursSpan = endTime - userSession.WordSessionAt;
+			var hoursSpan = endTime - userSession.CreatedAt;
 			if(hoursSpan.TotalHours<=20)
 			{
 				continue;

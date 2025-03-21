@@ -42,15 +42,14 @@ public class PublicAnnouncementController(ILogger<PublicAnnouncementController> 
 			));
 		}
 
-		var PublicAnnouncement = new PublicAnnouncementEntity
+		var publicAnnouncement = new PublicAnnouncementEntity
 		{
 			Title = PublicAnnouncementPublish.Title,
 			Content = PublicAnnouncementPublish.Content,
-			PublishTime = DateTime.Now,
 			AdminId = userId.Value	
 		};
 
-		repository.PublicAnnouncementRepository.Create(PublicAnnouncement);
+		repository.PublicAnnouncementRepository.Create(publicAnnouncement);
 		if(await repository.PublicAnnouncementRepository.SaveAsync())
 		{
 			return Ok(ResponseFactory.NewSuccessBaseResponse(SuccessMessages.Controller.PublicAnnouncement.PublishSuccess));

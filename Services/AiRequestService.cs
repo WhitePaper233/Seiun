@@ -158,8 +158,7 @@ public class AiRequestService(IServiceScopeFactory serviceScopeFactory, ILogger<
 			UserId = userId,
 			SessionId = latestFinishedWordGroup.Key,
 			Article = aiArticle,
-			CoverUrl = aiCoverUrl,
-			// CreatedAt = DateTimeOffset.UtcNow
+			CoverUrl = articleImgName,
 		};
 		repository.AiArticleRepository.Create(aIArticleEntity);
 		if (!await repository.AiArticleRepository.SaveAsync())
@@ -349,7 +348,6 @@ public class AiRequestService(IServiceScopeFactory serviceScopeFactory, ILogger<
 			UserId = userId,
 			QuestionId = fillInBlank.Id,
 			Type = QuestionType.FillInBlank,
-			SettingAt = DateTimeOffset.UtcNow
 		};
 		repository.UserQuestionRepository.Create(userQuestion);
 		if (!await repository.UserQuestionRepository.SaveAsync())
@@ -538,7 +536,6 @@ public class AiRequestService(IServiceScopeFactory serviceScopeFactory, ILogger<
 			UserId = userId,
 			QuestionId = clozeTest.Id,
 			Type = QuestionType.ClozeTest,
-			SettingAt = DateTimeOffset.UtcNow
 		};
 		repository.UserQuestionRepository.Create(userQuestion);
 		if (!await repository.UserQuestionRepository.SaveAsync())

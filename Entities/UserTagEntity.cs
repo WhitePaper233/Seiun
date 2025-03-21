@@ -12,6 +12,7 @@ public class UserTagEntity : BaseEntity
     
     public required int LearnedCount { get; set; }
     
+    
     [ForeignKey(nameof(this.UserId))] 
     public virtual UserEntity User { get; set; } = null!;
 }

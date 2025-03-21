@@ -13,8 +13,6 @@ public class ArticleEntity: BaseEntity
 	public string? CoverFileName { get; set; }
 	// 发布者ID
 	public required Guid CreatorId { get; set; }
-	// 发布时间
-	public required DateTimeOffset CreateTime { get; set; }
 	// 置顶
 	public required bool IsPinned { get; set; }
 	// 置顶时间

@@ -5,5 +5,5 @@ namespace Seiun.Repositories;
 public interface IWordSessionRepository : IBaseRepository<WordSessionEntity>
 {
 	Task<WordSessionEntity?> GetSessionByUserIdAsync(Guid userId);
-	void BulkDelete(List<Guid> sessionIds);
+	Task<List<WordSessionEntity>?> GetTodayAllSessionsByUserIdAsync(Guid userIds);
 }

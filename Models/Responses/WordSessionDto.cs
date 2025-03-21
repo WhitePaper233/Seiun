@@ -79,6 +79,10 @@ public class NextWordDetail
 {
 	public required List<OptionDetail> Options { get; set; }
 	public required AnswerDetail Answer { get; set; }
+	
+	public required int ReviewingWordCount { get; set; }
+	
+	public required int StudyingWordCount { get; set; }
 }
 
 public class OptionDetail
@@ -99,7 +103,7 @@ public class AnswerDetail
 public sealed class GetNextWordResp(int code, string message, NextWordDetail? nextWordDetail)
 	: BaseRespWithData<NextWordDetail>(code, message, nextWordDetail)
 {
-	public static GetNextWordResp Success(WordEntity nextWord, List<WordEntity> distractorWords)
+	public static GetNextWordResp Success(WordEntity nextWord, List<WordEntity> distractorWords, int reviewingWordCount, int studyingWordCount)
 	{
 		var options = distractorWords.Select(d => 
 			new OptionDetail { WordId = d.Id, Word = d.WordText, Pronunciation = d.Pronunciation, Definition = d.Definition })
@@ -111,7 +115,9 @@ public sealed class GetNextWordResp(int code, string message, NextWordDetail? ne
 			new NextWordDetail
 			{
 				Options = options,
-				Answer = answer
+				Answer = answer,
+				ReviewingWordCount = reviewingWordCount,
+				StudyingWordCount = studyingWordCount
 			});
 	}
 

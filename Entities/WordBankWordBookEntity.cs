@@ -1,8 +1,3 @@
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
-using Seiun.Resources;
-using Seiun.Utils;
-using Seiun.Utils.Enums;
 
 namespace Seiun.Entities;
 
