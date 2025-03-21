@@ -150,7 +150,7 @@ public class TagController(ILogger<UserController> logger, IRepositoryService re
     /// 获取当前选择的词库
     /// </summary>
     /// <returns>获取结果</returns>
-    [HttpPost("current-word-bank", Name = "GetCurrentWordBank")]
+    [HttpGet("current-word-bank", Name = "GetCurrentWordBank")]
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     [Authorize(Roles = $"{nameof(UserRole.User)},{nameof(UserRole.Creator)},{nameof(UserRole.Admin)},{nameof(UserRole.SuperAdmin)}")]
     [ProducesResponseType(typeof(CurrentWordBankResp), StatusCodes.Status200OK)]
@@ -175,8 +175,7 @@ public class TagController(ILogger<UserController> logger, IRepositoryService re
                 ErrorMessages.Controller.UserTag.CurrentUserTagNotFound
             ));
         }
-        // ToDo
-        return Ok(currentWordBank);
+        return Ok(CurrentWordBankResp.Success(currentWordBank));
     }
 
     /// <summary>

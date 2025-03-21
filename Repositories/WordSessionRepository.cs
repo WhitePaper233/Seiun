@@ -11,4 +11,11 @@ public class WordSessionRepository(SeiunDbContext dbContext, IMinioClient minioC
 	{
 		return DbContext.Sessions.Where(s => s.UserId == userId).FirstOrDefaultAsync();
 	}
+
+	public void BulkDelete(List<Guid> sessionIds)
+	{
+		DbContext.Sessions
+			.Where(s => sessionIds.Contains(s.Id))
+			.ExecuteDelete();
+	}
 }

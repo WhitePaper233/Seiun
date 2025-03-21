@@ -55,15 +55,15 @@ public class CurrentWordBankDetail
 
     public required int SetDailyPlan { get; set; }
 
-    public required int SetTotalDays { get; set; }
-    
-    public required int RemainingDays { get; set; }
+    // public required int SetTotalDays { get; set; }
+    //
+    // public required int RemainingDays { get; set; }
 
     public required int LearnedCount { get; set; }
     
-    public required DateTimeOffset ExpectedCompletionAt { get; set; }
-    
-    public required DateTimeOffset? LastStudyAt { get; set; }
+    // public required DateTimeOffset ExpectedCompletionAt { get; set; }
+    //
+    // public required DateTimeOffset? LastStudyAt { get; set; }
 }
 
 public sealed class CurrentWordBankResp(int code, string message, CurrentWordBankDetail? wordBanks)
@@ -76,11 +76,11 @@ public sealed class CurrentWordBankResp(int code, string message, CurrentWordBan
             {
                 WordLevel = userTag.WordLevel,
                 SetDailyPlan = userTag.SetDailyPlan,
-                SetTotalDays = userTag.SetTotalDays,
-                RemainingDays = userTag.RemainingDays,
+                // SetTotalDays = userTag.SetTotalDays,
+                // RemainingDays = userTag.RemainingDays,
                 LearnedCount = userTag.LearnedCount,
-                ExpectedCompletionAt = userTag.ExpectedCompletionAt,
-                LastStudyAt = userTag.LastStudyAt,
+                // ExpectedCompletionAt = userTag.ExpectedCompletionAt,
+                // LastStudyAt = userTag.LastStudyAt,
             });
     }
 

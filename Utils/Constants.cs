@@ -59,4 +59,9 @@ public static class Constants
         public const int FourLevelWordCount = 4428;
         public const int SixLevelWordCount = 5523;
     }
+
+    public static class WordBookName
+    {
+        public const int MaxWordBookNameLength = 50;
+    }
 }

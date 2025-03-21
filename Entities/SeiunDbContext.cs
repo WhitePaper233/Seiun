@@ -59,6 +59,8 @@ public class SeiunDbContext(DbContextOptions<SeiunDbContext> options) : DbContex
         ConfigureWordEntity(modelBuilder);
         ConfigureWordDistractorEntity(modelBuilder);
 
+        modelBuilder.Entity<WordBankWordBookEntity>().HasKey(p => new { p.WordId, p.BookId });
+
         base.OnModelCreating(modelBuilder);
 
         # endregion

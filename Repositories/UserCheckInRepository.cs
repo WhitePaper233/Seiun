@@ -7,18 +7,14 @@ namespace Seiun.Repositories;
 public class UserCheckInRepository(SeiunDbContext dbContext, IMinioClient minioClient)
 	: BaseRepository<UserCheckInEntity>(dbContext, minioClient), IUserCheckInRepository
 {
-    // 检查用户今天是否签到
-    public async Task<bool> CheckInTodayAsync(Guid userId)
+    public async Task<UserCheckInEntity?> LastCheckInAsync(Guid userId)
     {
-        // 本地时间
-        var today = DateTime.Today;
-        // 明天的 
-        var tomorrow = today.AddDays(1); 
-
         return await DbContext.UserCheckIns
-            .AnyAsync(x => x.UserId == userId && x.CheckInDate >= today && x.CheckInDate < tomorrow);
+            .Where(x => x.UserId == userId)
+            .OrderByDescending(x => x.CheckInDate)
+            .FirstOrDefaultAsync();
     }
-
+    // Todo
 
     // 获取用户的所有打卡记录，并按日期降序排列
     public async Task<List<UserCheckInEntity>> GetUserCheckInsAsync(Guid userId)
@@ -28,9 +24,9 @@ public class UserCheckInRepository(SeiunDbContext dbContext, IMinioClient minioC
             .OrderByDescending(x => x.CheckInDate)  
             .ToListAsync();
     }
-
+    
     // 获取用户最后一次打卡时间
-    public async Task<DateTime> GetLastCheckInTimeAsync(Guid userId)
+    public async Task<DateTimeOffset> GetLastCheckInTimeAsync(Guid userId)
     {
         return await DbContext.UserCheckIns
             .Where(x => x.UserId == userId)

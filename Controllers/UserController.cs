@@ -340,9 +340,9 @@ public class UserController(ILogger<UserController> logger, IRepositoryService r
                 StatusCodes.Status404NotFound,
                 ErrorMessages.Controller.User.UserNotFound
             ));
-
-        if (await repository.UserCheckInRepository.CheckInTodayAsync(userId))
-            return Ok(ResponseFactory.NewSuccessBaseResponse(SuccessMessages.Controller.User.CheckInToday));
+        //
+        // if (await repository.UserCheckInRepository.LastCheckInAsync(userId))
+        //     return Ok(ResponseFactory.NewSuccessBaseResponse(SuccessMessages.Controller.User.CheckInToday));
 
         return Ok(ResponseFactory.NewSuccessBaseResponse(SuccessMessages.Controller.User.NoCheckInToday));
     }
@@ -374,8 +374,8 @@ public class UserController(ILogger<UserController> logger, IRepositoryService r
         if (checkInRecords.Count == 0)
             return Ok(UserCheckInDayResp.Success(SuccessMessages.Controller.User.NoCheckInHistory, userCheckInDay));
 
-        if (await repository.UserCheckInRepository.CheckInTodayAsync(userId))
-            userCheckInDay.TodayCheckInStatus = CheckIn.Checked;
+        // if (await repository.UserCheckInRepository.LastCheckInAsync(userId))
+        //     userCheckInDay.TodayCheckInStatus = CheckIn.Checked;
 
         var lastCheckInDate = checkInRecords.First().CheckInDate.Date;
         foreach (var record in checkInRecords.Skip(1))

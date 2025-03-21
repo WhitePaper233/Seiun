@@ -9,5 +9,5 @@ public interface IUserTagRepository : IBaseRepository<UserTagEntity>
     
     Task<UserTagEntity?> GetTagByUserIdAndWordLevelAsync(Guid userId, WordLevel wordLevel);
     
-    Task<UserTagEntity?> GetCurrentUserTagAsync(Guid userId);
+    // Task<UserTagEntity?> GetCurrentUserTagAsync(Guid userId);
 }

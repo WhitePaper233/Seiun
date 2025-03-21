@@ -22,6 +22,8 @@ public class WordEntity : BaseEntity
     public required WordLevel Tag { get; set; }
     
     public virtual ICollection<WordDistractorEntity> WordDistractors { get; set; } = [];
+    
+    public virtual ICollection<WordBankWordBookEntity> Books { get; set; } = [];
 }
 
 public class WordDistractorEntity : BaseEntity

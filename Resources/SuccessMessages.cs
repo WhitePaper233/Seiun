@@ -85,6 +85,7 @@ public static class SuccessMessages
         {
             public const string GetSessionDetailSuccess = "controller.studysession.get.detail_success";
             public const string GetNextWordSuccess = "controller.studysession.get.next_word_success";
+            public const string ContinueSessionSuccess = "controller.studysession.continue_session_success";
         }
 
         public static class Word

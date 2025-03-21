@@ -230,7 +230,7 @@ public class ArticleController(ILogger<ArticleController> logger, IRepositorySer
 		repository.ArticleRepository.Delete(article);
 		if(await repository.ArticleRepository.SaveAsync()&&deleteResponse.IsValid)
 		{	
-			if(article.ImageFileNames != null&&await repository.ArticleRepository.DeleteAticleImgAsync(article.ImageFileNames, Constants.BucketNames.ArticleImages))
+			if(article.ImageFileNames != null&&await repository.ArticleRepository.DeleteArticleImgAsync(article.ImageFileNames, Constants.BucketNames.ArticleImages))
 			{
 				return Ok(ResponseFactory.NewSuccessBaseResponse(SuccessMessages.Controller.Article.DeleteSuccess));
 			}
@@ -367,7 +367,7 @@ public class ArticleController(ILogger<ArticleController> logger, IRepositorySer
 	[ProducesResponseType(typeof(ArticleListResp), StatusCodes.Status400BadRequest)]
 	[ProducesResponseType(typeof(ArticleListResp), StatusCodes.Status404NotFound)]	
 	[ProducesResponseType(typeof(ArticleListResp), StatusCodes.Status500InternalServerError)]
-	public async Task<IActionResult> GetArticleList([FromQuery] int len, [FromQuery] DateTime? from, [FromQuery] string? reqType, [FromQuery] Guid? userId = null)
+	public async Task<IActionResult> GetArticleList([FromQuery] int len, [FromQuery] DateTimeOffset? from, [FromQuery] string? reqType, [FromQuery] Guid? userId = null)
 	{
 		if(reqType == "user" || reqType == "liked")
 		{

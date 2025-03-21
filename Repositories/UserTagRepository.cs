@@ -22,11 +22,11 @@ public class UserTagRepository(SeiunDbContext dbContext, IMinioClient minioClien
             .FirstOrDefaultAsync();
     }
 
-    public Task<UserTagEntity?> GetCurrentUserTagAsync(Guid userId)
-    {
-        return DbContext.UserTag
-            .Where(w => w.UserId == userId)
-            .OrderByDescending(w => w.SettingAt)
-            .FirstOrDefaultAsync();
-    }
+    // public Task<UserTagEntity?> GetCurrentUserTagAsync(Guid userId)
+    // {
+    //     return DbContext.UserTag
+    //         .Where(w => w.UserId == userId)
+    //         .OrderByDescending(w => w.SettingAt)
+    //         .FirstOrDefaultAsync();
+    // }
 }
