@@ -17,6 +17,7 @@ public static class SuccessMessages
             public const string NoCheckInHistory = "controller.user.checkin.no_checkin_history";
             public const string GetConsecutiveCheckInDays = "controller.user.checkin.get_consecutive_checkin_days";
         }
+
         public static class Admin
         {
             public const string DeleteSuccess = "controller.admin.delete.delete_success";
@@ -73,12 +74,12 @@ public static class SuccessMessages
             public const string DetailSuccess = "controller.reply.detail.detail_success";
         }
 
-        public static class UserTag
+        public static class UserPlan
         {
-           public const string GetWordBooksSuccess = "controller.usertag.get_word_banks_success";
-           public const string SelectWordBankSuccess = "controller.usertag.select_word_bank_success";
-           public const string GetCurrentWordBookSuccess = "controller.usertag.get_current_word_book_success";
-           public const string UpdatePlanSuccess = "controller.usertag.update_plan.success"; 
+            public const string GetWordBooksSuccess = "controller.usertag.get_word_banks_success";
+            public const string SelectWordBankSuccess = "controller.usertag.select_word_bank_success";
+            public const string GetCurrentWordBookSuccess = "controller.usertag.get_current_word_book_success";
+            public const string UpdatePlanSuccess = "controller.usertag.update_plan.success";
         }
 
         public static class StudySession

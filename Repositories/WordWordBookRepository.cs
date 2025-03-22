@@ -7,7 +7,7 @@ namespace Seiun.Repositories;
 public class WordWordBookRepository(SeiunDbContext dbContext, IMinioClient minioClient)
     : BaseRepository<WordWordBookEntity>(dbContext, minioClient), IWordWordBookRepository
 {
-    public async Task<List<WordEntity>?> GetWordBookByTagAsync(Guid bookId, int dailyPlan, Guid userId)
+    public async Task<List<WordEntity>?> GetUnfinishedWordsByPlanAsync(Guid bookId, int dailyPlan, Guid userId)
     {
         var finishedWordIds = await DbContext.FinishedWords
             .Where(a => a.UserId == userId)
@@ -23,12 +23,12 @@ public class WordWordBookRepository(SeiunDbContext dbContext, IMinioClient minio
     }
 
     // 计算单词数量
-    public int QueryWordCount(Guid userBookId)
+    public int GetBookWordCount(Guid userBookId)
     {
         return DbContext.WordWordBooks.Count(entity => entity.BookId == userBookId);
     }
 
-    public Task<int> QueryWordCountAsync(Guid userBookId)
+    public Task<int> GetBookWordCountAsync(Guid userBookId)
     {
         return DbContext.WordWordBooks.CountAsync(entity => entity.BookId == userBookId);
     }
