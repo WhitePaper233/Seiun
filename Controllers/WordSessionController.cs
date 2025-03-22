@@ -208,7 +208,7 @@ public class WordSessionController(
             logger.LogWarning("User {} failed over session", userId);
             return StatusCode(StatusCodes.Status500InternalServerError, ResponseFactory.NewFailedBaseResponse(
                 StatusCodes.Status500InternalServerError,
-                ErrorMessages.Controller.UserPlan.UpdateUserPlanFailed
+                ErrorMessages.Controller.UserPlan.UpdatePlanFailed
             ));
         }
 

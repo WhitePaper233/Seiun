@@ -28,8 +28,8 @@ public class WordWordBookRepository(SeiunDbContext dbContext, IMinioClient minio
         return DbContext.WordWordBooks.Count(entity => entity.BookId == userBookId);
     }
 
-    public Task<int> GetBookWordCountAsync(Guid userBookId)
+    public async Task<int> GetBookWordCountAsync(Guid userBookId)
     {
-        return DbContext.WordWordBooks.CountAsync(entity => entity.BookId == userBookId);
+        return await DbContext.WordWordBooks.CountAsync(entity => entity.BookId == userBookId);
     }
 }
