@@ -327,7 +327,6 @@ public class UserController(ILogger<UserController> logger, IRepositoryService r
     /// <summary>
     /// 获取今日用户打卡状态
     /// </summary>
-    /// <param name="userId">用户ID</param>
     /// <returns>打卡状态</returns>
     [HttpGet("checkin", Name = "GetCheckin")]
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
@@ -344,6 +343,7 @@ public class UserController(ILogger<UserController> logger, IRepositoryService r
                 StatusCodes.Status404NotFound,
                 ErrorMessages.Controller.User.UserNotFound
             ));
+        }
 
         var userPlan = await repository.UserPlansRepository.GetUserPlanAsync(userId.Value);
         if (userPlan == null)
@@ -389,7 +389,6 @@ public class UserController(ILogger<UserController> logger, IRepositoryService r
     /// <summary>
     /// 获取用户的连续打卡天数
     /// </summary>
-    /// <param name="userId">用户ID</param>
     /// <returns>连续打卡天数</returns>
     [HttpGet("checkin/consecutive", Name = "GetConsecutiveCheckInDays")]
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
@@ -417,7 +416,7 @@ public class UserController(ILogger<UserController> logger, IRepositoryService r
         var lastDate = DateTimeOffset.UtcNow.Date;
 
         foreach (var date in userCheckInRecords)
-            if (date == lastDate)
+            if (date.Date == lastDate)
             {
                 consecutiveDays++;
                 lastDate = lastDate.AddDays(-1);
