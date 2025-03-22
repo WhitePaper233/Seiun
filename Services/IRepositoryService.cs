@@ -27,5 +27,5 @@ public interface IRepositoryService
     IClozeTestSelectionRepository ClozeTestSelectionRepository { get; }
     IClozeTestAnswerRepository ClozeTestAnswerRepository { get; }
     IWordBookRepository WordBookRepository { get; }
-    IWordBankWordBookRepository WordBankWordBookRepository { get; }
+    IWordWordBookRepository WordWordBookRepository { get; }
 }

@@ -1,7 +1,6 @@
-
 namespace Seiun.Entities;
 
-public class WordBankWordBookEntity : BaseEntity
+public class WordWordBookEntity : BaseEntity
 {
     public required Guid WordId { get; set; }
     public required WordEntity Word { get; set; }

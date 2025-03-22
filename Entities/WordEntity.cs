@@ -12,25 +12,25 @@ public class WordEntity : BaseEntity
     [MaxLength(Constants.Word.MaxWordTextLength, ErrorMessage = ErrorMessages.ValidationError.OverWordTextLength)]
     public required string WordText { get; set; }
 
-    [MaxLength(Constants.Word.MaxWordPronunciationLength, ErrorMessage = ErrorMessages.ValidationError.OverPronunciationLength)]
+    [MaxLength(Constants.Word.MaxWordPronunciationLength,
+        ErrorMessage = ErrorMessages.ValidationError.OverPronunciationLength)]
     public string? Pronunciation { get; set; }
 
     [Required]
-    [MaxLength(Constants.Word.MaxWordDefinitionLength, ErrorMessage = ErrorMessages.ValidationError.OverWordDefinitionLength)]
+    [MaxLength(Constants.Word.MaxWordDefinitionLength,
+        ErrorMessage = ErrorMessages.ValidationError.OverWordDefinitionLength)]
     public required string Definition { get; set; }
-    
+
     public virtual ICollection<WordDistractorEntity> WordDistractors { get; set; } = [];
-    
-    public virtual ICollection<WordBankWordBookEntity> Books { get; set; } = [];
+
+    public virtual ICollection<WordWordBookEntity> Books { get; set; } = [];
 }
 
 public class WordDistractorEntity : BaseEntity
 {
     public required Guid WordId { get; set; }
-    
-    public required Guid DistractorId { get; set; }
-    
-    [ForeignKey(nameof(this.WordId))]
-    public virtual WordEntity Word { get; set; } = null!;
-}
 
+    public required Guid DistractorId { get; set; }
+
+    [ForeignKey(nameof(this.WordId))] public virtual WordEntity Word { get; set; } = null!;
+}

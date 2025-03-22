@@ -28,7 +28,7 @@ public class SeiunDbContext(DbContextOptions<SeiunDbContext> options) : DbContex
     public required DbSet<ClozeTestSelectionEntity> ClozeTestSelections { get; set; }
     public required DbSet<ClozeTestAnswerEntity> ClozeTestAnswers { get; set; }
     public required DbSet<WordBookEntity> WordBooks { get; set; }
-    public required DbSet<WordBankWordBookEntity> WordBankWordBooks { get; set; }
+    public required DbSet<WordWordBookEntity> WordWordBooks { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
@@ -60,9 +60,9 @@ public class SeiunDbContext(DbContextOptions<SeiunDbContext> options) : DbContex
         ConfigureUserQuestionEntity(modelBuilder);
         ConfigureWordEntity(modelBuilder);
         ConfigureWordDistractorEntity(modelBuilder);
-        ConfigureWordBankWordBookEntity(modelBuilder);
+        ConfigureWordWordBookEntity(modelBuilder);
 
-        modelBuilder.Entity<WordBankWordBookEntity>().HasKey(p => new { p.WordId, p.BookId });
+        modelBuilder.Entity<WordWordBookEntity>().HasKey(p => new { p.WordId, p.BookId });
 
         base.OnModelCreating(modelBuilder);
 
@@ -262,16 +262,16 @@ public class SeiunDbContext(DbContextOptions<SeiunDbContext> options) : DbContex
             .HasForeignKey(d => d.WordId);
     }
 
-    private static void ConfigureWordBankWordBookEntity(ModelBuilder modelBuilder)
+    private static void ConfigureWordWordBookEntity(ModelBuilder modelBuilder)
     {
         // WordBankWordBook - word
-        modelBuilder.Entity<WordBankWordBookEntity>()
+        modelBuilder.Entity<WordWordBookEntity>()
             .HasOne(b => b.Word)
             .WithMany(b => b.Books)
             .HasForeignKey(b => b.WordId);
-        
+
         // WordBankWordBook - book
-        modelBuilder.Entity<WordBankWordBookEntity>()
+        modelBuilder.Entity<WordWordBookEntity>()
             .HasOne(b => b.Book)
             .WithMany(b => b.Words)
             .HasForeignKey(b => b.BookId);
