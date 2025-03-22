@@ -87,7 +87,6 @@ public static class SuccessMessages
 
         public static class Word
         {
-            public const string GetReviewingWordSuccess = "controller.word.get.reviewing_word_success";
             public const string FinishedWordCreatSuccess = "controller.word.finishedword.create.create_success";
             public const string ErrorWordRecordCreatSuccess = "controller.word.errorword.record.record_success";
         }

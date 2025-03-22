@@ -59,22 +59,22 @@ public class WordSessionController(
 
         var reviewingWordCount = 0;
         var reviewingWordIds = await repository.ErrorWordRepository.GetErrorWordIdsByUserIdAsync(userId.Value);
-        if (reviewingWordIds != null)
+        if (reviewingWordIds != null && reviewingWordIds.Count != 0)
         {
             reviewingWordCount = reviewingWordIds.Count;
-            var reviewingWords = (await repository.WordRepository.GetByGuidsAsync(reviewingWordIds)).ToList();
+            var reviewingWords = (await repository.WordRepository.GetReviewingWordsByGuidsAsync(reviewingWordIds)).ToList();
 
             foreach (var studyingWord in reviewingWords) wordQueue.Enqueue(studyingWord);
-        }
-
-        repository.ErrorWordRepository.BulkDelete(userId.Value);
-        if (!await repository.ErrorWordRepository.SaveAsync())
-        {
-            logger.LogWarning("User {} start study session failed", userId);
-            return StatusCode(StatusCodes.Status500InternalServerError, StartStudyResp.Fail(
-                StatusCodes.Status500InternalServerError,
-                ErrorMessages.Controller.WordSession.StartFailed
-            ));
+            
+            repository.ErrorWordRepository.BulkDelete(userId.Value);
+            if (!await repository.ErrorWordRepository.SaveAsync())
+            {
+                logger.LogWarning("User {} start study session failed", userId);
+                return StatusCode(StatusCodes.Status500InternalServerError, StartStudyResp.Fail(
+                    StatusCodes.Status500InternalServerError,
+                    ErrorMessages.Controller.WordSession.StartFailed
+                ));
+            }
         }
 
         var studyWords =
@@ -83,12 +83,12 @@ public class WordSessionController(
         if (studyWords == null || studyWords.Count == 0)
         {
             logger.LogWarning("No studying words found for {}", selectedPlan.WordBookId);
-            return StatusCode(StatusCodes.Status500InternalServerError, StartStudyResp.Fail(
+            return StatusCode(StatusCodes.Status404NotFound, StartStudyResp.Fail(
                 StatusCodes.Status404NotFound,
                 ErrorMessages.Controller.WordSession.NotFoundStudyingWords
             ));
         }
-
+        
         var studyingWordCount = studyWords.Count;
         foreach (var word in studyWords) wordQueue.Enqueue(word);
 
