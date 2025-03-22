@@ -50,7 +50,7 @@ public class UserEntity : BaseEntity
 
     [JsonIgnore] public virtual ICollection<UserPlanEntity> UserPlans { get; set; } = null!;
 
-    [JsonIgnore] public virtual WordSessionEntity WordSession { get; set; } = null!;
+    [JsonIgnore] public virtual ICollection<WordSessionEntity> WordSession { get; set; } = null!;
 
     [JsonIgnore] public virtual ICollection<UserCheckInEntity> CheckIns { get; set; } = [];
 }
