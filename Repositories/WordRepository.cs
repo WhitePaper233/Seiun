@@ -14,7 +14,7 @@ public class WordRepository(SeiunDbContext dbContext, IMinioClient minioClient)
             .Include(w => w.WordDistractors)
             .ToListAsync();
     }
-}
+
     public async Task<List<WordEntity>> GetAllWordsAsync(int index, int size, Guid? keyword)
     {
         var query = DbContext.Words
