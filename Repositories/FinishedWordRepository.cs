@@ -5,26 +5,17 @@ using Seiun.Entities;
 namespace Seiun.Repositories;
 
 public class FinishedWordRepository(SeiunDbContext dbContext, IMinioClient minioClient)
-	: BaseRepository<FinishedWordRecordEntity>(dbContext, minioClient), IFinishedWordRepository
+    : BaseRepository<FinishedWordRecordEntity>(dbContext, minioClient), IFinishedWordRepository
 {
-    public async Task<IGrouping<Guid,FinishedWordRecordEntity>?> GetLatestFinishedWordIdAsync(Guid userId)
-	{	
-		var latestFinishedWords = await DbContext.FinishedWords
-			.Where(x => x.UserId == userId)
-			.OrderByDescending(x => x.CreatedAt)
-			.ToListAsync();
-		
-		return latestFinishedWords
-			.GroupBy(x => x.SessionId)
-			.FirstOrDefault();
-	}
+    public async Task<IGrouping<Guid, FinishedWordRecordEntity>?> GetLatestFinishedWordIdAsync(Guid userId)
+    {
+        var latestFinishedWords = await DbContext.FinishedWords
+            .Where(x => x.UserId == userId)
+            .OrderByDescending(x => x.CreatedAt)
+            .ToListAsync();
 
-	public async Task<List<FinishedWordRecordEntity>?> GetWordsToQuestionAsync(Guid userId)
-	{
-		return await DbContext.FinishedWords
-			.Where(w => w.UserId == userId)
-			.OrderByDescending(w => w.Id)
-			.Take(15)
-			.ToListAsync();
-	}
+        return latestFinishedWords
+            .GroupBy(x => x.SessionId)
+            .FirstOrDefault();
+    }
 }

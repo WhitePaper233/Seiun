@@ -16,8 +16,9 @@ public class WordWordBookRepository(SeiunDbContext dbContext, IMinioClient minio
 
         return await DbContext.WordWordBooks
             .Where(w => w.BookId == bookId)
-            .Where(w => !finishedWordIds.Contains(w.Id))
+            .Where(w => !finishedWordIds.Contains(w.WordId))
             .Take(dailyPlan)
+            .Include(w => w.Word.WordDistractors)
             .Select(w => w.Word)
             .ToListAsync();
     }

@@ -29,7 +29,7 @@ public static class PasswordUtils
     {
         using var hmac = new HMACSHA512(passwordSalt);
         var computedHash = hmac.ComputeHash(Encoding.UTF8.GetBytes(password));
-        
+
         return !computedHash.Where((t, i) => t != passwordHash[i]).Any();
     }
 }

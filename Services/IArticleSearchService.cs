@@ -1,5 +1,3 @@
-using Seiun.Entities;
-
 namespace Seiun.Services;
 
 public interface IArticleSearchService

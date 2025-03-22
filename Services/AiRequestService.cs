@@ -283,7 +283,7 @@ public class AiRequestService(IServiceScopeFactory serviceScopeFactory, ILogger<
         var response = await client.ExecuteAsync(request);
         if (response.Content == null)
         {
-            logger.LogWarning("User {} failed generate ai filled in book", userId);
+            logger.LogWarning("User {} failed generate ai filled in word book", userId);
             return;
         }
 
@@ -293,7 +293,7 @@ public class AiRequestService(IServiceScopeFactory serviceScopeFactory, ILogger<
         var questionEntity = root.GetProperty("choices")[0].GetProperty("message").GetProperty("content").GetString();
         if (questionEntity == null)
         {
-            logger.LogWarning("User {} failed generate ai filled in book", userId);
+            logger.LogWarning("User {} failed generate ai filled in word book", userId);
             return;
         }
 
@@ -307,7 +307,7 @@ public class AiRequestService(IServiceScopeFactory serviceScopeFactory, ILogger<
         if (wordsElement.GetArrayLength() == 0 || content == null || transition == null ||
             answersElement.GetArrayLength() == 0)
         {
-            logger.LogWarning("User {} failed generate ai filled in book", userId);
+            logger.LogWarning("User {} failed generate ai filled in word book", userId);
             return;
         }
 
@@ -340,7 +340,7 @@ public class AiRequestService(IServiceScopeFactory serviceScopeFactory, ILogger<
             !await repository.FillInBlankAnswerRepository.SaveAsync() ||
             !await repository.FillInBlankRepository.SaveAsync())
         {
-            logger.LogWarning("User {} failed generate ai filled in book", userId);
+            logger.LogWarning("User {} failed generate ai filled in word book", userId);
             return;
         }
 
@@ -352,7 +352,7 @@ public class AiRequestService(IServiceScopeFactory serviceScopeFactory, ILogger<
         };
         repository.UserQuestionRepository.Create(userQuestion);
         if (!await repository.UserQuestionRepository.SaveAsync())
-            logger.LogWarning("User {} failed generate ai filled in book", userId);
+            logger.LogWarning("User {} failed generate ai filled in word book", userId);
     }
 
     // 生成完形填空
@@ -539,6 +539,6 @@ public class AiRequestService(IServiceScopeFactory serviceScopeFactory, ILogger<
         };
         repository.UserQuestionRepository.Create(userQuestion);
         if (!await repository.UserQuestionRepository.SaveAsync())
-            logger.LogWarning("User {} failed generate ai filled in book", userId);
+            logger.LogWarning("User {} failed generate ai filled in word book", userId);
     }
 }

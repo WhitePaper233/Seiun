@@ -26,6 +26,12 @@ public static class ErrorMessages
         public const string OverWordDefinitionLength = "error.validation.over_word_definition_length";
         public const string OverWordTextLength = "error.validation.over_word_text_length";
         public const string OverPronunciationLength = "error.validation.over_pronunciation_length";
+        public const string OverMaxQuestionAnswerLength = "error.validation.over_max_question_answer_length";
+        public const string OverMaxQuestionAnalysisLength = "error.validation.over_max_question_analysis_length";
+        public const string OverMaxQuestionContentLength = "error.validation.over_max_question_content_length";
+        public const string OverMaxQuestionWordLength = "error.validation.over_max_question_word_length";
+        public const string OverMaxQuestionTransitionLength = "error.validation.over_max_question_transition_length";
+        public const string OverImgUrlLength = "error.validation.over_img_url_length";
 
         public const string AtLeastOnePropertyRequired = "error.validation.at_least_one_property_is_required";
         public const string UserIdRequired = "error.validation.user_id_required";
@@ -42,7 +48,7 @@ public static class ErrorMessages
         public const string WordIdRequired = "error.validation.word_id_required";
 
         public const string SessionIdRequired = "error.validation.session_id_required";
-        public const string OverArticleLength = "error.validation.over_article_length";
+        public const string OverArticleMaxLength = "error.validation.over_article_length";
         public const string OverCoverUrlLength = "error.validation.over_cover_url_length";
         public const string OverPublicAnnouncementLength = "error.validation.over_public_announcement_length";
         public const string OverWordBookNameLength = "error.validation.over_word_book_name_length";
@@ -52,7 +58,7 @@ public static class ErrorMessages
     {
         public static class Any
         {
-            public const string ParamValidFailed = $"error.controller.any.param_valid_failed";
+            public const string ParamValidFailed = "error.controller.any.param_valid_failed";
             public const string FileNotUploaded = "error.controller.any.file_not_uploaded";
             public const string FileTooLarge = "error.controller.any.file_too_large";
             public const string FileFormatNotSupported = "error.controller.any.file_format_not_supported";
@@ -158,7 +164,6 @@ public static class ErrorMessages
             public const string StartFailed = "error.controller.session.start_failed";
             public const string NotFoundSession = "error.controller.session.not_found_session";
             public const string GetNextWordFailed = "error.controller.session.get_next_word_failed";
-            public const string DeleteFailed = "error.controller.session.delete_failed";
             public const string NotFoundStudyingWords = "error.controller.session.not_found_studying_words";
         }
 
@@ -167,11 +172,6 @@ public static class ErrorMessages
             public const string QuestionNotFound = "error.controller.question.not_found";
             public const string QuestionWordNotFound = "error.controller.question.word_not_found";
             public const string QuestionAnswerNotFound = "error.controller.question.answer_not_found";
-        }
-
-        public static class CheckIn
-        {
-            public const string NotFoundCheckIn = "error.controller.checkin.not_fount_check_in";
         }
     }
 }

@@ -63,7 +63,7 @@ public class UserUpdateByAdmin
 
     [MaxLength(Constants.User.MaxNickNameLength, ErrorMessage = ErrorMessages.ValidationError.OverNickNameLength)]
     public required string NickName { get; set; }
-        
+
     public Gender? Gender { get; set; }
 
 

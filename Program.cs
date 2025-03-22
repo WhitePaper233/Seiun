@@ -10,6 +10,7 @@ using Seiun.Filters;
 using Seiun.Services;
 using Seiun.Utils;
 using Nest;
+
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddSingleton<IElasticClient>(_ =>
@@ -81,9 +82,9 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
         policy.WithOrigins("http://localhost:5173") // 你的前端地址
-              .AllowAnyHeader()  // 允许所有请求头，包括 Authorization 头
-              .AllowAnyMethod()  // 允许 GET、POST、PUT、DELETE 等
-              .AllowCredentials()); // 允许前端携带 Cookie 或 Authorization 头
+            .AllowAnyHeader() // 允许所有请求头，包括 Authorization 头
+            .AllowAnyMethod() // 允许 GET、POST、PUT、DELETE 等
+            .AllowCredentials()); // 允许前端携带 Cookie 或 Authorization 头
 });
 
 // Configure PgSQL database
@@ -102,7 +103,7 @@ if (app.Environment.IsDevelopment())
     using var scope = app.Services.CreateScope();
     var dbContext = scope.ServiceProvider.GetRequiredService<SeiunDbContext>();
     dbContext.Database.Migrate();
-    
+
     // 配置 ElasticSearch 分词方式 
     var elasticClient = scope.ServiceProvider.GetRequiredService<IElasticClient>();
     // 先检查索引是否存在
@@ -113,11 +114,11 @@ if (app.Environment.IsDevelopment())
             .Map<ArticleSearchEntity>(m => m
                 .Properties(props => props
                     .Text(t => t
-                            .Name(n => n.Article)  // 文章内容进行分词
-                            .Analyzer("standard")   // 使用标准分析器
+                            .Name(n => n.Article) // 文章内容进行分词
+                            .Analyzer("standard") // 使用标准分析器
                     )
                     .Keyword(k => k
-                        .Name(n => n.CreatorUserName) 
+                        .Name(n => n.CreatorUserName)
                     )
                     .Text(k => k
                         .Name(n => n.CreatorNickName)
@@ -130,13 +131,9 @@ if (app.Environment.IsDevelopment())
         );
         var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
         if (createIndexResponse.IsValid)
-        {
             logger.LogInformation("Elasticsearch 索引创建成功！");
-        }
         else
-        {
             logger.LogError("Elasticsearch 索引创建失败: {Reason}", createIndexResponse.OriginalException?.Message);
-        }
     }
 }
 
