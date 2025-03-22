@@ -32,7 +32,7 @@ public class CurrentStudySessionService(IServiceScopeFactory serviceScopeFactory
 	// 删除正确单词
 	public void DeleteCorrectWord(Guid sessionId)
 	{
-		if(!_currentStudySessions.TryGetValue(sessionId, out var _))
+		if(!_currentStudySessions.TryGetValue(sessionId, out _))
 		{	
 			logger.LogWarning("Session {} does not exist",sessionId);
 			return;
@@ -43,7 +43,7 @@ public class CurrentStudySessionService(IServiceScopeFactory serviceScopeFactory
     // 插入错误单词到队尾
 	public void InsertErrorWord(Guid sessionId)
 	{
-		if(!_currentStudySessions.TryGetValue(sessionId, out var _))
+		if(!_currentStudySessions.TryGetValue(sessionId, out _))
 		{	
 			logger.LogWarning("Session {} does not exist",sessionId);
 			return;
@@ -65,7 +65,7 @@ public class CurrentStudySessionService(IServiceScopeFactory serviceScopeFactory
 	// 会话结束，移除Session
 	public void RemoveSession(Guid sessionId)
 	{
-		if(_currentStudySessions.ContainsKey(sessionId)&&_currentStudySessions[sessionId].Count==0)
+		if(_currentStudySessions.TryGetValue(sessionId, out _) && _currentStudySessions[sessionId].Count == 0)
 		{
 			_currentStudySessions.Remove(sessionId);
 		}

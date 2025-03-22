@@ -1,6 +1,4 @@
 using Seiun.Entities;
-using Seiun.Repositories;
-using Seiun.Controllers;
 
 namespace Seiun.Services;
 

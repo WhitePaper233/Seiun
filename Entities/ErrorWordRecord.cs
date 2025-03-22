@@ -1,6 +1,4 @@
-using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using Seiun.Resources;
 
 namespace Seiun.Entities;
 public class ErrorWordRecordEntity : BaseEntity

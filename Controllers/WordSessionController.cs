@@ -3,6 +3,7 @@ using Seiun.Utils;
 using Seiun.Resources;
 using Seiun.Utils.Enums;
 using Seiun.Models.Responses;
+using Seiun.Models.Parameters;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -68,16 +69,17 @@ public class WordSessionController(ILogger<WordSessionController> logger, IRepos
 			{
 				wordQueue.Enqueue(studyingWord);
 			}
-		}
-		
-		repository.ErrorWordRepository.BulkDelete(userId.Value);
-		if (!await repository.ErrorWordRepository.SaveAsync())
-		{
-			logger.LogWarning("User {} start study session failed", userId);
-			return StatusCode(StatusCodes.Status500InternalServerError, StartStudyResp.Fail(
-				StatusCodes.Status500InternalServerError,
-				ErrorMessages.Controller.WordSession.StartFailed
-			));
+			
+			repository.ErrorWordRepository.BulkDelete(userId.Value);
+			if (!await repository.ErrorWordRepository.SaveAsync())
+			{
+				Console.WriteLine("22222222222222222222222222222222");
+				logger.LogWarning("User {} start study session failed", userId);
+				return StatusCode(StatusCodes.Status500InternalServerError, StartStudyResp.Fail(
+					StatusCodes.Status500InternalServerError,
+					ErrorMessages.Controller.WordSession.StartFailed
+				));
+			}
 		}
 
 		var studyWords = await repository.WordBankWordBookRepository.GetWordBookByTagAsync(selectedTag.WordBookId, selectedTag.SetDailyPlan, userId.Value);
@@ -115,7 +117,7 @@ public class WordSessionController(ILogger<WordSessionController> logger, IRepos
 		{
 			return Ok(StartStudyResp.Success(session.Id, reviewingWordCount, studyingWordCount, wordQueue));
 		}
-		
+		Console.WriteLine($"111111111111111111111111111111111111111111111111    {newSessionResult}");
 		logger.LogWarning("User {} start study session failed", userId);
 		return StatusCode(StatusCodes.Status500InternalServerError, StartStudyResp.Fail(
 			StatusCodes.Status500InternalServerError,
@@ -185,7 +187,7 @@ public class WordSessionController(ILogger<WordSessionController> logger, IRepos
 		{
 			var userCheckInEntity = new UserCheckInEntity
 			{
-				UserId = userId.Value,
+				UserId = userId.Value
 			};
 
 			repository.UserCheckInRepository.Create(userCheckInEntity);
@@ -214,17 +216,17 @@ public class WordSessionController(ILogger<WordSessionController> logger, IRepos
 		
 		userTag.LearnedCount += userTag.SetDailyPlan;
 		repository.UserTagRepository.Update(userTag);
-		if (!await repository.UserTagRepository.SaveAsync())
+		if (await repository.UserTagRepository.SaveAsync())
 		{
-			logger.LogWarning("User {} failed over session", userId);
-			return StatusCode(StatusCodes.Status500InternalServerError, ResponseFactory.NewFailedBaseResponse(
-				StatusCodes.Status500InternalServerError,
-				ErrorMessages.Controller.UserTag.UpdateUserTagFailed
-			));
+			// 返回会话结束信息
+			return Ok(SuccessMessages.Controller.WordSession.WordSessionOver);
 		}
 
-		// 返回会话结束信息
-		return Ok(SuccessMessages.Controller.WordSession.WordSessionOver);
+		logger.LogWarning("User {} failed over session", userId);
+		return StatusCode(StatusCodes.Status500InternalServerError, ResponseFactory.NewFailedBaseResponse(
+			StatusCodes.Status500InternalServerError,
+			ErrorMessages.Controller.UserTag.UpdateUserTagFailed
+		));
 	}
 
 	/// <summary>
@@ -283,7 +285,7 @@ public class WordSessionController(ILogger<WordSessionController> logger, IRepos
 		{
 			UserId = userId.Value,
 			SessionId = wordResultDto.SessionId,
-			WordId = wordResultDto.WordId,
+			WordId = wordResultDto.WordId
 		};
 		currentStudySession.DeleteCorrectWord(session.Id);
 		repository.FinishedWordRepository.Create(finishedRecord);

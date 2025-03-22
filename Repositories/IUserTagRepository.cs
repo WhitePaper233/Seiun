@@ -1,5 +1,4 @@
 using Seiun.Entities;
-using Seiun.Utils.Enums;
 
 namespace Seiun.Repositories;
 

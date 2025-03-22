@@ -23,7 +23,7 @@ public class PublicAnnouncementController(ILogger<PublicAnnouncementController> 
 	/// <summary>
 	/// 发布公告
 	/// </summary>
-	/// <param name="PublicAnnouncementPublish">公告信息</param>
+	/// <param name="publicAnnouncementPublish">公告信息</param>
 	/// <returns>发布结果</returns>
 	[HttpPost("publish", Name = "Publish")]
 	[Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
@@ -31,7 +31,7 @@ public class PublicAnnouncementController(ILogger<PublicAnnouncementController> 
 	[ProducesResponseType(typeof(BaseResp), StatusCodes.Status200OK)]
 	[ProducesResponseType(typeof(BaseResp), StatusCodes.Status403Forbidden)]
 	[ProducesResponseType(typeof(BaseResp), StatusCodes.Status500InternalServerError)]
-	public async Task<IActionResult> PublishPublicAnnouncement([FromBody] PublicAnnouncementPublish PublicAnnouncementPublish)
+	public async Task<IActionResult> PublishPublicAnnouncement([FromBody] PublicAnnouncementPublish publicAnnouncementPublish)
 	{
 		var userId = User.GetUserId();
 		if(userId == null)
@@ -44,8 +44,8 @@ public class PublicAnnouncementController(ILogger<PublicAnnouncementController> 
 
 		var publicAnnouncement = new PublicAnnouncementEntity
 		{
-			Title = PublicAnnouncementPublish.Title,
-			Content = PublicAnnouncementPublish.Content,
+			Title = publicAnnouncementPublish.Title,
+			Content = publicAnnouncementPublish.Content,
 			AdminId = userId.Value	
 		};
 

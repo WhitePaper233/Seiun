@@ -1,5 +1,4 @@
 using System.ComponentModel.DataAnnotations.Schema;
-using Seiun.Utils.Enums;
 
 namespace Seiun.Entities;
 public class UserTagEntity : BaseEntity

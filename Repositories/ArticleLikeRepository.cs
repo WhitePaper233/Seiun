@@ -9,17 +9,11 @@ public class ArticleLikeRepository(SeiunDbContext dbContext, IMinioClient minioC
 {
 	public async Task<List<Guid>?> GetArticleListByLikedRecordAsync(Guid userId)
 	{
-		var articleList = await DbContext.ArticleLikes
+		return await DbContext.ArticleLikes
 			.Where(a => a.UserId == userId)
 			.OrderByDescending(a => a.LikedTime)
+			.Select(a => a.LikedArticleId)
 			.ToListAsync();
-
-		List<Guid> articleIds = [];
-		for(int i = 0; i < articleList.Count; i++)
-		{
-			articleIds.Add(articleList[i].LikedArticleId);
-		}
-		return articleIds;
 	}
 
 	public async Task<ArticleLikeEntity?> GetArticleByLikedRecordAsync(Guid userId, Guid articleId)
@@ -31,10 +25,8 @@ public class ArticleLikeRepository(SeiunDbContext dbContext, IMinioClient minioC
 
 	public async Task<int> GetUserCountByLikedRecordAsync(Guid articleId)
 	{
-		var userCount = await DbContext.ArticleLikes
+		return await DbContext.ArticleLikes
 			.Where(a => a.LikedArticleId == articleId)
 			.CountAsync();
-			
-		return userCount;
 	}
 }

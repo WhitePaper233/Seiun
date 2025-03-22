@@ -366,17 +366,14 @@ public class ArticleController(ILogger<ArticleController> logger, IRepositorySer
 	[ProducesResponseType(typeof(ArticleListResp), StatusCodes.Status500InternalServerError)]
 	public async Task<IActionResult> GetArticleList([FromQuery] int len, [FromQuery] DateTimeOffset? from, [FromQuery] string? reqType, [FromQuery] Guid? userId = null)
 	{
-		if(reqType == "user" || reqType == "liked")
+		if (reqType is "user" or "liked" && userId is null)
 		{
-			if(userId == null)
-			{
-				return BadRequest(ArticleListResp.Fail(
-					StatusCodes.Status400BadRequest,
-					ErrorMessages.Controller.Article.UserIdRequired
-				));
-			}
+			return BadRequest(ArticleListResp.Fail(
+				StatusCodes.Status400BadRequest,
+				ErrorMessages.Controller.Article.UserIdRequired
+			));
 		}
-
+		
 		try
 		{
 			List<Guid>? articleIds;

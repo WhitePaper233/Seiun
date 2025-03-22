@@ -19,7 +19,7 @@ public class UserRegister
     public required string Password { get; set; }
 }
 
-[AtLeastOnePropertyRequired([nameof(PhoneNumber), nameof(Email), nameof(UserName)],
+    [AtLeastOnePropertyRequired([nameof(PhoneNumber), nameof(Email), nameof(UserName)],
     ErrorMessage = ErrorMessages.ValidationError.AtLeastOnePropertyRequired)]
 public class UserLogin
 {

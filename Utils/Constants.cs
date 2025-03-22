@@ -42,7 +42,7 @@ public static class Constants
         public const int ArticleImageMaxHeight = 3 * 1024;
         public static readonly string[] AllowedArticleImageExtensions = [".jpg", ".jpeg", ".png", "webp"];
         public const int MaxArticleLength = 5000;
-        public const int MaxCoverUrlLength = 1000;
+        public const int MaxImgUrlLength = 1000;
     }
 
     public static class PublicAnnotation
@@ -52,16 +52,22 @@ public static class Constants
 
     public static class Word
     {
-        public const int MaxTagNameLength = 10;
         public const int MaxWordTextLength = 100;
         public const int MaxWordPronunciationLength = 100;
         public const int MaxWordDefinitionLength = 500;
-        public const int FourLevelWordCount = 4428;
-        public const int SixLevelWordCount = 5523;
     }
 
     public static class WordBookName
     {
         public const int MaxWordBookNameLength = 50;
+    }
+
+    public static class Question
+    {
+        public const int MaxQuestionAnswerLength = 5000;
+        public const int MaxQuestionAnalysisLength = 5000;
+        public const int MaxQuestionContentLength = 5000;
+        public const int MaxQuestionWordLength = 5000;
+        public const int MaxQuestionTransitionLength = 5000;
     }
 }

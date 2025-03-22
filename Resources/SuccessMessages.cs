@@ -12,10 +12,6 @@ public static class SuccessMessages
             public const string ProfileUpdateSuccess = "controller.user.profile.update_success";
             public const string AvatarUpdateSuccess = "controller.user.profile.avatar_update_success";
             public const string GetProfileSuccess = "controller.user.profile.get_success";
-            public const string CheckInToday = "controller.user.checkin.checkin_today";
-            public const string NoCheckInToday = "controller.user.checkin.no_checkin_today";
-            public const string NoCheckInHistory = "controller.user.checkin.no_checkin_history";
-            public const string GetConsecutiveCheckInDays = "controller.user.checkin.get_consecutive_checkin_days";
         }
         public static class Admin
         {
@@ -98,7 +94,6 @@ public static class SuccessMessages
         public static class WordSession
         {
             public const string WordSessionOver = "controller.session.word_session_over";
-            public const string SessionOverSuccess = "controller.session.session_over_success";
         }
 
         public static class Question

@@ -1,6 +1,5 @@
 using System.ComponentModel.DataAnnotations;
 using Seiun.Resources;
-using Seiun.Utils.Enums;
 
 
 namespace Seiun.Models.Parameters;

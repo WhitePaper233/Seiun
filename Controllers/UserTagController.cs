@@ -1,6 +1,5 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Seiun.Entities;
 using Seiun.Models.Parameters;
@@ -64,7 +63,7 @@ public class TagController(ILogger<UserController> logger, IRepositoryService re
                     WordCount = u.WordCount,
                     LearnedWordCount = userTagDict[u.Id].LearnedCount,
                     DailyPlan = userTagDict[u.Id].SetDailyPlan,
-                    RemainingDays = (u.WordCount - userTagDict[u.Id].LearnedCount) / userTagDict[u.Id].SetDailyPlan,
+                    RemainingDays = (u.WordCount - userTagDict[u.Id].LearnedCount) / userTagDict[u.Id].SetDailyPlan
                 })
                 .ToList();
 
@@ -73,7 +72,7 @@ public class TagController(ILogger<UserController> logger, IRepositoryService re
             {
                 WordBookId = x.Id,
                 WordBookName = x.WordBookName,
-                WordCount = x.WordCount,
+                WordCount = x.WordCount
             }));
             
             return Ok(WordBooksResp.Success(result));
@@ -118,7 +117,7 @@ public class TagController(ILogger<UserController> logger, IRepositoryService re
                 UserId = userId.Value,
                 WordBookId = selectedWordBank.WordBookId,
                 SetDailyPlan = selectedWordBank.SetDailyPlan,
-                LearnedCount = 0,
+                LearnedCount = 0
             };
             repository.UserTagRepository.Create(userTagEntity);
             if (await repository.UserTagRepository.SaveAsync())
