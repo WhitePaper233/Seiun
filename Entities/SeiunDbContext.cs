@@ -270,13 +270,13 @@ public class SeiunDbContext(DbContextOptions<SeiunDbContext> options) : DbContex
 
     private static void ConfigureWordWordBookEntity(ModelBuilder modelBuilder)
     {
-        // WordBankWordBook - word
+        // WordBookWordBook - word
         modelBuilder.Entity<WordWordBookEntity>()
             .HasOne(b => b.Word)
             .WithMany(b => b.Books)
             .HasForeignKey(b => b.WordId);
 
-        // WordBankWordBook - book
+        // WordBookWordBook - book
         modelBuilder.Entity<WordWordBookEntity>()
             .HasOne(b => b.Book)
             .WithMany(b => b.Words)

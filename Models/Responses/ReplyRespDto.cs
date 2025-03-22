@@ -1,7 +1,5 @@
 namespace Seiun.Models.Responses;
 
-
-
 /// <summary>
 /// Reply 信息
 /// </summary>
@@ -45,6 +43,3 @@ public sealed class ReplyListResp(int code, string message, List<ReplyInfo>? rep
         return new ReplyListResp(code, message, null);
     }
 }
-
-
-

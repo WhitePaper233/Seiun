@@ -7,45 +7,46 @@ namespace Seiun.Models.Responses;
 
 public class WordDetail
 {
-	public required string WordText { get; set; }
-	public string? Pronunciation { get; set; }
-	public required string Definition { get; set; }
+    public required string WordText { get; set; }
+    public string? Pronunciation { get; set; }
+    public required string Definition { get; set; }
 }
 
 public class WordSessionDetail
 {
-	public required Guid WordSessionId { get; set; }
-	public required int ReviewingWordCount { get; set; }
-	public required int StudyingWordCount { get; set; }
-	public required List<WordDetail> Words { get; set; }
+    public required Guid WordSessionId { get; set; }
+    public required int ReviewingWordCount { get; set; }
+    public required int StudyingWordCount { get; set; }
+    public required List<WordDetail> Words { get; set; }
 }
 
 public sealed class StartStudyResp(int code, string message, WordSessionDetail? wordSessionDetail)
-	: BaseRespWithData<WordSessionDetail>(code, message, wordSessionDetail)
+    : BaseRespWithData<WordSessionDetail>(code, message, wordSessionDetail)
 {
-	public static StartStudyResp Success(Guid sessionId, int reviewingWordCount, int studyingWordCount, Queue<WordEntity> wordQueue)
-	{
-		return new StartStudyResp(StatusCodes.Status200OK,
-			SuccessMessages.Controller.StudySession.GetSessionDetailSuccess,
-			new WordSessionDetail
-			{
-				WordSessionId = sessionId,
-				ReviewingWordCount = reviewingWordCount,
-				StudyingWordCount = studyingWordCount,
-				Words = wordQueue.Select(a =>
-					new WordDetail
-					{
-						WordText = a.WordText,
-						Pronunciation = a.Pronunciation,
-						Definition = a.Definition
-					}).ToList()
-			});
-	}
+    public static StartStudyResp Success(Guid sessionId, int reviewingWordCount, int studyingWordCount,
+        Queue<WordEntity> wordQueue)
+    {
+        return new StartStudyResp(StatusCodes.Status200OK,
+            SuccessMessages.Controller.StudySession.GetSessionDetailSuccess,
+            new WordSessionDetail
+            {
+                WordSessionId = sessionId,
+                ReviewingWordCount = reviewingWordCount,
+                StudyingWordCount = studyingWordCount,
+                Words = wordQueue.Select(a =>
+                    new WordDetail
+                    {
+                        WordText = a.WordText,
+                        Pronunciation = a.Pronunciation,
+                        Definition = a.Definition
+                    }).ToList()
+            });
+    }
 
-	public static StartStudyResp Fail(int code, string message)
-	{
-		return new StartStudyResp(code, message, null);
-	}
+    public static StartStudyResp Fail(int code, string message)
+    {
+        return new StartStudyResp(code, message, null);
+    }
 }
 
 # endregion
@@ -54,77 +55,82 @@ public sealed class StartStudyResp(int code, string message, WordSessionDetail? 
 
 public class ContinueStudyDetail
 {
-	public required Guid SessionId { get; set; }
+    public required Guid SessionId { get; set; }
 }
 
 public sealed class ContinueStudyResp(int code, string message, ContinueStudyDetail? sessionDetail)
-	: BaseRespWithData<ContinueStudyDetail>(code, message, sessionDetail)
+    : BaseRespWithData<ContinueStudyDetail>(code, message, sessionDetail)
 {
-	public static ContinueStudyResp Success(Guid sessionId)
-	{
-		return new ContinueStudyResp(StatusCodes.Status200OK,
-			SuccessMessages.Controller.StudySession.ContinueSessionSuccess,
-			new ContinueStudyDetail
-			{
-				SessionId = sessionId
-			});
-	}
+    public static ContinueStudyResp Success(Guid sessionId)
+    {
+        return new ContinueStudyResp(StatusCodes.Status200OK,
+            SuccessMessages.Controller.StudySession.ContinueSessionSuccess,
+            new ContinueStudyDetail
+            {
+                SessionId = sessionId
+            });
+    }
 }
 
-# endregion 
+# endregion
 
 # region GetNextWordResponse
 
 public class NextWordDetail
 {
-	public required List<OptionDetail> Options { get; set; }
-	public required AnswerDetail Answer { get; set; }
-	
-	public required int ReviewingWordCount { get; set; }
-	
-	public required int StudyingWordCount { get; set; }
+    public required List<OptionDetail> Options { get; set; }
+    public required AnswerDetail Answer { get; set; }
+
+    public required int ReviewingWordCount { get; set; }
+
+    public required int StudyingWordCount { get; set; }
 }
 
 public class OptionDetail
 {
-	public required Guid WordId { get; set; }
-	public required string Word { get; set; }
-	public string? Pronunciation { get; set; }
-	public required string Definition { get; set; }
+    public required Guid WordId { get; set; }
+    public required string Word { get; set; }
+    public string? Pronunciation { get; set; }
+    public required string Definition { get; set; }
 }
 
 public class AnswerDetail
 {
-	public required Guid WordId { get; set; }
-	public required string Word { get; set; }
+    public required Guid WordId { get; set; }
+    public required string Word { get; set; }
 }
 
-
 public sealed class GetNextWordResp(int code, string message, NextWordDetail? nextWordDetail)
-	: BaseRespWithData<NextWordDetail>(code, message, nextWordDetail)
+    : BaseRespWithData<NextWordDetail>(code, message, nextWordDetail)
 {
-	public static GetNextWordResp Success(WordEntity nextWord, List<WordEntity> distractorWords, int reviewingWordCount, int studyingWordCount)
-	{
-		var options = distractorWords.Select(d => 
-			new OptionDetail { WordId = d.Id, Word = d.WordText, Pronunciation = d.Pronunciation, Definition = d.Definition })
-		.ToList();
-		options.Add(new OptionDetail { WordId = nextWord.Id, Word = nextWord.WordText, Pronunciation = nextWord.Pronunciation, Definition = nextWord.Definition});
-		var answer = new AnswerDetail { WordId = nextWord.Id, Word = nextWord.WordText };
-		
-		return new GetNextWordResp(StatusCodes.Status200OK, SuccessMessages.Controller.StudySession.GetNextWordSuccess,
-			new NextWordDetail
-			{
-				Options = options,
-				Answer = answer,
-				ReviewingWordCount = reviewingWordCount,
-				StudyingWordCount = studyingWordCount
-			});
-	}
+    public static GetNextWordResp Success(WordEntity nextWord, List<WordEntity> distractorWords, int reviewingWordCount,
+        int studyingWordCount)
+    {
+        var options = distractorWords.Select(d =>
+                new OptionDetail
+                    { WordId = d.Id, Word = d.WordText, Pronunciation = d.Pronunciation, Definition = d.Definition })
+            .ToList();
+        options.Add(new OptionDetail
+        {
+            WordId = nextWord.Id, Word = nextWord.WordText, Pronunciation = nextWord.Pronunciation,
+            Definition = nextWord.Definition
+        });
+        var answer = new AnswerDetail { WordId = nextWord.Id, Word = nextWord.WordText };
 
-	public static GetNextWordResp Fail(int code, string message)
-	{
-		return new GetNextWordResp(code, message, null);
-	}
+        return new GetNextWordResp(StatusCodes.Status200OK, SuccessMessages.Controller.StudySession.GetNextWordSuccess,
+            new NextWordDetail
+            {
+                Options = options,
+                Answer = answer,
+                ReviewingWordCount = reviewingWordCount,
+                StudyingWordCount = studyingWordCount
+            });
+    }
+
+    public static GetNextWordResp Fail(int code, string message)
+    {
+        return new GetNextWordResp(code, message, null);
+    }
 }
 
 # endregion

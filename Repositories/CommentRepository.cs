@@ -4,8 +4,8 @@ using Seiun.Entities;
 
 namespace Seiun.Repositories;
 
-public class CommentLikeRepository(SeiunDbContext dbContext , IMinioClient minioClient)
-    : BaseRepository<CommentLikeEntity>(dbContext , minioClient) , ICommentLikeRepository
+public class CommentLikeRepository(SeiunDbContext dbContext, IMinioClient minioClient)
+    : BaseRepository<CommentLikeEntity>(dbContext, minioClient), ICommentLikeRepository
 {
     public async Task<CommentLikeEntity?> GetCommentLikeAsync(Guid userId, Guid commentId)
     {
@@ -14,8 +14,8 @@ public class CommentLikeRepository(SeiunDbContext dbContext , IMinioClient minio
     }
 }
 
-public class CommentRepository(SeiunDbContext dbContext , IMinioClient minioClient)
-    : BaseRepository<CommentEntity>(dbContext , minioClient) , ICommentRepository
+public class CommentRepository(SeiunDbContext dbContext, IMinioClient minioClient)
+    : BaseRepository<CommentEntity>(dbContext, minioClient), ICommentRepository
 {
     public async Task<IEnumerable<CommentEntity>> GetListByPostIdAsync(Guid postId)
     {

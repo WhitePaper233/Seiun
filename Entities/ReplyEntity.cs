@@ -16,9 +16,7 @@ public class ReplyEntity : BaseEntity
     public required Guid CommentId { get; set; }
 
     public Guid? ParentReplyId { get; set; }
-    
-    
-    [ForeignKey(nameof(this.CommentId))]
-    public virtual CommentEntity Comment { get; set; } = null!;
-}
 
+
+    [ForeignKey(nameof(this.CommentId))] public virtual CommentEntity Comment { get; set; } = null!;
+}

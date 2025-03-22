@@ -1,4 +1,3 @@
-
 namespace Seiun.Services;
 
 public interface IArticleSearchService

@@ -10,12 +10,12 @@ public static class ClaimsPrincipalExtensions
         var userId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         return userId == null ? null : new Guid(userId);
     }
-    
+
     public static string? GetUserName(this ClaimsPrincipal user)
     {
         return user.FindFirst(ClaimTypes.Name)?.Value;
     }
-    
+
     public static UserRole GetUserRole(this ClaimsPrincipal user)
     {
         var role = user.FindFirst(ClaimTypes.Role)?.Value;

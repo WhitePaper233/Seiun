@@ -18,7 +18,7 @@ public sealed class UserCheckInResp(int code, string message, UserCheckInDetail?
 {
     public static UserCheckInResp Success(UserCheckInDetail checkInDetail)
     {
-        return new UserCheckInResp(StatusCodes.Status200OK, SuccessMessages.Controller.CheckIn.GetCheckInStatusSuccess, 
+        return new UserCheckInResp(StatusCodes.Status200OK, SuccessMessages.Controller.CheckIn.GetCheckInStatusSuccess,
             checkInDetail);
     }
 
@@ -42,7 +42,8 @@ public sealed class ConsecutiveCheckInDaysResp(int code, string message, Consecu
 {
     public static ConsecutiveCheckInDaysResp Success(ConsecutiveCheckInDaysDetail days)
     {
-        return new ConsecutiveCheckInDaysResp(StatusCodes.Status200OK, SuccessMessages.Controller.CheckIn.GetCheckInDaysSuccess,
+        return new ConsecutiveCheckInDaysResp(StatusCodes.Status200OK,
+            SuccessMessages.Controller.CheckIn.GetCheckInDaysSuccess,
             days);
     }
 }

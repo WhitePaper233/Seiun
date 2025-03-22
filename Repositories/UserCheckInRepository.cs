@@ -5,7 +5,7 @@ using Seiun.Entities;
 namespace Seiun.Repositories;
 
 public class UserCheckInRepository(SeiunDbContext dbContext, IMinioClient minioClient)
-	: BaseRepository<UserCheckInEntity>(dbContext, minioClient), IUserCheckInRepository
+    : BaseRepository<UserCheckInEntity>(dbContext, minioClient), IUserCheckInRepository
 {
     public async Task<UserCheckInEntity?> LastCheckInAsync(Guid userId)
     {
@@ -14,7 +14,7 @@ public class UserCheckInRepository(SeiunDbContext dbContext, IMinioClient minioC
             .OrderByDescending(x => x.CreatedAt)
             .FirstOrDefaultAsync();
     }
-    
+
     // 获取用户的所有打卡记录，并按日期降序排列
     public async Task<List<DateTimeOffset>> GetUserAllCheckInsAsync(Guid userId)
     {
@@ -34,9 +34,8 @@ public class UserCheckInRepository(SeiunDbContext dbContext, IMinioClient minioC
             .Select(g => new
             {
                 UserId = g.Key,
-                LastCheckInTime = g.Max(x => x.CreatedAt) 
+                LastCheckInTime = g.Max(x => x.CreatedAt)
             })
             .ToDictionaryAsync(x => x.UserId, x => (DateTimeOffset?)x.LastCheckInTime);
     }
-
 }

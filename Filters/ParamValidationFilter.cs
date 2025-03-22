@@ -8,10 +8,7 @@ public class ParamValidationFilter : IActionFilter
 {
     public void OnActionExecuting(ActionExecutingContext context)
     {
-        if (context.ModelState.IsValid)
-        {
-            return;
-        }
+        if (context.ModelState.IsValid) return;
 
         var errors = context.ModelState.Where(e => e.Value?.Errors.Count > 0).Select(e => new ParamValidationError
         {

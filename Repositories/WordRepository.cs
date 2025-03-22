@@ -5,7 +5,7 @@ using Seiun.Entities;
 namespace Seiun.Repositories;
 
 public class WordRepository(SeiunDbContext dbContext, IMinioClient minioClient)
-    :BaseRepository<WordEntity>(dbContext,minioClient), IWordRepository
+    : BaseRepository<WordEntity>(dbContext, minioClient), IWordRepository
 {
     public async Task<List<WordEntity>> GetReviewingWordsByGuidsAsync(List<Guid> reviewingWordIds)
     {

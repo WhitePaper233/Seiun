@@ -344,7 +344,6 @@ public class UserController(ILogger<UserController> logger, IRepositoryService r
                 StatusCodes.Status404NotFound,
                 ErrorMessages.Controller.User.UserNotFound
             ));
-        }
 
         var userPlan = await repository.UserPlansRepository.GetUserPlanAsync(userId.Value);
         if (userPlan == null)

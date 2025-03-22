@@ -6,42 +6,46 @@ using System.ComponentModel.DataAnnotations;
 
 namespace Seiun.Entities;
 
-public class ArticleEntity: BaseEntity
+public class ArticleEntity : BaseEntity
 {
-	// 文章
-	[MaxLength(Constants.Article.MaxArticleLength, ErrorMessage = ErrorMessages.ValidationError.OverArticleMaxLength)]
-	public required string Article { get; set; }
-	// 图片
-	public List<string>? ImageFileNames { get; set; }
-	// 封面
-	[MaxLength(Constants.Article.MaxImgUrlLength, ErrorMessage = ErrorMessages.ValidationError.OverImgUrlLength)]
-	public string? CoverFileName { get; set; }
-	// 发布者ID
-	public required Guid CreatorId { get; set; }
-	// 置顶
-	public required bool IsPinned { get; set; }
-	// 置顶时间
-	public DateTimeOffset? PinTime { get; set; }
-	
-	[ForeignKey(nameof(this.CreatorId))]
-	public virtual UserEntity Creator { get; set; } = null!;
+    // 文章
+    [MaxLength(Constants.Article.MaxArticleLength, ErrorMessage = ErrorMessages.ValidationError.OverArticleMaxLength)]
+    public required string Article { get; set; }
 
-	[JsonIgnore]
-	public virtual ICollection<ArticleLikeEntity> Likes { get; set; } = [];
-	
-	[JsonIgnore]	
-	public virtual ICollection<CommentEntity> Comments { get; set; } = [];
+    // 图片
+    public List<string>? ImageFileNames { get; set; }
+
+    // 封面
+    [MaxLength(Constants.Article.MaxImgUrlLength, ErrorMessage = ErrorMessages.ValidationError.OverImgUrlLength)]
+    public string? CoverFileName { get; set; }
+
+    // 发布者ID
+    public required Guid CreatorId { get; set; }
+
+    // 置顶
+    public required bool IsPinned { get; set; }
+
+    // 置顶时间
+    public DateTimeOffset? PinTime { get; set; }
+
+    [ForeignKey(nameof(this.CreatorId))] public virtual UserEntity Creator { get; set; } = null!;
+
+    [JsonIgnore] public virtual ICollection<ArticleLikeEntity> Likes { get; set; } = [];
+
+    [JsonIgnore] public virtual ICollection<CommentEntity> Comments { get; set; } = [];
 }
 
-public class ArticleLikeEntity: BaseEntity
+public class ArticleLikeEntity : BaseEntity
 {
-	// 用户ID
-	public required Guid UserId { get; set; }
-	// 文章ID
-	public required Guid LikedArticleId {get; set; }
-	// 点赞时间
-	public required DateTimeOffset LikedTime {get; set; }
-	
-	[ForeignKey(nameof(this.LikedArticleId))]
-	public virtual ArticleEntity LikedArticle { get; set; } = null!;
+    // 用户ID
+    public required Guid UserId { get; set; }
+
+    // 文章ID
+    public required Guid LikedArticleId { get; set; }
+
+    // 点赞时间
+    public required DateTimeOffset LikedTime { get; set; }
+
+    [ForeignKey(nameof(this.LikedArticleId))]
+    public virtual ArticleEntity LikedArticle { get; set; } = null!;
 }

@@ -62,10 +62,11 @@ public class WordSessionController(
         if (reviewingWordIds != null && reviewingWordIds.Count != 0)
         {
             reviewingWordCount = reviewingWordIds.Count;
-            var reviewingWords = (await repository.WordRepository.GetReviewingWordsByGuidsAsync(reviewingWordIds)).ToList();
+            var reviewingWords =
+                (await repository.WordRepository.GetReviewingWordsByGuidsAsync(reviewingWordIds)).ToList();
 
             foreach (var studyingWord in reviewingWords) wordQueue.Enqueue(studyingWord);
-            
+
             repository.ErrorWordRepository.BulkDelete(userId.Value);
             if (!await repository.ErrorWordRepository.SaveAsync())
             {
@@ -88,7 +89,7 @@ public class WordSessionController(
                 ErrorMessages.Controller.WordSession.NotFoundStudyingWords
             ));
         }
-        
+
         var studyingWordCount = studyWords.Count;
         foreach (var word in studyWords) wordQueue.Enqueue(word);
 
@@ -209,7 +210,7 @@ public class WordSessionController(
             logger.LogWarning("User {} failed over session", userId);
             return StatusCode(StatusCodes.Status500InternalServerError, ResponseFactory.NewFailedBaseResponse(
                 StatusCodes.Status500InternalServerError,
-                ErrorMessages.Controller.UserPlan.UpdateUserPlanFailed
+                ErrorMessages.Controller.UserPlan.UpdatePlanFailed
             ));
         }
 

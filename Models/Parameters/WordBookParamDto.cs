@@ -1,20 +1,13 @@
 using System.ComponentModel.DataAnnotations;
 using Seiun.Resources;
 
-
 namespace Seiun.Models.Parameters;
 
-public class UserSelectWordBank
+public class SelectWordBook
 {
     [Required(ErrorMessage = ErrorMessages.ValidationError.WordBookIdRequired)]
     public required Guid WordBookId { get; set; }
 
-    [Required(ErrorMessage = ErrorMessages.ValidationError.DailyPlanRequired)]
-    public required int SetDailyPlan { get; set; }
-}
-
-public class UserUpdatePlan
-{
     [Required(ErrorMessage = ErrorMessages.ValidationError.DailyPlanRequired)]
     public required int SetDailyPlan { get; set; }
 }

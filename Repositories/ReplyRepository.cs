@@ -12,7 +12,7 @@ public class ReplyRepository(SeiunDbContext dbContext, IMinioClient minioClient)
         var replies = await DbContext.Set<ReplyEntity>()
             .Where(reply => reply.CommentId == commentId)
             .ToListAsync();
-        
+
         return replies.Count == 0 ? [] : replies;
     }
 }

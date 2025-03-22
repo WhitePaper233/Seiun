@@ -13,15 +13,13 @@ public class AtLeastOnePropertyRequiredAttribute(string[]? propertyNames = null,
     protected override ValidationResult? IsValid(object? value, ValidationContext validationContext)
     {
         string thisErrorMessage;
-        
+
         // 如果没有指定属性，则判断所有属性
         if (propertyNames == null || propertyNames.Length == 0)
         {
             var properties = validationContext.ObjectType.GetProperties();
             if (properties.Any(property => property.GetValue(validationContext.ObjectInstance) != null))
-            {
                 return ValidationResult.Success;
-            }
 
             thisErrorMessage = ErrorMessage ?? $"At least one property is required: {
                 string.Join(", ", properties.Select(property => property.Name))
@@ -33,16 +31,10 @@ public class AtLeastOnePropertyRequiredAttribute(string[]? propertyNames = null,
         foreach (var propertyName in propertyNames)
         {
             var property = validationContext.ObjectType.GetProperty(propertyName);
-            if (property == null)
-            {
-                continue;
-            }
+            if (property == null) continue;
 
             var propertyValue = property.GetValue(validationContext.ObjectInstance);
-            if (propertyValue is string strVal && !string.IsNullOrWhiteSpace(strVal))
-            {
-                return ValidationResult.Success;
-            }
+            if (propertyValue is string strVal && !string.IsNullOrWhiteSpace(strVal)) return ValidationResult.Success;
         }
 
         thisErrorMessage = ErrorMessage ?? $"At least one property is required: {string.Join(", ", propertyNames)}";

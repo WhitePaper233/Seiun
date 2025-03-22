@@ -15,21 +15,16 @@ public static class ImageUtils
         public Image Process(Image image)
         {
             var processedImage = image;
-            foreach (var processUtil in processUtils)
-            {
-                processedImage = processUtil.ProcessImage(processedImage);
-            }
+            foreach (var processUtil in processUtils) processedImage = processUtil.ProcessImage(processedImage);
 
             return processedImage;
         }
-        
+
         public async Task<Image> ProcessAsync(Image image)
         {
             var processedImage = image;
             foreach (var processUtil in processUtils)
-            {
                 await Task.Run(() => processedImage = processUtil.ProcessImage(processedImage));
-            }
             return processedImage;
         }
     }
@@ -42,7 +37,7 @@ public static class ImageUtils
             return image;
         }
     }
-    
+
     public class ProportionallyResizeUtil(int x, int y) : IProcessUtil
     {
         public Image ProcessImage(Image image)

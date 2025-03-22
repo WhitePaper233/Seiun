@@ -5,7 +5,8 @@ using Seiun.Entities;
 
 namespace Seiun.Repositories;
 
-public class BaseRepository<T>(SeiunDbContext dbContext, IMinioClient minioClient) : IBaseRepository<T> where T : BaseEntity
+public class BaseRepository<T>(SeiunDbContext dbContext, IMinioClient minioClient)
+    : IBaseRepository<T> where T : BaseEntity
 {
     public SeiunDbContext DbContext { get; set; } = dbContext;
     public IMinioClient MinioCl { get; set; } = minioClient;
