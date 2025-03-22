@@ -10,11 +10,12 @@ public class CurrentPlanData
 
     public required string WordBookName { get; set; }
 
-    public required int SetDailyPlan { get; set; }
+    public required int DailyPlan { get; set; }
 
     public required int RemainingDays { get; set; }
 
     public required int LearnedCount { get; set; }
+    public required int BookWordCount { get; set; }
 
     public required long ExpectedCompletionAt { get; set; }
 }

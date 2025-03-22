@@ -8,7 +8,7 @@ public class UserPlanEntity : BaseEntity
 
     public required Guid WordBookId { get; set; }
 
-    public required int SetDailyPlan { get; set; }
+    public required int DailyPlan { get; set; }
 
     public required int LearnedCount { get; set; }
 

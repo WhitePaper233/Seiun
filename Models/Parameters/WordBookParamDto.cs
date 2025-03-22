@@ -9,5 +9,5 @@ public class SelectWordBook
     public required Guid WordBookId { get; set; }
 
     [Required(ErrorMessage = ErrorMessages.ValidationError.DailyPlanRequired)]
-    public required int SetDailyPlan { get; set; }
+    public required int DailyPlan { get; set; }
 }

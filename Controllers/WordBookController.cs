@@ -64,9 +64,9 @@ public class WordBookController(ILogger<UserController> logger, IRepositoryServi
                         WordBookName = wordBook.WordBookName,
                         WordCount = wordCount,
                         LearnedWordCount = userPlanDict[wordBook.Id].LearnedCount,
-                        DailyPlan = userPlanDict[wordBook.Id].SetDailyPlan,
+                        DailyPlan = userPlanDict[wordBook.Id].DailyPlan,
                         RemainingDays = (wordCount - userPlanDict[wordBook.Id].LearnedCount) /
-                                        userPlanDict[wordBook.Id].SetDailyPlan
+                                        userPlanDict[wordBook.Id].DailyPlan
                     };
                 })
                 .ToList();
@@ -121,7 +121,7 @@ public class WordBookController(ILogger<UserController> logger, IRepositoryServi
             {
                 UserId = userId.Value,
                 WordBookId = selectedWordBook.WordBookId,
-                SetDailyPlan = selectedWordBook.SetDailyPlan,
+                DailyPlan = selectedWordBook.DailyPlan,
                 LearnedCount = 0
             };
             repository.UserPlansRepository.Create(userPlanEntity);
@@ -136,7 +136,7 @@ public class WordBookController(ILogger<UserController> logger, IRepositoryServi
             ));
         }
 
-        existUserPlan.SetDailyPlan = selectedWordBook.SetDailyPlan;
+        existUserPlan.DailyPlan = selectedWordBook.DailyPlan;
 
         repository.UserPlansRepository.Update(existUserPlan);
         if (await repository.UserPlansRepository.SaveAsync())

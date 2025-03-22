@@ -50,15 +50,16 @@ public class UserPlanController(ILogger<UserController> logger, IRepositoryServi
             ));
 
         var wordCount = await repository.WordWordBookRepository.GetBookWordCountAsync(currentUserPlan.WordBookId);
-        var remainDays = (wordCount - currentUserPlan.LearnedCount) / currentUserPlan.SetDailyPlan;
+        var remainDays = (wordCount - currentUserPlan.LearnedCount) / currentUserPlan.DailyPlan;
 
         var currentPlanData = new CurrentPlanData
         {
             WordBookId = wordBook.Id,
             WordBookName = wordBook.WordBookName,
-            SetDailyPlan = currentUserPlan.SetDailyPlan,
+            DailyPlan = currentUserPlan.DailyPlan,
             RemainingDays = remainDays,
             LearnedCount = currentUserPlan.LearnedCount,
+            BookWordCount = wordCount,
             ExpectedCompletionAt = DateTimeOffset.UtcNow.AddDays(remainDays).ToUnixTimeSeconds()
         };
 
@@ -95,7 +96,7 @@ public class UserPlanController(ILogger<UserController> logger, IRepositoryServi
                 ErrorMessages.Controller.UserPlan.CurrentUserPlanNotFound
             ));
 
-        userPlanEntity.SetDailyPlan = updatePlan.SetDailyPlan;
+        userPlanEntity.DailyPlan = updatePlan.DailyPlan;
 
         repository.UserPlansRepository.Update(userPlanEntity);
         if (await repository.UserPlansRepository.SaveAsync())

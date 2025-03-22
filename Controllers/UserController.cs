@@ -364,7 +364,7 @@ public class UserController(ILogger<UserController> logger, IRepositoryService r
             var notCheckInStatus = new UserCheckInDetail
             {
                 TodayUserIsCheckIn = false,
-                DailyPlan = userPlan.SetDailyPlan,
+                DailyPlan = userPlan.DailyPlan,
                 TodayPlanReviewedCount = todayAllSessions[0].ReviewingCount,
                 ToDayStudiedCount = todayAllSessions.Sum(s => s.StudyingCount - s.StudyingWords.Count),
                 ToDayReviewedCount = todayAllSessions.Sum(s => s.ReviewingCount - s.ReviewingWords?.Count ?? 0)
@@ -376,7 +376,7 @@ public class UserController(ILogger<UserController> logger, IRepositoryService r
         var checkInStatus = new UserCheckInDetail
         {
             TodayUserIsCheckIn = true,
-            DailyPlan = userPlan.SetDailyPlan,
+            DailyPlan = userPlan.DailyPlan,
             TodayPlanReviewedCount = todayAllSessions[0].ReviewingCount,
             ToDayStudiedCount = todayAllSessions.Sum(s => s.StudyingCount - s.StudyingWords.Count),
             ToDayReviewedCount = todayAllSessions.Sum(s => s.ReviewingCount - s.ReviewingWords?.Count ?? 0)
