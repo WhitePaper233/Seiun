@@ -80,7 +80,7 @@ public class WordSessionController(
 
         var studyWords =
             await repository.WordWordBookRepository.GetUnfinishedWordsByPlanAsync(selectedPlan.WordBookId,
-                selectedPlan.SetDailyPlan, userId.Value);
+                selectedPlan.DailyPlan, userId.Value);
         if (studyWords == null || studyWords.Count == 0)
         {
             logger.LogWarning("No studying words found for {}", selectedPlan.WordBookId);
@@ -203,7 +203,7 @@ public class WordSessionController(
                 ErrorMessages.Controller.UserPlan.CurrentUserPlanNotFound
             ));
 
-        userPlanEntity.LearnedCount += userPlanEntity.SetDailyPlan;
+        userPlanEntity.LearnedCount += userPlanEntity.DailyPlan;
         repository.UserPlansRepository.Update(userPlanEntity);
         if (!await repository.UserPlansRepository.SaveAsync())
         {
