@@ -13,8 +13,6 @@ public class PublicAnnouncementEntity : BaseEntity
 	// 内容
 	[MaxLength(Constants.PublicAnnotation.MaxAnnotationLength, ErrorMessage = ErrorMessages.ValidationError.OverPublicAnnouncementLength)]
 	public required string Content { get; set; }
-	// 发布时间
-	public required DateTimeOffset PublishTime { get; set; }
 	// 发布人
 	public required Guid AdminId { get; set; }
 

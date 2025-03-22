@@ -8,7 +8,6 @@ using Seiun.Models.Parameters;
 using SixLabors.ImageSharp;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using SixLabors.ImageSharp.Processing;
 using Seiun.Utils;
 using Nest;
 
@@ -20,9 +19,8 @@ namespace Seiun.Controllers;
 /// <param name="repository">日志</param>
 /// <param name="elasticClient">Elasticsearch 搜索客户端</param>
 /// <param name="articleSearch">文章搜索服务</param>
-/// <param name="aiRequest">AI请求服务</param>
 [ApiController,Route("/api/article")]
-public class ArticleController(ILogger<ArticleController> logger, IRepositoryService repository, IElasticClient elasticClient, IArticleSearchService articleSearch, IAiRequestService aiRequest) : ControllerBase{
+public class ArticleController(ILogger<ArticleController> logger, IRepositoryService repository, IElasticClient elasticClient, IArticleSearchService articleSearch) : ControllerBase{
 	
 	/// <summary>
 	/// 上传文章
@@ -61,7 +59,6 @@ public class ArticleController(ILogger<ArticleController> logger, IRepositorySer
 			ImageFileNames = articleCreate.ImageNames,
 			CoverFileName = articleCreate.CoverFileName,
 			CreatorId = userId.Value,
-			CreateTime = DateTimeOffset.UtcNow,
 			IsPinned = false
 		};
 
@@ -73,7 +70,7 @@ public class ArticleController(ILogger<ArticleController> logger, IRepositorySer
 				Article = article.Article,
 				CreatorUserName = user.UserName,
 				CreatorNickName = user.NickName,
-				CreateTime = article.CreateTime,
+				CreatedAt = article.CreatedAt,
 				ArticleId = article.Id
 			};
 
@@ -230,7 +227,7 @@ public class ArticleController(ILogger<ArticleController> logger, IRepositorySer
 		repository.ArticleRepository.Delete(article);
 		if(await repository.ArticleRepository.SaveAsync()&&deleteResponse.IsValid)
 		{	
-			if(article.ImageFileNames != null&&await repository.ArticleRepository.DeleteAticleImgAsync(article.ImageFileNames, Constants.BucketNames.ArticleImages))
+			if(article.ImageFileNames != null&&await repository.ArticleRepository.DeleteArticleImgAsync(article.ImageFileNames, Constants.BucketNames.ArticleImages))
 			{
 				return Ok(ResponseFactory.NewSuccessBaseResponse(SuccessMessages.Controller.Article.DeleteSuccess));
 			}
@@ -367,7 +364,7 @@ public class ArticleController(ILogger<ArticleController> logger, IRepositorySer
 	[ProducesResponseType(typeof(ArticleListResp), StatusCodes.Status400BadRequest)]
 	[ProducesResponseType(typeof(ArticleListResp), StatusCodes.Status404NotFound)]	
 	[ProducesResponseType(typeof(ArticleListResp), StatusCodes.Status500InternalServerError)]
-	public async Task<IActionResult> GetArticleList([FromQuery] int len, [FromQuery] DateTime? from, [FromQuery] string? reqType, [FromQuery] Guid? userId = null)
+	public async Task<IActionResult> GetArticleList([FromQuery] int len, [FromQuery] DateTimeOffset? from, [FromQuery] string? reqType, [FromQuery] Guid? userId = null)
 	{
 		if(reqType == "user" || reqType == "liked")
 		{

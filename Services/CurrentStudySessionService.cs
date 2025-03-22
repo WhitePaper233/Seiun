@@ -1,112 +1,107 @@
 using Seiun.Entities;
-using Seiun.Repositories;
-using Seiun.Controllers;
 
 namespace Seiun.Services;
 
-public class CurrentStudySessionService : ICurrentStudySessionService
+public class CurrentStudySessionService(IServiceScopeFactory serviceScopeFactory, ILogger<CurrentStudySessionService> logger) : ICurrentStudySessionService
 {
-	private Dictionary<Guid,Queue<WordEntity>> _currentStudySessions = [];
-
+	private  readonly Dictionary<Guid,Queue<WordEntity>> _currentStudySessions = [];
+	
 	// 添加Session
-    public bool AddSession(Guid SessionId, Queue<WordEntity> Words, ILogger<WordSessionController> logger)
+    public bool AddSession(Guid sessionId, Queue<WordEntity> words)
 	{
-		if(_currentStudySessions.ContainsKey(SessionId))
+		if (_currentStudySessions.TryAdd(sessionId, words))
 		{
-			logger.LogWarning("Session {} already exists",SessionId);
-			return false;
+			return true;
 		}
-		_currentStudySessions.Add(SessionId,Words);
-		return true;
+		logger.LogWarning("Session {} already exists", sessionId);
+		return false;
 	}
 
     // 获取下一个单词
-	public WordEntity? GetNextWord(Guid SessionId, ILogger<WordSessionController> logger)
+	public WordEntity? GetNextWord(Guid sessionId)
 	{
-		if(_currentStudySessions.ContainsKey(SessionId))
+		if(_currentStudySessions.ContainsKey(sessionId))
 		{
-			return _currentStudySessions[SessionId].Count == 0 ? null : _currentStudySessions[SessionId].Peek();
+			return _currentStudySessions[sessionId].Count == 0 ? null : _currentStudySessions[sessionId].Peek();
 		}
 		
-		logger.LogWarning("Session {} does not exist",SessionId);
+		logger.LogWarning("Session {} does not exist",sessionId);
 		return null;
 	}
 
 	// 删除正确单词
-	public void DeleteCorrectWord(Guid SessionId, ILogger<WordSessionController> logger)
+	public void DeleteCorrectWord(Guid sessionId)
 	{
-		if(_currentStudySessions.ContainsKey(SessionId)==false)
+		if(!_currentStudySessions.TryGetValue(sessionId, out var _))
 		{	
-			logger.LogWarning("Session {} does not exist",SessionId);
+			logger.LogWarning("Session {} does not exist",sessionId);
 			return;
 		}
-		_currentStudySessions[SessionId].Dequeue();
+		_currentStudySessions[sessionId].Dequeue();
 	}
 
     // 插入错误单词到队尾
-	public void InsertErrorWord(Guid SessionId, ILogger<WordSessionController> logger)
+	public void InsertErrorWord(Guid sessionId)
 	{
-		if(_currentStudySessions.ContainsKey(SessionId)==false)
+		if(!_currentStudySessions.TryGetValue(sessionId, out var _))
 		{	
-			logger.LogWarning("Session {} does not exist",SessionId);
+			logger.LogWarning("Session {} does not exist",sessionId);
 			return;
 		}
-		var Word = _currentStudySessions[SessionId].Dequeue();
-		_currentStudySessions[SessionId].Enqueue(Word);
+		var word = _currentStudySessions[sessionId].Dequeue();
+		_currentStudySessions[sessionId].Enqueue(word);
 	}
 
-    // 会话结束，移除Session
-	public void RemoveSession(Guid SessionId, ILogger<WordSessionController> logger)
+	public Queue<WordEntity>? GetAllWords(Guid sessionId)
 	{
-		if(_currentStudySessions.ContainsKey(SessionId)&&_currentStudySessions[SessionId].Count==0)
+		if(_currentStudySessions.TryGetValue(sessionId, out var words))
+		{	
+			return words;
+		}
+		logger.LogWarning("Session {} does not exist",sessionId);
+		return null;
+	}
+
+	// 会话结束，移除Session
+	public void RemoveSession(Guid sessionId)
+	{
+		if(_currentStudySessions.ContainsKey(sessionId)&&_currentStudySessions[sessionId].Count==0)
 		{
-			_currentStudySessions.Remove(SessionId);
+			_currentStudySessions.Remove(sessionId);
 		}
 		else
 		{
-			logger.LogWarning("Session {} does not exist or not finished",SessionId);
+			logger.LogWarning("Session {} does not exist or not finished",sessionId);
 		}
 	}
 
 	// 定时清理Session
-	public async Task ClearSessionAsync(IWordSessionRepository sessionRepository, ILogger logger)
+	public async Task ClearSessionAsync()
 	{
+		using var scope = serviceScopeFactory.CreateScope();
+		var repository = scope.ServiceProvider.GetRequiredService<IRepositoryService>();
+		
 		var endTime = DateTimeOffset.UtcNow;
-		var clearingSessions = new List<Guid>();
-		foreach(var Session in _currentStudySessions)
+		var clearingSessionIds = new List<Guid>();
+		foreach(var session in _currentStudySessions)
 		{
-			try
+			var userSession = await repository.SessionRepository.GetByIdAsync(session.Key);
+			if(userSession == null)
 			{
-				var userSession = await sessionRepository.GetByIdAsync(Session.Key);
-				if(userSession!=null)
-				{
-					TimeSpan hoursSpan = endTime - userSession.WordSessionAt;
-					if(hoursSpan.TotalHours>20)
-					{
-						clearingSessions.Add(Session.Key);
-						sessionRepository.Delete(userSession);
-					}
-				}
-				else
-				{
-					logger.LogWarning("SessionEntity does not exist for Session {}",Session.Key);
-				}
-			}
-			catch(Exception e)
-			{
-				logger.LogWarning(e,"Error when clearing session {}",Session.Key);
+				logger.LogWarning("SessionEntity does not exist for Session {}",session.Key);
 				continue;
 			}
+			var hoursSpan = endTime - userSession.CreatedAt;
+			if(hoursSpan.TotalHours<=20)
+			{
+				continue;
+			}
+			clearingSessionIds.Add(session.Key);
 		}
 		
-		foreach(var SessionId in clearingSessions)
+		foreach(var sessionId in clearingSessionIds)
 		{
-			_currentStudySessions.Remove(SessionId);
-		}
-
-		if(await sessionRepository.SaveAsync())
-		{
-			logger.LogInformation("Session cleared successfully");
+			_currentStudySessions.Remove(sessionId);
 		}
 	}
 	

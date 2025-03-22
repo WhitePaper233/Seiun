@@ -53,10 +53,15 @@ public static class Constants
     public static class Word
     {
         public const int MaxTagNameLength = 10;
-        public const int MaxWordTextLength = 50;
-        public const int MaxWordPronunciationLength = 50;
-        public const int MaxWordDefinitionLength = 50;
+        public const int MaxWordTextLength = 100;
+        public const int MaxWordPronunciationLength = 100;
+        public const int MaxWordDefinitionLength = 500;
         public const int FourLevelWordCount = 4428;
         public const int SixLevelWordCount = 5523;
+    }
+
+    public static class WordBookName
+    {
+        public const int MaxWordBookNameLength = 50;
     }
 }

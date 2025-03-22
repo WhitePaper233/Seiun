@@ -34,14 +34,12 @@ public class ArticleSearchService(IElasticClient elasticClient) : IArticleSearch
             )
             .From((page - 1) * pageSize)  // 分页起始位置
             .Size(pageSize)               // 每页数量
-            .Sort(ss => ss.Descending(art => art.CreateTime)) // 按发布时间倒序
+            .Sort(ss => ss.Descending(art => art.CreatedAt)) // 按发布时间倒序
         );
 
         List<Guid> articleIds = [];
-		foreach(var article in response.Documents)
-		{
-			articleIds.Add(article.ArticleId);
-		}
+        articleIds.AddRange(response.Documents.Select(a => a.ArticleId).ToList());
+        
         return articleIds; 
     }
 }

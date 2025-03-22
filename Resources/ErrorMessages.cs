@@ -1,4 +1,3 @@
-using Seiun.Models.Parameters;
 
 namespace Seiun.Resources;
 
@@ -27,14 +26,13 @@ public static class ErrorMessages
         public const string OverContentLength = "error.validation.over_content_length";
         public const string OverWordDefinitionLength = "error.validation.over_word_definition_length";
         public const string OverWordTextLength= "error.validation.over_word_text_length";
+        public const string OverPronunciationLength = "error.validation.over_pronunciation_length";
         
         public const string AtLeastOnePropertyRequired = "error.validation.at_least_one_property_is_required";
         public const string UserIdRequired = "error.validation.user_id_required";
 
-        public const string UserTagSetTotalDaysRequired = "error.validation.tag_total_days_required";
-        public const string UserTagExpectedCompletionAtRequired = "error.validation.user_tag_expected_completion_at_required";
-        public const string UserTagWordLevelRequired = "error.validation.user_tag_word_level_required";
-        public const string UserTagSetDailyPlanRequired = "error.validation.user_tag_set_daily_plan_required";
+        public const string WordBookIdRequired = "error.validation.word_book_id_required";
+        public const string DailyPlanRequired = "error.validation.user_tag_set_daily_plan_required";
         
         public const string CommentIdRequired = "error.validation.comment_id_required";
 
@@ -48,6 +46,7 @@ public static class ErrorMessages
         public const string OverArticleLength = "error.validation.over_article_length";
         public const string OverCoverUrlLength = "error.validation.over_cover_url_length";
         public const string OverPublicAnnouncementLength = "error.validation.over_public_announcement_length";
+        public const string OverWordBookNameLength = "error.validation.over_word_book_name_length";
     }
 
     public static class Controller
@@ -159,6 +158,11 @@ public static class ErrorMessages
             public const string QuestionNotFound = "error.controller.question.not_found";
             public const string QuestionWordNotFound = "error.controller.question.word_not_found";
             public const string QuestionAnswerNotFound = "error.controller.question.answer_not_found";
+        }
+
+        public static class CheckIn
+        {
+            public const string NotFoundCheckIn = "error.controller.checkin.not_fount_check_in";
         }
     }
 }

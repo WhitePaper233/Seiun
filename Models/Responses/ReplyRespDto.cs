@@ -13,7 +13,6 @@ public class ReplyInfo
     public required string Content { get; set; }
     public Guid? ParentReplyId { get; set; }
     public required DateTimeOffset CreatedAt { get; set; }
-
 }
 
 /// <summary>

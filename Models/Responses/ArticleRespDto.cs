@@ -92,7 +92,7 @@ public class ArticleDetail
 	public required Guid CreatorId { get; set; }
 	public required string Article { get; set; }
 	public List<string>? ArticleImgURLs { get; set; }
-	public required DateTimeOffset CreateTime { get; set; }
+	public required DateTimeOffset CreateAt { get; set; }
 	public required int Like { get; set; }
 	public required bool IsPinned { get; set; }
 }
@@ -109,7 +109,7 @@ public sealed class ArticleDetailResp(int code, string message, ArticleDetail? a
 				CreatorId = articleEntity.CreatorId,
 				Article = articleEntity.Article,
 				ArticleImgURLs = articleImgURLs,
-				CreateTime = articleEntity.CreateTime,
+				CreateAt = articleEntity.CreatedAt,
 				Like = articleLikedCount,
 				IsPinned = articleEntity.IsPinned
 			}

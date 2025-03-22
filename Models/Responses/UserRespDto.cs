@@ -138,7 +138,7 @@ public class UserList
     public required Gender Gender { get; set; }
     public required string NickName { get; set; }
     public required string? Description { get; set; }
-    public DateTimeOffset CreatedAt { get; set; }
+    // public DateTimeOffset CreatedAt { get; set; }
 }
 
 public class UserListData

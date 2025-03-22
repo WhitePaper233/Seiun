@@ -72,7 +72,7 @@ public class ReplyController(ILogger<ReplyController> logger, IRepositoryService
             Content = replyCreate.Content,  
             CommentId = replyCreate.CommentId, 
             ParentReplyId = replyCreate.ParentReplyId,
-            CreatedAt = DateTime.UtcNow    
+            // CreatedAt = DateTime.UtcNow    
         };
 
         repository.ReplyRepository.Create(reply);

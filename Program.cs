@@ -12,7 +12,7 @@ using Seiun.Utils;
 using Nest;
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddSingleton<IElasticClient>(provider =>
+builder.Services.AddSingleton<IElasticClient>(_ =>
 {
     var settings = new ConnectionSettings(new Uri("http://localhost:9200"))
         .DefaultIndex("articles");
@@ -61,6 +61,8 @@ builder.Services.AddScoped<IArticleSearchService, ArticleSearchService>();
 // Inject current study session service
 // 单例
 builder.Services.AddSingleton<ICurrentStudySessionService, CurrentStudySessionService>();
+// 定时清理Session
+builder.Services.AddHostedService<ClearSessionTimedService>(); // 注册后台任务
 
 // Use snake_case for JSON serialization
 builder.Services.AddControllers().AddJsonOptions(options =>
@@ -84,38 +86,11 @@ builder.Services.AddCors(options =>
               .AllowCredentials()); // 允许前端携带 Cookie 或 Authorization 头
 });
 
-// Configure PostgreSQL database
+// Configure PgSQL database
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddDbContext<SeiunDbContext>(options => { options.UseNpgsql(connectionString); });
 
 var app = builder.Build();
-
-// 子线程定时20小时自动清理session
-Thread ClearSession = new(() =>
-{
-    var time = new System.Timers.Timer
-    {
-        Interval = 3600000 * 20
-    };
-    time.Elapsed += async (_, _) =>
-    {
-        var currentStudySession = app.Services.GetService<CurrentStudySessionService>();
-        if (currentStudySession != null)
-        {
-            var sessionRepository = app.Services.GetService<RepositoryService>()?.SessionRepository;
-            var loggger = app.Services.GetService<ILogger>();
-            if(sessionRepository != null && loggger!= null)
-            {
-                await currentStudySession.ClearSessionAsync(sessionRepository, loggger);
-            }
-        }
-    };
-    time.Start();
-})
-{
-    IsBackground = true
-};
-ClearSession.Start();
 
 if (app.Environment.IsDevelopment())
 {
@@ -127,28 +102,42 @@ if (app.Environment.IsDevelopment())
     using var scope = app.Services.CreateScope();
     var dbContext = scope.ServiceProvider.GetRequiredService<SeiunDbContext>();
     dbContext.Database.Migrate();
-
-    // 示例代码（应用启动时运行一次）
+    
+    // 配置 ElasticSearch 分词方式 
     var elasticClient = scope.ServiceProvider.GetRequiredService<IElasticClient>();
-    var createIndexResponse = await elasticClient.Indices.CreateAsync("articles", c => c
-        .Map<ArticleSearchEntity>(m => m
-            .Properties(props => props
-                .Text(t => t
-                    .Name(n => n.Article)  // 文章内容进行分词
-                    .Analyzer("standard")   // 使用标准分析器
+    // 先检查索引是否存在
+    var indexExistsResponse = await elasticClient.Indices.ExistsAsync("articles");
+    if (!indexExistsResponse.Exists)
+    {
+        var createIndexResponse = await elasticClient.Indices.CreateAsync("articles", c => c
+            .Map<ArticleSearchEntity>(m => m
+                .Properties(props => props
+                    .Text(t => t
+                            .Name(n => n.Article)  // 文章内容进行分词
+                            .Analyzer("standard")   // 使用标准分析器
+                    )
+                    .Keyword(k => k
+                        .Name(n => n.CreatorUserName) 
+                    )
+                    .Text(k => k
+                        .Name(n => n.CreatorNickName)
+                        .Analyzer("standard")
+                    )
+                    .Keyword(l => l
+                        .Name(n => n.ArticleId))
                 )
-                .Keyword(k => k
-                    .Name(n => n.CreatorUserName) 
-                )
-                .Text(k => k
-                    .Name(n => n.CreatorNickName)
-                    .Analyzer("standard")
-                )
-                .Keyword(l => l
-                    .Name(n => n.ArticleId))
             )
-        )
-    );
+        );
+        var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+        if (createIndexResponse.IsValid)
+        {
+            logger.LogInformation("Elasticsearch 索引创建成功！");
+        }
+        else
+        {
+            logger.LogError("Elasticsearch 索引创建失败: {Reason}", createIndexResponse.OriginalException?.Message);
+        }
+    }
 }
 
 app.UseCors("AllowFrontend"); // 在 UseAuthorization 之前调用

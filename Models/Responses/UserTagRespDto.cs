@@ -1,47 +1,44 @@
-using Seiun.Entities;
-using Seiun.Utils.Enums;
 using Seiun.Resources;
-using Seiun.Utils;
 
 namespace Seiun.Models.Responses;
 
 # region GetAllWordBank 
 
-public class WordBank
+public class WordBook
 {
-    public required WordLevel WordLevel { get; set; }
+    public required Guid WordBookId { get; set; }
+    
+    public required string WordBookName { get; set; }
     
     public required int WordCount { get; set; }
 
-    public int LearnedWordCount { get; set; } = 0;
+    public int LearnedWordCount { get; set; }
 
-    public int DailyPlan { get; set; } = 0;
+    public int DailyPlan { get; set; }
 
-    public int RemainingDays { get; set; } = 0;
-
-    public DateTimeOffset? LastStudyAt { get; set; } = null;
+    public int RemainingDays { get; set; }
 }
 
-public class AllWordBankDetail
+public class AllWordBookDetail
 {
-    public required List<WordBank> WordBanks { get; set; }
+    public required List<WordBook> WordBooks { get; set; }
 }
 
-public sealed class WordBanksResp(int code, string message, AllWordBankDetail? wordBanks)
-    : BaseRespWithData<AllWordBankDetail>(code, message, wordBanks)
+public sealed class WordBooksResp(int code, string message, AllWordBookDetail? wordBanks)
+    : BaseRespWithData<AllWordBookDetail>(code, message, wordBanks)
 {
-    public static WordBanksResp Success(List<WordBank> wordBanks)
+    public static WordBooksResp Success(List<WordBook> wordBanks)
     {
-        return new WordBanksResp(StatusCodes.Status200OK, SuccessMessages.Controller.UserTag.GetWordBanksSuccess,
-            new AllWordBankDetail
+        return new WordBooksResp(StatusCodes.Status200OK, SuccessMessages.Controller.UserTag.GetWordBooksSuccess,
+            new AllWordBookDetail
             {
-                WordBanks = wordBanks
+                WordBooks = wordBanks
             });
     }
 
-    public static WordBanksResp Fail(int code, string message)
+    public static WordBooksResp Fail(int code, string message)
     {
-        return new WordBanksResp(code, message, null);
+        return new WordBooksResp(code, message, null);
     }
 }
 
@@ -51,37 +48,26 @@ public sealed class WordBanksResp(int code, string message, AllWordBankDetail? w
 
 public class CurrentWordBankDetail
 {
-    public required WordLevel WordLevel { get; set; }
+    public required Guid WordBookId { get; set; }
 
+    public required string WordBookName { get; set; }
+    
     public required int SetDailyPlan { get; set; }
-
-    public required int SetTotalDays { get; set; }
     
     public required int RemainingDays { get; set; }
 
     public required int LearnedCount { get; set; }
     
     public required DateTimeOffset ExpectedCompletionAt { get; set; }
-    
-    public required DateTimeOffset? LastStudyAt { get; set; }
 }
 
 public sealed class CurrentWordBankResp(int code, string message, CurrentWordBankDetail? wordBanks)
     : BaseRespWithData<CurrentWordBankDetail>(code, message, wordBanks)
 {
-    public static CurrentWordBankResp Success(UserTagEntity userTag)
+    public static CurrentWordBankResp Success(CurrentWordBankDetail currentWordBook)
     {
-        return new CurrentWordBankResp(StatusCodes.Status200OK, SuccessMessages.Controller.UserTag.GetCurrentWordBankSuccess,
-            new CurrentWordBankDetail
-            {
-                WordLevel = userTag.WordLevel,
-                SetDailyPlan = userTag.SetDailyPlan,
-                SetTotalDays = userTag.SetTotalDays,
-                RemainingDays = userTag.RemainingDays,
-                LearnedCount = userTag.LearnedCount,
-                ExpectedCompletionAt = userTag.ExpectedCompletionAt,
-                LastStudyAt = userTag.LastStudyAt,
-            });
+        return new CurrentWordBankResp(StatusCodes.Status200OK, SuccessMessages.Controller.UserTag.GetCurrentWordBookSuccess,
+            currentWordBook);
     }
 
     public static CurrentWordBankResp Fail(int code, string message)
@@ -91,3 +77,4 @@ public sealed class CurrentWordBankResp(int code, string message, CurrentWordBan
 }
 
 # endregion
+

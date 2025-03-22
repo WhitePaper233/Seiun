@@ -5,24 +5,40 @@ namespace Seiun.Models.Responses;
 
 # region StartStudyResponse
 
+public class WordDetail
+{
+	public required string WordText { get; set; }
+	public string? Pronunciation { get; set; }
+	public required string Definition { get; set; }
+}
+
 public class WordSessionDetail
 {
 	public required Guid WordSessionId { get; set; }
 	public required int ReviewingWordCount { get; set; }
 	public required int StudyingWordCount { get; set; }
+	public required List<WordDetail> Words { get; set; }
 }
 
-public sealed class StartStudyResp(int code, string message, WordSessionDetail? WordsessionDetail)
-	: BaseRespWithData<WordSessionDetail>(code, message, WordsessionDetail)
+public sealed class StartStudyResp(int code, string message, WordSessionDetail? wordSessionDetail)
+	: BaseRespWithData<WordSessionDetail>(code, message, wordSessionDetail)
 {
-	public static StartStudyResp Success(Guid sessionId, int reviewingWordCount, int studyingWordCount)
+	public static StartStudyResp Success(Guid sessionId, int reviewingWordCount, int studyingWordCount, Queue<WordEntity> wordQueue)
 	{
-		return new StartStudyResp(StatusCodes.Status200OK, SuccessMessages.Controller.StudySession.GetSessionDetailSuccess,
+		return new StartStudyResp(StatusCodes.Status200OK,
+			SuccessMessages.Controller.StudySession.GetSessionDetailSuccess,
 			new WordSessionDetail
 			{
 				WordSessionId = sessionId,
 				ReviewingWordCount = reviewingWordCount,
-				StudyingWordCount = studyingWordCount
+				StudyingWordCount = studyingWordCount,
+				Words = wordQueue.Select(a =>
+					new WordDetail
+					{
+						WordText = a.WordText,
+						Pronunciation = a.Pronunciation,
+						Definition = a.Definition
+					}).ToList()
 			});
 	}
 
@@ -34,12 +50,39 @@ public sealed class StartStudyResp(int code, string message, WordSessionDetail? 
 
 # endregion
 
+# region ContinueStudy
+
+public class ContinueStudyDetail
+{
+	public required Guid SessionId { get; set; }
+}
+
+public sealed class ContinueStudyResp(int code, string message, ContinueStudyDetail? sessionDetail)
+	: BaseRespWithData<ContinueStudyDetail>(code, message, sessionDetail)
+{
+	public static ContinueStudyResp Success(Guid sessionId)
+	{
+		return new ContinueStudyResp(StatusCodes.Status200OK,
+			SuccessMessages.Controller.StudySession.ContinueSessionSuccess,
+			new ContinueStudyDetail
+			{
+				SessionId = sessionId
+			});
+	}
+}
+
+# endregion 
+
 # region GetNextWordResponse
 
 public class NextWordDetail
 {
 	public required List<OptionDetail> Options { get; set; }
 	public required AnswerDetail Answer { get; set; }
+	
+	public required int ReviewingWordCount { get; set; }
+	
+	public required int StudyingWordCount { get; set; }
 }
 
 public class OptionDetail
@@ -60,7 +103,7 @@ public class AnswerDetail
 public sealed class GetNextWordResp(int code, string message, NextWordDetail? nextWordDetail)
 	: BaseRespWithData<NextWordDetail>(code, message, nextWordDetail)
 {
-	public static GetNextWordResp Success(WordEntity nextWord, List<WordEntity> distractorWords)
+	public static GetNextWordResp Success(WordEntity nextWord, List<WordEntity> distractorWords, int reviewingWordCount, int studyingWordCount)
 	{
 		var options = distractorWords.Select(d => 
 			new OptionDetail { WordId = d.Id, Word = d.WordText, Pronunciation = d.Pronunciation, Definition = d.Definition })
@@ -72,7 +115,9 @@ public sealed class GetNextWordResp(int code, string message, NextWordDetail? ne
 			new NextWordDetail
 			{
 				Options = options,
-				Answer = answer
+				Answer = answer,
+				ReviewingWordCount = reviewingWordCount,
+				StudyingWordCount = studyingWordCount
 			});
 	}
 

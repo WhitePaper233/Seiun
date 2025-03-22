@@ -60,7 +60,7 @@ public class CommentController(ILogger<CommentController> logger, IRepositorySer
             PostId = commentCreate.ArticleId,
             LikeCount = 0,
             DislikeCount = 0,
-            CreatedAt = DateTimeOffset.UtcNow
+            // CreatedAt = DateTimeOffset.UtcNow
         };
         repository.CommentRepository.Create(comment);
         if (await repository.CommentRepository.SaveAsync())
@@ -273,7 +273,7 @@ public class CommentController(ILogger<CommentController> logger, IRepositorySer
             UserId = (Guid)userId,
             CommentId = commentId,
             Action = ActionType.Like,
-            CreatedAt = DateTime.UtcNow
+            // CreatedAt = DateTime.UtcNow
         };
         repository.CommentLikeRepository.Create(likeRecord);
 
@@ -419,7 +419,7 @@ public class CommentController(ILogger<CommentController> logger, IRepositorySer
             UserId = (Guid)userId,
             CommentId = commentId,
             Action = ActionType.Dislike,
-            CreatedAt = DateTime.UtcNow
+            // CreatedAt = DateTime.UtcNow
         };
         repository.CommentLikeRepository.Create(dislikeRecord);
         comment.DislikeCount += 1;

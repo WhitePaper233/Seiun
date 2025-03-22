@@ -5,9 +5,7 @@ namespace Seiun.Entities;
 public class UserCheckInEntity : BaseEntity
 {
     public required Guid UserId { get; set; }
-
-    public required DateTimeOffset CheckInDate { get; set; }
-
+    
     [ForeignKey(nameof(this.UserId))]
     public virtual UserEntity User { get; set; } = null!;
 }
