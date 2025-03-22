@@ -12,10 +12,6 @@ public static class SuccessMessages
             public const string ProfileUpdateSuccess = "controller.user.profile.update_success";
             public const string AvatarUpdateSuccess = "controller.user.profile.avatar_update_success";
             public const string GetProfileSuccess = "controller.user.profile.get_success";
-            public const string CheckInToday = "controller.user.checkin.checkin_today";
-            public const string NoCheckInToday = "controller.user.checkin.no_checkin_today";
-            public const string NoCheckInHistory = "controller.user.checkin.no_checkin_history";
-            public const string GetConsecutiveCheckInDays = "controller.user.checkin.get_consecutive_checkin_days";
         }
 
         public static class Admin
@@ -74,12 +70,16 @@ public static class SuccessMessages
             public const string DetailSuccess = "controller.reply.detail.detail_success";
         }
 
+        public static class WordBook
+        {
+            public const string GetWordBooksSuccess = "controller.word_book.get_word_books_success";
+            public const string SelectWordBookSuccess = "controller.word_book.select_word_book_success";
+        }
+
         public static class UserPlan
         {
-            public const string GetWordBooksSuccess = "controller.usertag.get_word_banks_success";
-            public const string SelectWordBankSuccess = "controller.usertag.select_word_bank_success";
-            public const string GetCurrentWordBookSuccess = "controller.usertag.get_current_word_book_success";
-            public const string UpdatePlanSuccess = "controller.usertag.update_plan.success";
+            public const string GetCurrentPlanSuccess = "controller.user_plan.get_current_plan_success";
+            public const string UpdatePlanSuccess = "controller.user_plan.update_plan.success";
         }
 
         public static class StudySession
@@ -91,7 +91,6 @@ public static class SuccessMessages
 
         public static class Word
         {
-            public const string GetReviewingWordSuccess = "controller.word.get.reviewing_word_success";
             public const string FinishedWordCreatSuccess = "controller.word.finishedword.create.create_success";
             public const string ErrorWordRecordCreatSuccess = "controller.word.errorword.record.record_success";
             public const string GetWordSuccess = "controller.word.get.word_success";
@@ -100,7 +99,6 @@ public static class SuccessMessages
         public static class WordSession
         {
             public const string WordSessionOver = "controller.session.word_session_over";
-            public const string SessionOverSuccess = "controller.session.session_over_success";
         }
 
         public static class Question

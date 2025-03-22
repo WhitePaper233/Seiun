@@ -12,36 +12,29 @@ public class CommentEntity : BaseEntity
 
     [MaxLength(500, ErrorMessage = ErrorMessages.ValidationError.OverContentLength)]
     public required string Content { get; set; }
+
     public required Guid PostId { get; set; }
 
     [Range(0, int.MaxValue, ErrorMessage = ErrorMessages.ValidationError.InvalidLikeCount)]
-    public int LikeCount { get; set; } = 0;
+    public int LikeCount { get; set; }
 
     [Range(0, int.MaxValue, ErrorMessage = ErrorMessages.ValidationError.InvalidDisLikeCount)]
-    public int DislikeCount { get; set; } = 0;
+    public int DislikeCount { get; set; }
 
-    // public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
-    
-    [JsonIgnore]
-    public virtual ICollection<CommentLikeEntity> CommentLikes { get; set; } = [];
-    
-    [ForeignKey(nameof(this.PostId))]
-    public virtual ArticleEntity Article { get; set; } = null!;
-    
-    [JsonIgnore]
-    public virtual ICollection<ReplyEntity> Replies { get; set; } = [];
+    [JsonIgnore] public virtual ICollection<CommentLikeEntity> CommentLikes { get; set; } = [];
+
+    [ForeignKey(nameof(this.PostId))] public virtual ArticleEntity Article { get; set; } = null!;
+
+    [JsonIgnore] public virtual ICollection<ReplyEntity> Replies { get; set; } = [];
 }
 
 public class CommentLikeEntity : BaseEntity
 {
-    public required Guid UserId { get; set; } 
+    public required Guid UserId { get; set; }
 
-    public required Guid CommentId { get; set; } 
+    public required Guid CommentId { get; set; }
 
-    public ActionType Action { get; set; } 
+    public ActionType Action { get; set; }
 
-    // public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow; 
-    
-    [ForeignKey(nameof(this.UserId))]
-    public virtual CommentEntity Comment { get; set; } = null!;
+    [ForeignKey(nameof(this.UserId))] public virtual CommentEntity Comment { get; set; } = null!;
 }

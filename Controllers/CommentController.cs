@@ -28,7 +28,8 @@ public class CommentController(ILogger<CommentController> logger, IRepositorySer
     /// <returns>操作结果</returns>
     [HttpPost("create", Name = "CreateComment")]
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-    [Authorize(Roles = $"{nameof(UserRole.User)},{nameof(UserRole.Creator)},{nameof(UserRole.Admin)},{nameof(UserRole.SuperAdmin)}")]
+    [Authorize(Roles =
+        $"{nameof(UserRole.User)},{nameof(UserRole.Creator)},{nameof(UserRole.Admin)},{nameof(UserRole.SuperAdmin)}")]
     [ProducesResponseType(typeof(BaseResp), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(BaseResp), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(BaseResp), StatusCodes.Status403Forbidden)]
@@ -37,21 +38,17 @@ public class CommentController(ILogger<CommentController> logger, IRepositorySer
     {
         var userId = User.GetUserId();
         if (userId == null)
-        {
             return StatusCode(StatusCodes.Status403Forbidden, ResponseFactory.NewFailedBaseResponse(
                 StatusCodes.Status403Forbidden,
                 ErrorMessages.Controller.Any.InvalidJwtToken
             ));
-        }
 
         var article = await repository.ArticleRepository.GetByIdAsync(commentCreate.ArticleId);
         if (article == null)
-        {
             return StatusCode(StatusCodes.Status403Forbidden, ResponseFactory.NewFailedBaseResponse(
                 StatusCodes.Status403Forbidden,
                 ErrorMessages.Controller.Article.ArticleNotFound
             ));
-        }
 
         var comment = new CommentEntity
         {
@@ -59,16 +56,14 @@ public class CommentController(ILogger<CommentController> logger, IRepositorySer
             Content = commentCreate.Content,
             PostId = commentCreate.ArticleId,
             LikeCount = 0,
-            DislikeCount = 0,
+            DislikeCount = 0
             // CreatedAt = DateTimeOffset.UtcNow
         };
         repository.CommentRepository.Create(comment);
         if (await repository.CommentRepository.SaveAsync())
-        {
             return Ok(ResponseFactory.NewSuccessBaseResponse(SuccessMessages.Controller.Comment.CreateSuccess));
-        }
 
-        logger.LogError("Comment creation failed. UserId: {UserId}, PostId: {PostId}",userId, commentCreate.ArticleId);
+        logger.LogError("Comment creation failed. UserId: {UserId}, PostId: {PostId}", userId, commentCreate.ArticleId);
         return StatusCode(StatusCodes.Status500InternalServerError, ResponseFactory.NewFailedBaseResponse(
             StatusCodes.Status500InternalServerError,
             ErrorMessages.Controller.Comment.CreateFailed
@@ -82,7 +77,8 @@ public class CommentController(ILogger<CommentController> logger, IRepositorySer
     /// <returns>操作结果</returns>
     [HttpDelete("delete/{id:guid}", Name = "DeleteComment")]
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-    [Authorize(Roles = $"{nameof(UserRole.User)},{nameof(UserRole.Creator)},{nameof(UserRole.Admin)},{nameof(UserRole.SuperAdmin)}")]
+    [Authorize(Roles =
+        $"{nameof(UserRole.User)},{nameof(UserRole.Creator)},{nameof(UserRole.Admin)},{nameof(UserRole.SuperAdmin)}")]
     [ProducesResponseType(typeof(BaseResp), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(BaseResp), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(BaseResp), StatusCodes.Status403Forbidden)]
@@ -90,27 +86,21 @@ public class CommentController(ILogger<CommentController> logger, IRepositorySer
     public async Task<IActionResult> Delete([FromRoute] Guid id)
     {
         if (id == Guid.Empty)
-        {
             return StatusCode(StatusCodes.Status400BadRequest, ResponseFactory.NewFailedBaseResponse(
                 StatusCodes.Status400BadRequest,
                 ErrorMessages.ValidationError.CommentIdRequired
             ));
-        }
 
         var comment = await repository.CommentRepository.GetByIdAsync(id);
         if (comment == null)
-        {
             return StatusCode(StatusCodes.Status403Forbidden, ResponseFactory.NewFailedBaseResponse(
                 StatusCodes.Status403Forbidden,
                 ErrorMessages.Controller.Comment.CommentNotFound
             ));
-        }
 
         repository.CommentRepository.Delete(comment);
         if (await repository.CommentRepository.SaveAsync())
-        {
             return Ok(ResponseFactory.NewSuccessBaseResponse(SuccessMessages.Controller.Comment.DeleteSuccess));
-        }
 
         logger.LogError("Comment delete failed. CommentID: {}", id);
         return StatusCode(StatusCodes.Status500InternalServerError, ResponseFactory.NewFailedBaseResponse(
@@ -126,31 +116,28 @@ public class CommentController(ILogger<CommentController> logger, IRepositorySer
     /// <returns>操作结果</returns>
     [HttpGet("detail", Name = "DetailComment")]
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-    [Authorize(Roles = $"{nameof(UserRole.User)},{nameof(UserRole.Creator)},{nameof(UserRole.Admin)},{nameof(UserRole.SuperAdmin)}")]
+    [Authorize(Roles =
+        $"{nameof(UserRole.User)},{nameof(UserRole.Creator)},{nameof(UserRole.Admin)},{nameof(UserRole.SuperAdmin)}")]
     [ProducesResponseType(typeof(CommentDetailResp), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(BaseResp), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(BaseResp), StatusCodes.Status403Forbidden)]
     public async Task<IActionResult> Detail(Guid commentId)
     {
         if (commentId == Guid.Empty)
-        {
             return StatusCode(StatusCodes.Status400BadRequest, ResponseFactory.NewFailedBaseResponse(
                 StatusCodes.Status400BadRequest,
                 ErrorMessages.ValidationError.CommentIdRequired
             ));
-        }
         var comment = await repository.CommentRepository.GetByIdAsync(commentId);
         if (comment == null)
-        {
             return StatusCode(StatusCodes.Status403Forbidden, ResponseFactory.NewFailedBaseResponse(
                 StatusCodes.Status403Forbidden,
                 ErrorMessages.Controller.Comment.CommentNotFound
             ));
-        }
         var commentInfo = new CommentInfo
         {
             CommentId = comment.Id,
-            UserId  = comment.UserId,
+            UserId = comment.UserId,
             Content = comment.Content,
             PostId = comment.PostId,
             LikeCount = comment.LikeCount,
@@ -167,37 +154,32 @@ public class CommentController(ILogger<CommentController> logger, IRepositorySer
     /// <returns>操作结果</returns>
     [HttpGet("list", Name = "ListComment")]
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-    [Authorize(Roles = $"{nameof(UserRole.User)},{nameof(UserRole.Creator)},{nameof(UserRole.Admin)},{nameof(UserRole.SuperAdmin)}")]
+    [Authorize(Roles =
+        $"{nameof(UserRole.User)},{nameof(UserRole.Creator)},{nameof(UserRole.Admin)},{nameof(UserRole.SuperAdmin)}")]
     [ProducesResponseType(typeof(CommentListResp), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(BaseResp), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(BaseResp), StatusCodes.Status403Forbidden)]
     public async Task<IActionResult> List([FromBody] Guid articleId)
     {
         if (articleId == Guid.Empty)
-        {
             return StatusCode(StatusCodes.Status400BadRequest, ResponseFactory.NewFailedBaseResponse(
                 StatusCodes.Status400BadRequest,
                 ErrorMessages.ValidationError.CommentIdRequired
             ));
-        }
 
         var article = await repository.ArticleRepository.GetByIdAsync(articleId);
         if (article == null)
-        {
             return StatusCode(StatusCodes.Status403Forbidden, ResponseFactory.NewFailedBaseResponse(
                 StatusCodes.Status403Forbidden,
                 ErrorMessages.Controller.Article.ArticleNotFound
             ));
-        }
 
         var comments = (await repository.CommentRepository.GetListByPostIdAsync(articleId)).ToList();
         if (comments.Count == 0)
-        {
             return Ok(CommentListResp.Success(
                 ErrorMessages.Controller.Comment.CommentNotFound,
                 []
             ));
-        }
 
         var commentList = comments.Select(comment => new CommentInfo
         {
@@ -220,7 +202,8 @@ public class CommentController(ILogger<CommentController> logger, IRepositorySer
     /// <returns>操作结果</returns>
     [HttpPost("like", Name = "LikeComment")]
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-    [Authorize(Roles = $"{nameof(UserRole.User)},{nameof(UserRole.Creator)},{nameof(UserRole.Admin)},{nameof(UserRole.SuperAdmin)}")]
+    [Authorize(Roles =
+        $"{nameof(UserRole.User)},{nameof(UserRole.Creator)},{nameof(UserRole.Admin)},{nameof(UserRole.SuperAdmin)}")]
     [ProducesResponseType(typeof(BaseResp), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(BaseResp), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(BaseResp), StatusCodes.Status403Forbidden)]
@@ -228,52 +211,44 @@ public class CommentController(ILogger<CommentController> logger, IRepositorySer
     public async Task<IActionResult> Like([FromBody] Guid commentId)
     {
         if (commentId == Guid.Empty)
-        {
             return StatusCode(StatusCodes.Status400BadRequest, ResponseFactory.NewFailedBaseResponse(
                 StatusCodes.Status400BadRequest,
                 ErrorMessages.ValidationError.CommentIdRequired
             ));
-        }
 
         var userId = User.GetUserId();
         if (userId == null)
-        {
             return StatusCode(StatusCodes.Status403Forbidden, ResponseFactory.NewFailedBaseResponse(
                 StatusCodes.Status403Forbidden,
                 ErrorMessages.Controller.Any.InvalidJwtToken
             ));
-        }
 
         var comment = await repository.CommentRepository.GetByIdAsync(commentId);
         if (comment == null)
-        {
             return StatusCode(StatusCodes.Status404NotFound, ResponseFactory.NewFailedBaseResponse(
                 StatusCodes.Status404NotFound,
                 ErrorMessages.Controller.Comment.CommentNotFound
             ));
-        }
 
-        var existingLike = await repository.CommentLikeRepository.GetCommentLikeAsync((Guid)userId, commentId);
-        if (existingLike != null && existingLike.Action == ActionType.Like)
-        {
+        var existingLike = await repository.CommentLikeRepository.GetCommentLikeAsync(userId.Value, commentId);
+        if (existingLike is { Action: ActionType.Like })
             return StatusCode(StatusCodes.Status400BadRequest, ResponseFactory.NewFailedBaseResponse(
                 StatusCodes.Status400BadRequest,
                 ErrorMessages.Controller.Comment.AlreadyLiked
             ));
-        }
 
-        if (existingLike != null && existingLike.Action == ActionType.Dislike)
+        if (existingLike is { Action: ActionType.Dislike })
         {
             repository.CommentLikeRepository.Delete(existingLike);
             comment.DislikeCount -= 1;
         }
 
+
         var likeRecord = new CommentLikeEntity
         {
             UserId = (Guid)userId,
             CommentId = commentId,
-            Action = ActionType.Like,
-            // CreatedAt = DateTime.UtcNow
+            Action = ActionType.Like
         };
         repository.CommentLikeRepository.Create(likeRecord);
 
@@ -281,9 +256,7 @@ public class CommentController(ILogger<CommentController> logger, IRepositorySer
         repository.CommentRepository.Update(comment);
 
         if (await repository.CommentRepository.SaveAsync() && !await repository.CommentLikeRepository.SaveAsync())
-        {
             return Ok(ResponseFactory.NewSuccessBaseResponse(SuccessMessages.Controller.Comment.GetLikeSuccess));
-        }
 
 
         logger.LogError("Like operation failed. UserId: {UserId}, CommentId: {CommentId}", userId, commentId);
@@ -300,7 +273,8 @@ public class CommentController(ILogger<CommentController> logger, IRepositorySer
     /// <returns>操作结果</returns>
     [HttpPost("cancellike", Name = "CancelCommentLike")]
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-    [Authorize(Roles = $"{nameof(UserRole.User)},{nameof(UserRole.Creator)},{nameof(UserRole.Admin)},{nameof(UserRole.SuperAdmin)}")]
+    [Authorize(Roles =
+        $"{nameof(UserRole.User)},{nameof(UserRole.Creator)},{nameof(UserRole.Admin)},{nameof(UserRole.SuperAdmin)}")]
     [ProducesResponseType(typeof(BaseResp), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(BaseResp), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(BaseResp), StatusCodes.Status403Forbidden)]
@@ -308,55 +282,44 @@ public class CommentController(ILogger<CommentController> logger, IRepositorySer
     public async Task<IActionResult> CancelLike([FromBody] Guid commentId)
     {
         if (commentId == Guid.Empty)
-        {
             return StatusCode(StatusCodes.Status400BadRequest, ResponseFactory.NewFailedBaseResponse(
                 StatusCodes.Status400BadRequest,
                 ErrorMessages.ValidationError.CommentIdRequired
             ));
-        }
 
         var userId = User.GetUserId();
         if (userId == null)
-        {
             return StatusCode(StatusCodes.Status403Forbidden, ResponseFactory.NewFailedBaseResponse(
                 StatusCodes.Status403Forbidden,
                 ErrorMessages.Controller.Any.InvalidJwtToken
             ));
-        }
 
         var comment = await repository.CommentRepository.GetByIdAsync(commentId);
         if (comment == null)
-        {
             return StatusCode(StatusCodes.Status404NotFound, ResponseFactory.NewFailedBaseResponse(
                 StatusCodes.Status404NotFound,
                 ErrorMessages.Controller.Comment.CommentNotFound
             ));
-        }
 
-        var existingLike = await repository.CommentLikeRepository.GetCommentLikeAsync((Guid)userId, commentId);
-        if (existingLike == null || existingLike.Action != ActionType.Like)
-        {
+        var existingLike = await repository.CommentLikeRepository.GetCommentLikeAsync(userId.Value, commentId);
+        if (existingLike is not { Action: ActionType.Like })
             return StatusCode(StatusCodes.Status400BadRequest, ResponseFactory.NewFailedBaseResponse(
                 StatusCodes.Status400BadRequest,
                 ErrorMessages.Controller.Comment.AlreadyCancelLiked
             ));
-        }
 
         repository.CommentLikeRepository.Delete(existingLike);
         comment.LikeCount -= 1;
         repository.CommentRepository.Update(comment);
-        
+
         if (await repository.CommentRepository.SaveAsync() && !await repository.CommentLikeRepository.SaveAsync())
-        {
             return Ok(ResponseFactory.NewSuccessBaseResponse(SuccessMessages.Controller.Comment.CancelLikeSuccess));
-        }
 
         logger.LogError("Cancel Like operation failed. UserId: {UserId}, CommentId: {CommentId}", userId, commentId);
         return StatusCode(StatusCodes.Status500InternalServerError, ResponseFactory.NewFailedBaseResponse(
             StatusCodes.Status500InternalServerError,
             ErrorMessages.Controller.Comment.CancelLikeFailed
         ));
-        
     }
 
     /// <summary>
@@ -364,9 +327,10 @@ public class CommentController(ILogger<CommentController> logger, IRepositorySer
     /// </summary>
     /// <param name="commentId">评论Id</param>
     /// <returns>操作结果</returns>
-    [HttpPost("dislike",Name = "DislikeComment")]
+    [HttpPost("dislike", Name = "DislikeComment")]
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-    [Authorize(Roles = $"{nameof(UserRole.User)},{nameof(UserRole.Creator)},{nameof(UserRole.Admin)},{nameof(UserRole.SuperAdmin)}")]
+    [Authorize(Roles =
+        $"{nameof(UserRole.User)},{nameof(UserRole.Creator)},{nameof(UserRole.Admin)},{nameof(UserRole.SuperAdmin)}")]
     [ProducesResponseType(typeof(BaseResp), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(BaseResp), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(BaseResp), StatusCodes.Status403Forbidden)]
@@ -374,41 +338,34 @@ public class CommentController(ILogger<CommentController> logger, IRepositorySer
     public async Task<IActionResult> Dislike([FromBody] Guid commentId)
     {
         if (commentId == Guid.Empty)
-        {
             return StatusCode(StatusCodes.Status400BadRequest, ResponseFactory.NewFailedBaseResponse(
                 StatusCodes.Status400BadRequest,
                 ErrorMessages.ValidationError.CommentIdRequired
             ));
-        }
 
         var userId = User.GetUserId();
         if (userId == null)
-        {
             return StatusCode(StatusCodes.Status403Forbidden, ResponseFactory.NewFailedBaseResponse(
                 StatusCodes.Status403Forbidden,
                 ErrorMessages.Controller.Any.InvalidJwtToken
             ));
-        }
 
         var comment = await repository.CommentRepository.GetByIdAsync(commentId);
         if (comment == null)
-        {
             return StatusCode(StatusCodes.Status404NotFound, ResponseFactory.NewFailedBaseResponse(
                 StatusCodes.Status404NotFound,
                 ErrorMessages.Controller.Comment.CommentNotFound
             ));
-        }
 
         var existingDislike = await repository.CommentLikeRepository.GetCommentLikeAsync((Guid)userId, commentId);
-        if (existingDislike != null && existingDislike.Action == ActionType.Dislike)
-        {
+        if (existingDislike is { Action: ActionType.Dislike })
             return StatusCode(StatusCodes.Status400BadRequest, ResponseFactory.NewFailedBaseResponse(
                 StatusCodes.Status400BadRequest,
                 ErrorMessages.Controller.Comment.AlreadyDisliked
             ));
-        }
 
-        if (existingDislike != null && existingDislike.Action == ActionType.Like)
+
+        if (existingDislike is { Action: ActionType.Like })
         {
             repository.CommentLikeRepository.Delete(existingDislike);
             comment.LikeCount -= 1;
@@ -418,17 +375,14 @@ public class CommentController(ILogger<CommentController> logger, IRepositorySer
         {
             UserId = (Guid)userId,
             CommentId = commentId,
-            Action = ActionType.Dislike,
-            // CreatedAt = DateTime.UtcNow
+            Action = ActionType.Dislike
         };
         repository.CommentLikeRepository.Create(dislikeRecord);
         comment.DislikeCount += 1;
         repository.CommentRepository.Update(comment);
 
         if (await repository.CommentRepository.SaveAsync() && !await repository.CommentLikeRepository.SaveAsync())
-        {
             return Ok(ResponseFactory.NewSuccessBaseResponse(SuccessMessages.Controller.Comment.GetDislikeSuccess));
-        }
 
         logger.LogError("Dislike operation failed. UserId: {UserId}, CommentId: {CommentId}", userId, commentId);
         return StatusCode(StatusCodes.Status500InternalServerError, ResponseFactory.NewFailedBaseResponse(
@@ -441,9 +395,10 @@ public class CommentController(ILogger<CommentController> logger, IRepositorySer
     /// 取消踩
     /// <param name="commentId">评论Id</param>
     /// <returns>操作结果</returns>
-    [HttpPost("canceldislike",Name = "CancelCommentDislike")]
+    [HttpPost("canceldislike", Name = "CancelCommentDislike")]
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-    [Authorize(Roles = $"{nameof(UserRole.User)},{nameof(UserRole.Creator)},{nameof(UserRole.Admin)},{nameof(UserRole.SuperAdmin)}")] 
+    [Authorize(Roles =
+        $"{nameof(UserRole.User)},{nameof(UserRole.Creator)},{nameof(UserRole.Admin)},{nameof(UserRole.SuperAdmin)}")]
     [ProducesResponseType(typeof(BaseResp), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(BaseResp), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(BaseResp), StatusCodes.Status403Forbidden)]
@@ -451,47 +406,38 @@ public class CommentController(ILogger<CommentController> logger, IRepositorySer
     public async Task<IActionResult> CancelDislike([FromBody] Guid commentId)
     {
         if (commentId == Guid.Empty)
-        {
             return StatusCode(StatusCodes.Status400BadRequest, ResponseFactory.NewFailedBaseResponse(
                 StatusCodes.Status400BadRequest,
                 ErrorMessages.ValidationError.CommentIdRequired
             ));
-        }
 
         var userId = User.GetUserId();
         if (userId == null)
-        {
             return StatusCode(StatusCodes.Status403Forbidden, ResponseFactory.NewFailedBaseResponse(
                 StatusCodes.Status403Forbidden,
                 ErrorMessages.Controller.Any.InvalidJwtToken
             ));
-        }
 
         var comment = await repository.CommentRepository.GetByIdAsync(commentId);
         if (comment == null)
-        {
             return StatusCode(StatusCodes.Status404NotFound, ResponseFactory.NewFailedBaseResponse(
                 StatusCodes.Status404NotFound,
                 ErrorMessages.Controller.Comment.CommentNotFound
             ));
-        }
         var existingDislike = await repository.CommentLikeRepository.GetCommentLikeAsync((Guid)userId, commentId);
-        if (existingDislike == null || existingDislike.Action != ActionType.Dislike)
-        {
+        if (existingDislike is not { Action: ActionType.Dislike })
             return StatusCode(StatusCodes.Status400BadRequest, ResponseFactory.NewFailedBaseResponse(
                 StatusCodes.Status400BadRequest,
                 ErrorMessages.Controller.Comment.AlreadyCancelDisliked
             ));
-        }
+
 
         repository.CommentLikeRepository.Delete(existingDislike);
         comment.DislikeCount -= 1;
         repository.CommentRepository.Update(comment);
 
         if (await repository.CommentRepository.SaveAsync() && !await repository.CommentLikeRepository.SaveAsync())
-        {
             return Ok(ResponseFactory.NewSuccessBaseResponse(SuccessMessages.Controller.Comment.CancelDislikeSuccess));
-        }
 
         logger.LogError("CancelDislike operation failed. UserId: {UserId}, CommentId: {CommentId}", userId, commentId);
         return StatusCode(StatusCodes.Status500InternalServerError, ResponseFactory.NewFailedBaseResponse(

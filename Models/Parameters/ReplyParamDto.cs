@@ -10,7 +10,7 @@ public class ReplyCreate
     public required string Content { get; set; }
 
     [Required(ErrorMessage = ErrorMessages.ValidationError.CommentIdRequired)]
-    public required Guid CommentId { get; set; } 
-    public Guid? ParentReplyId { get; set; }
+    public required Guid CommentId { get; set; }
 
+    public Guid? ParentReplyId { get; set; }
 }

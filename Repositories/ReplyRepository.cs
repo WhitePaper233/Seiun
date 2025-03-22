@@ -1,9 +1,6 @@
-using System.Net.Mime;
 using Microsoft.EntityFrameworkCore;
 using Minio;
-using Minio.DataModel.Args;
 using Seiun.Entities;
-using Seiun.Utils;
 
 namespace Seiun.Repositories;
 
@@ -12,14 +9,10 @@ public class ReplyRepository(SeiunDbContext dbContext, IMinioClient minioClient)
 {
     public async Task<IEnumerable<ReplyEntity>> GetListByCommentIdAsync(Guid commentId)
     {
-        var replyies = await DbContext.Set<ReplyEntity>()
+        var replies = await DbContext.Set<ReplyEntity>()
             .Where(reply => reply.CommentId == commentId)
             .ToListAsync();
 
-        if (replyies.Count == 0)
-        {
-            return [];
-        }
-        return replyies;
+        return replies.Count == 0 ? [] : replies;
     }
 }

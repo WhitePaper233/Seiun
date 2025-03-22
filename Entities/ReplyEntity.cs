@@ -2,24 +2,21 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Seiun.Resources;
 
-namespace Seiun.Entities
+namespace Seiun.Entities;
+
+public class ReplyEntity : BaseEntity
 {
-    public class ReplyEntity : BaseEntity
-    {
-        [MaxLength(500, ErrorMessage = ErrorMessages.ValidationError.OverContentLength)]
-        public required string Content { get; set; }
+    [MaxLength(500, ErrorMessage = ErrorMessages.ValidationError.OverContentLength)]
+    public required string Content { get; set; }
 
-        [Required(ErrorMessage = ErrorMessages.ValidationError.UserIdRequired)]
-        public required Guid UserId { get; set; }
+    [Required(ErrorMessage = ErrorMessages.ValidationError.UserIdRequired)]
+    public required Guid UserId { get; set; }
 
-        [Required(ErrorMessage = ErrorMessages.ValidationError.CommentIdRequired)]
-        public required Guid CommentId { get; set; }
+    [Required(ErrorMessage = ErrorMessages.ValidationError.CommentIdRequired)]
+    public required Guid CommentId { get; set; }
 
-        public Guid? ParentReplyId { get; set; }
+    public Guid? ParentReplyId { get; set; }
 
-        // public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
-        
-        [ForeignKey(nameof(this.CommentId))]
-        public virtual CommentEntity Comment { get; set; } = null!;
-    }
+
+    [ForeignKey(nameof(this.CommentId))] public virtual CommentEntity Comment { get; set; } = null!;
 }

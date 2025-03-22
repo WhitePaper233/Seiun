@@ -102,30 +102,6 @@ public sealed class UserProfileResp(int code, string message, UserProfile? userP
 
 #endregion
 
-#region UserChickInDayResponse
-
-public class UserCheckInDay
-{
-    public required int ContinuousDays { get; set; }
-    public required CheckIn TodayCheckInStatus { get; set; }
-}
-
-public sealed class UserCheckInDayResp(int code, string message, UserCheckInDay? userChickInDay)
-    : BaseRespWithData<UserCheckInDay>(code, message, userChickInDay)
-{
-    public static UserCheckInDayResp Success(string message, UserCheckInDay userChickInDay)
-    {
-        return new UserCheckInDayResp(200, message, userChickInDay);
-    }
-
-    public static UserCheckInDayResp Fail(int code, string message)
-    {
-        return new UserCheckInDayResp(code, message, null);
-    }
-}
-
-#endregion
-
 #region UserListResponse
 
 public class UserList
@@ -138,7 +114,6 @@ public class UserList
     public required Gender Gender { get; set; }
     public required string NickName { get; set; }
     public required string? Description { get; set; }
-    // public DateTimeOffset CreatedAt { get; set; }
 }
 
 public class UserListData

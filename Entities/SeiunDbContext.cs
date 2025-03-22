@@ -5,10 +5,10 @@ namespace Seiun.Entities;
 
 public class SeiunDbContext(DbContextOptions<SeiunDbContext> options) : DbContext(options)
 {
-    public required DbSet<UserEntity> Users { get; init; }
-    public required DbSet<ArticleEntity> Articles { get; init; }
-    public required DbSet<ArticleLikeEntity> ArticleLikes { get; init; }
-    public required DbSet<PublicAnnouncementEntity> PublicAnnouncements { get; init; }
+    public required DbSet<UserEntity> Users { get; set; }
+    public required DbSet<ArticleEntity> Articles { get; set; }
+    public required DbSet<ArticleLikeEntity> ArticleLikes { get; set; }
+    public required DbSet<PublicAnnouncementEntity> PublicAnnouncements { get; set; }
     public required DbSet<CommentEntity> Comments { get; set; }
     public required DbSet<CommentLikeEntity> CommentLike { get; set; }
     public required DbSet<ReplyEntity> Replies { get; set; }
@@ -128,6 +128,13 @@ public class SeiunDbContext(DbContextOptions<SeiunDbContext> options) : DbContex
             .WithOne(c => c.User)
             .HasForeignKey(c => c.UserId)
             .OnDelete(DeleteBehavior.Cascade);
+        
+        // user - session
+        modelBuilder.Entity<UserEntity>()
+            .HasMany(u => u.WordSession)
+            .WithOne(w => w.User)
+            .HasForeignKey(w => w.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 
     private static void ConfigureArticleEntity(ModelBuilder modelBuilder)
@@ -238,8 +245,8 @@ public class SeiunDbContext(DbContextOptions<SeiunDbContext> options) : DbContex
         // WordSessionEntity - User
         modelBuilder.Entity<WordSessionEntity>()
             .HasOne(s => s.User)
-            .WithOne(u => u.WordSession)
-            .HasForeignKey<WordSessionEntity>(w => w.UserId);
+            .WithMany(u => u.WordSession)
+            .HasForeignKey(s => s.UserId);
     }
 
     private static void ConfigureWordEntity(ModelBuilder modelBuilder)
@@ -263,13 +270,13 @@ public class SeiunDbContext(DbContextOptions<SeiunDbContext> options) : DbContex
 
     private static void ConfigureWordWordBookEntity(ModelBuilder modelBuilder)
     {
-        // WordBankWordBook - word
+        // WordBookWordBook - word
         modelBuilder.Entity<WordWordBookEntity>()
             .HasOne(b => b.Word)
             .WithMany(b => b.Books)
             .HasForeignKey(b => b.WordId);
 
-        // WordBankWordBook - book
+        // WordBookWordBook - book
         modelBuilder.Entity<WordWordBookEntity>()
             .HasOne(b => b.Book)
             .WithMany(b => b.Words)

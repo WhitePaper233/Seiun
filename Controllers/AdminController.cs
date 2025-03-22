@@ -1,4 +1,3 @@
-using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Seiun.Models.Parameters;
@@ -7,7 +6,6 @@ using Seiun.Resources;
 using Seiun.Services;
 using Seiun.Utils;
 using Seiun.Utils.Enums;
-using static Seiun.Models.Responses.UserList;
 
 namespace Seiun.Controllers;
 
@@ -32,16 +30,14 @@ public class AdminController(ILogger<AdminController> logger, IRepositoryService
 
             // 如果没有找到用户，返回空列表和总数为0
             if (users.Count == 0)
-            {
                 return Ok(UserListResp.Success(
                     SuccessMessages.Controller.Admin.GetUserListSuccess,
                     new UserListData
                     {
                         List = [], // 空列表
-                        Total = 0  // 总数为0
+                        Total = 0 // 总数为0
                     }
                 ));
-            }
 
             // 对结果进行分页
             var pagedUsers = users
@@ -56,7 +52,7 @@ public class AdminController(ILogger<AdminController> logger, IRepositoryService
                     PhoneNumber = user.PhoneNumber,
                     Gender = user.Gender,
                     NickName = user.NickName,
-                    Description = user.Description,
+                    Description = user.Description
                 })
                 .ToList();
 
@@ -82,7 +78,7 @@ public class AdminController(ILogger<AdminController> logger, IRepositoryService
             return StatusCode(StatusCodes.Status500InternalServerError,
                 UserListResp.Fail(StatusCodes.Status500InternalServerError,
                     ErrorMessages.Controller.Admin.UserListFailed
-            ));
+                ));
         }
     }
 
@@ -115,12 +111,10 @@ public class AdminController(ILogger<AdminController> logger, IRepositoryService
                 ErrorMessages.Controller.Admin.AdminNotFound
             ));
         if (user.Role != UserRole.SuperAdmin)
-        {
             return StatusCode(StatusCodes.Status401Unauthorized, UserLoginResp.Fail(
                 StatusCodes.Status401Unauthorized,
                 ErrorMessages.Controller.Admin.NotAdmin
             ));
-        }
         if (!PasswordUtils.VerifyPasswordHash(userLogin.Password, user.PasswordHash, user.PasswordSalt))
             return StatusCode(StatusCodes.Status403Forbidden, UserLoginResp.Fail(
                 StatusCodes.Status403Forbidden,
@@ -143,7 +137,6 @@ public class AdminController(ILogger<AdminController> logger, IRepositoryService
     /// <param name="userId">用户ID</param>
     /// <param name="userUpdate">用户更新信息DTO</param>
     /// <returns>更新结果DTO</returns>
-    /// <summary>
     [HttpPost("user/update", Name = "UpdateUser")]
     [Authorize(Roles = $"{nameof(UserRole.SuperAdmin)}")]
     [ProducesResponseType(typeof(BaseResp), StatusCodes.Status200OK)]
@@ -163,14 +156,14 @@ public class AdminController(ILogger<AdminController> logger, IRepositoryService
         }
 
         user.NickName = string.IsNullOrWhiteSpace(userUpdate.NickName) ? user.NickName : userUpdate.NickName;
-        user.Description = string.IsNullOrWhiteSpace(userUpdate.Description) ? user.Description : userUpdate.Description;
+        user.Description = string.IsNullOrWhiteSpace(userUpdate.Description)
+            ? user.Description
+            : userUpdate.Description;
         user.Gender = userUpdate.Gender ?? user.Gender;
         repository.UserRepository.Update(user);
-        
+
         if (await repository.UserRepository.SaveAsync())
-        {
             return Ok(ResponseFactory.NewSuccessBaseResponse(SuccessMessages.Controller.Admin.UpdateSuccess));
-        }
 
         logger.LogError("User update failed: {UserId}", user.Id);
         return StatusCode(StatusCodes.Status500InternalServerError, ResponseFactory.NewFailedBaseResponse(
@@ -192,7 +185,6 @@ public class AdminController(ILogger<AdminController> logger, IRepositoryService
     [ProducesResponseType(typeof(BaseResp), StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> DeleteUser([FromRoute] Guid userId)
     {
-
         var user = await repository.UserRepository.GetByIdAsync(userId);
         if (user == null)
         {
@@ -202,11 +194,10 @@ public class AdminController(ILogger<AdminController> logger, IRepositoryService
                 ErrorMessages.Controller.User.UserNotFound
             ));
         }
+
         repository.UserRepository.Delete(user);
         if (await repository.UserRepository.SaveAsync())
-        {
             return Ok(ResponseFactory.NewSuccessBaseResponse(SuccessMessages.Controller.Admin.DeleteSuccess));
-        }
 
         logger.LogError("User delete failed: {UserId}", userId);
         return StatusCode(StatusCodes.Status500InternalServerError, ResponseFactory.NewFailedBaseResponse(
