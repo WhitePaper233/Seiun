@@ -331,37 +331,32 @@ public class UserController(ILogger<UserController> logger, IRepositoryService r
     /// <returns>打卡状态</returns>
     [HttpGet("checkin/{userId:Guid}", Name = "GetCheckin")]
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-    [Authorize(Roles = $"{nameof(UserRole.User)},{nameof(UserRole.Creator)},{nameof(UserRole.Admin)},{nameof(UserRole.SuperAdmin)}")]
+    [Authorize(Roles =
+        $"{nameof(UserRole.User)},{nameof(UserRole.Creator)},{nameof(UserRole.Admin)},{nameof(UserRole.SuperAdmin)}")]
     [ProducesResponseType(typeof(UserCheckInResp), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(UserCheckInResp), StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetCheckin(Guid userId)
     {
         var user = await repository.UserRepository.GetByIdAsync(userId);
         if (user == null)
-        {
             return NotFound(UserCheckInResp.Fail(
                 StatusCodes.Status404NotFound,
                 ErrorMessages.Controller.User.UserNotFound
             ));
-        }
 
-        var userTag = await repository.UserTagRepository.GetCurrentUserTagAsync(userId);
-        if (userTag == null)
-        {
+        var userPlan = await repository.UserPlansRepository.GetUserPlanAsync(userId);
+        if (userPlan == null)
             return NotFound(UserCheckInResp.Fail(
                 StatusCodes.Status404NotFound,
-                ErrorMessages.Controller.UserTag.UserTagNotFound
+                ErrorMessages.Controller.UserPlan.UserPlanNotFound
             ));
-        }
 
         var todayAllSessions = await repository.SessionRepository.GetTodayAllSessionsByUserIdAsync(userId);
         if (todayAllSessions == null)
-        {
             return NotFound(UserCheckInResp.Fail(
                 StatusCodes.Status404NotFound,
                 ErrorMessages.Controller.WordSession.NotFoundSession
             ));
-        }
 
         var lastCheckIn = await repository.UserCheckInRepository.LastCheckInAsync(userId);
         if (lastCheckIn == null || DateTimeOffset.UtcNow.Date != lastCheckIn.CreatedAt.Date)
@@ -369,19 +364,19 @@ public class UserController(ILogger<UserController> logger, IRepositoryService r
             var notCheckInStatus = new UserCheckInDetail
             {
                 TodayUserIsCheckIn = false,
-                DailyPlan = userTag.SetDailyPlan,
+                DailyPlan = userPlan.SetDailyPlan,
                 TodayPlanReviewedCount = todayAllSessions[0].ReviewingCount,
                 ToDayStudiedCount = todayAllSessions.Sum(s => s.StudyingCount - s.StudyingWords.Count),
                 ToDayReviewedCount = todayAllSessions.Sum(s => s.ReviewingCount - s.ReviewingWords?.Count ?? 0)
             };
-            
+
             return Ok(UserCheckInResp.Success(notCheckInStatus));
         }
 
         var checkInStatus = new UserCheckInDetail
         {
             TodayUserIsCheckIn = true,
-            DailyPlan = userTag.SetDailyPlan,
+            DailyPlan = userPlan.SetDailyPlan,
             TodayPlanReviewedCount = todayAllSessions[0].ReviewingCount,
             ToDayStudiedCount = todayAllSessions.Sum(s => s.StudyingCount - s.StudyingWords.Count),
             ToDayReviewedCount = todayAllSessions.Sum(s => s.ReviewingCount - s.ReviewingWords?.Count ?? 0)
@@ -402,38 +397,32 @@ public class UserController(ILogger<UserController> logger, IRepositoryService r
     {
         var user = await repository.UserRepository.GetByIdAsync(userId);
         if (user == null)
-        {
             return NotFound(UserProfileResp.Fail(
                 StatusCodes.Status404NotFound,
                 ErrorMessages.Controller.User.UserNotFound
             ));
-        }
 
         var userCheckInRecords = await repository.UserCheckInRepository.GetUserAllCheckInsAsync(userId);
         if (userCheckInRecords.Count == 0)
-        {
             return Ok(ConsecutiveCheckInDaysResp.Success(new ConsecutiveCheckInDaysDetail
             {
                 Days = 0
             }));
-        }
-        
+
         var consecutiveDays = 0;
         var lastDate = DateTimeOffset.UtcNow.Date;
 
         foreach (var date in userCheckInRecords)
-        {
-            if (date == lastDate) 
+            if (date == lastDate)
             {
                 consecutiveDays++;
-                lastDate = lastDate.AddDays(-1); 
+                lastDate = lastDate.AddDays(-1);
             }
-            else if (date < lastDate) 
+            else if (date < lastDate)
             {
                 break;
             }
-        }
-        
+
         return Ok(ConsecutiveCheckInDaysResp.Success(new ConsecutiveCheckInDaysDetail
         {
             Days = consecutiveDays

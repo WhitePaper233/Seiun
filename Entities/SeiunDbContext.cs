@@ -13,7 +13,7 @@ public class SeiunDbContext(DbContextOptions<SeiunDbContext> options) : DbContex
     public required DbSet<CommentLikeEntity> CommentLike { get; set; }
     public required DbSet<ReplyEntity> Replies { get; set; }
     public required DbSet<WordSessionEntity> Sessions { get; set; }
-    public required DbSet<UserTagEntity> UserTag { get; set; }
+    public required DbSet<UserPlanEntity> UserPlans { get; set; }
     public required DbSet<WordEntity> Words { get; set; }
     public required DbSet<ErrorWordRecordEntity> ErrorWords { get; set; }
     public required DbSet<FinishedWordRecordEntity> FinishedWords { get; set; }
@@ -50,7 +50,7 @@ public class SeiunDbContext(DbContextOptions<SeiunDbContext> options) : DbContex
         ConfigureAiArticleEntity(modelBuilder);
         ConfigureErrorWordRecordEntity(modelBuilder);
         ConfigureWordSessionEntity(modelBuilder);
-        ConfigureUserTagEntity(modelBuilder);
+        ConfigureUserPlansEntity(modelBuilder);
         ConfigureUserCheckInEntity(modelBuilder);
         ConfigureFinishedWordRecordEntity(modelBuilder);
         ConfigureAiArticleEntity(modelBuilder);
@@ -115,9 +115,9 @@ public class SeiunDbContext(DbContextOptions<SeiunDbContext> options) : DbContex
             .HasForeignKey(u => u.UserId)
             .OnDelete(DeleteBehavior.Cascade);
 
-        // user - UserTag
+        // user - UserPlans
         modelBuilder.Entity<UserEntity>()
-            .HasMany(u => u.UserTags)
+            .HasMany(u => u.UserPlans)
             .WithOne(u => u.User)
             .HasForeignKey(u => u.UserId)
             .OnDelete(DeleteBehavior.Cascade);
@@ -225,12 +225,11 @@ public class SeiunDbContext(DbContextOptions<SeiunDbContext> options) : DbContex
             .HasForeignKey(q => q.UserId);
     }
 
-    private static void ConfigureUserTagEntity(ModelBuilder modelBuilder)
+    private static void ConfigureUserPlansEntity(ModelBuilder modelBuilder)
     {
-        // UserTagEntity - User
-        modelBuilder.Entity<UserTagEntity>()
+        modelBuilder.Entity<UserPlanEntity>()
             .HasOne(t => t.User)
-            .WithMany(u => u.UserTags)
+            .WithMany(u => u.UserPlans)
             .HasForeignKey(t => t.UserId);
     }
 

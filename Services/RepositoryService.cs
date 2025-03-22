@@ -43,10 +43,10 @@ public class RepositoryService(SeiunDbContext seiunDbContext, IMinioClient minio
     private readonly Lazy<IWordRepository> _wordRepository = new(() => new WordRepository(seiunDbContext, minioClient));
     public IWordRepository WordRepository => _wordRepository.Value;
 
-    private readonly Lazy<IUserTagRepository> _userTagRepository =
-        new(() => new UserTagRepository(seiunDbContext, minioClient));
+    private readonly Lazy<IUserPlansRepository> _userPlansRepository =
+        new(() => new UserPlansRepository(seiunDbContext, minioClient));
 
-    public IUserTagRepository UserTagRepository => _userTagRepository.Value;
+    public IUserPlansRepository UserPlansRepository => _userPlansRepository.Value;
 
     private readonly Lazy<IWordSessionRepository> _sessionRepository =
         new(() => new WordSessionRepository(seiunDbContext, minioClient));

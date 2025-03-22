@@ -40,11 +40,11 @@ public class WordSessionController(
                 ErrorMessages.Controller.Any.InvalidJwtToken
             ));
 
-        var selectedTag = await repository.UserTagRepository.GetCurrentUserTagAsync(userId.Value);
-        if (selectedTag == null)
+        var selectedPlan = await repository.UserPlansRepository.GetUserPlanAsync(userId.Value);
+        if (selectedPlan == null)
             return NotFound(StartStudyResp.Fail(
                 StatusCodes.Status404NotFound,
-                ErrorMessages.Controller.UserTag.UserTagNotFound
+                ErrorMessages.Controller.UserPlan.UserPlanNotFound
             ));
 
         var existingSession = await repository.SessionRepository.GetSessionByUserIdAsync(userId.Value);
@@ -77,11 +77,11 @@ public class WordSessionController(
         }
 
         var studyWords =
-            await repository.WordWordBookRepository.GetWordBookByTagAsync(selectedTag.WordBookId,
-                selectedTag.SetDailyPlan, userId.Value);
+            await repository.WordWordBookRepository.GetUnfinishedWordsByPlanAsync(selectedPlan.WordBookId,
+                selectedPlan.SetDailyPlan, userId.Value);
         if (studyWords == null || studyWords.Count == 0)
         {
-            logger.LogWarning("No studying words found for {}", selectedTag.WordBookId);
+            logger.LogWarning("No studying words found for {}", selectedPlan.WordBookId);
             return StatusCode(StatusCodes.Status500InternalServerError, StartStudyResp.Fail(
                 StatusCodes.Status404NotFound,
                 ErrorMessages.Controller.WordSession.NotFoundStudyingWords
@@ -193,22 +193,22 @@ public class WordSessionController(
         // 删除会话
         currentStudySession.RemoveSession(session.Id);
 
-        // 更新	UserTag
-        var userTag = await repository.UserTagRepository.GetCurrentUserTagAsync(userId.Value);
-        if (userTag == null)
+        // 更新用户计划
+        var userPlanEntity = await repository.UserPlansRepository.GetUserPlanAsync(userId.Value);
+        if (userPlanEntity == null)
             return StatusCode(StatusCodes.Status404NotFound, ResponseFactory.NewFailedBaseResponse(
                 StatusCodes.Status404NotFound,
-                ErrorMessages.Controller.UserTag.CurrentUserTagNotFound
+                ErrorMessages.Controller.UserPlan.CurrentUserPlanNotFound
             ));
 
-        userTag.LearnedCount += userTag.SetDailyPlan;
-        repository.UserTagRepository.Update(userTag);
-        if (!await repository.UserTagRepository.SaveAsync())
+        userPlanEntity.LearnedCount += userPlanEntity.SetDailyPlan;
+        repository.UserPlansRepository.Update(userPlanEntity);
+        if (!await repository.UserPlansRepository.SaveAsync())
         {
             logger.LogWarning("User {} failed over session", userId);
             return StatusCode(StatusCodes.Status500InternalServerError, ResponseFactory.NewFailedBaseResponse(
                 StatusCodes.Status500InternalServerError,
-                ErrorMessages.Controller.UserTag.UpdateUserTagFailed
+                ErrorMessages.Controller.UserPlan.UpdateUserPlanFailed
             ));
         }
 
