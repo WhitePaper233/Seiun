@@ -35,31 +35,22 @@ public class UserEntity : BaseEntity
 
     public required UserRole Role { get; set; }
     public required bool IsBanned { get; set; }
-    
-    [JsonIgnore]
-    public virtual ICollection<ArticleEntity> Articles { get; set; } = [];
-    
-    [JsonIgnore]
-    public virtual ICollection<AiArticleEntity> AiArticles { get; set; } = []; 
-    
-    [JsonIgnore]
-    public virtual ICollection<ErrorWordRecordEntity> ErrorWordRecords { get; set; } = [];
-    
-    [JsonIgnore]
-    public virtual ICollection<FinishedWordRecordEntity> FinishedWordRecords { get; set; } = [];
-    
-    [JsonIgnore]
-    public virtual ICollection<PublicAnnouncementEntity> PublicAnnouncements { get; set; } = [];
-    
-    [JsonIgnore]
-    public virtual ICollection<UserQuestionEntity> UserQuestions { get; set; } = [];
 
-    [JsonIgnore]
-    public virtual ICollection<UserTagEntity> UserTags { get; set; } = null!;
+    [JsonIgnore] public virtual ICollection<ArticleEntity> Articles { get; set; } = [];
 
-    [JsonIgnore] 
-    public virtual WordSessionEntity WordSession { get; set; } = null!;
-    
-    [JsonIgnore]
-    public virtual ICollection<UserCheckInEntity> CheckIns { get; set; } = [];
+    [JsonIgnore] public virtual ICollection<AiArticleEntity> AiArticles { get; set; } = [];
+
+    [JsonIgnore] public virtual ICollection<ErrorWordRecordEntity> ErrorWordRecords { get; set; } = [];
+
+    [JsonIgnore] public virtual ICollection<FinishedWordRecordEntity> FinishedWordRecords { get; set; } = [];
+
+    [JsonIgnore] public virtual ICollection<PublicAnnouncementEntity> PublicAnnouncements { get; set; } = [];
+
+    [JsonIgnore] public virtual ICollection<UserQuestionEntity> UserQuestions { get; set; } = [];
+
+    [JsonIgnore] public virtual ICollection<UserPlanEntity> UserPlans { get; set; } = null!;
+
+    [JsonIgnore] public virtual WordSessionEntity WordSession { get; set; } = null!;
+
+    [JsonIgnore] public virtual ICollection<UserCheckInEntity> CheckIns { get; set; } = [];
 }

@@ -12,7 +12,7 @@ public interface IRepositoryService
     ICommentLikeRepository CommentLikeRepository { get; }
     IReplyRepository ReplyRepository { get; }
     IWordRepository WordRepository { get; }
-    IUserTagRepository UserTagRepository { get; }
+    IUserPlansRepository UserPlansRepository { get; }
     IWordSessionRepository SessionRepository { get; }
     IErrorWordRepository ErrorWordRepository { get; }
     IFinishedWordRepository FinishedWordRepository { get; }
@@ -27,5 +27,5 @@ public interface IRepositoryService
     IClozeTestSelectionRepository ClozeTestSelectionRepository { get; }
     IClozeTestAnswerRepository ClozeTestAnswerRepository { get; }
     IWordBookRepository WordBookRepository { get; }
-    IWordBankWordBookRepository WordBankWordBookRepository { get; }
+    IWordWordBookRepository WordWordBookRepository { get; }
 }

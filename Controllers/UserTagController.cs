@@ -1,9 +1,11 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Seiun.Entities;
 using Seiun.Models.Parameters;
 using Seiun.Models.Responses;
+using Seiun.Repositories;
 using Seiun.Resources;
 using Seiun.Services;
 using Seiun.Utils;
@@ -11,9 +13,9 @@ using Seiun.Utils.Enums;
 
 namespace Seiun.Controllers;
 
-
-[ApiController, Route("/api/tag/user")]
-public class TagController(ILogger<UserController> logger, IRepositoryService repository) : ControllerBase
+[ApiController]
+[Route("/api/user-plan")]
+public class UserPlanController(ILogger<UserController> logger, IRepositoryService repository) : ControllerBase
 {
     /// <summary>
     /// 获取词库 
@@ -21,7 +23,8 @@ public class TagController(ILogger<UserController> logger, IRepositoryService re
     /// <returns>获取词库结果</returns>
     [HttpGet("word-bank", Name = "GetWordBank")]
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-    [Authorize(Roles = $"{nameof(UserRole.User)},{nameof(UserRole.Creator)},{nameof(UserRole.Admin)},{nameof(UserRole.SuperAdmin)}")]
+    [Authorize(Roles =
+        $"{nameof(UserRole.User)},{nameof(UserRole.Creator)},{nameof(UserRole.Admin)},{nameof(UserRole.SuperAdmin)}")]
     [ProducesResponseType(typeof(WordBooksResp), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(BaseResp), StatusCodes.Status403Forbidden)]
     [ProducesResponseType(typeof(WordBooksResp), StatusCodes.Status500InternalServerError)]
@@ -29,20 +32,19 @@ public class TagController(ILogger<UserController> logger, IRepositoryService re
     {
         var userId = User.GetUserId();
         if (userId == null)
-        {
             return StatusCode(StatusCodes.Status403Forbidden, ResponseFactory.NewFailedBaseResponse(
                 StatusCodes.Status403Forbidden,
                 ErrorMessages.Controller.Any.InvalidJwtToken
             ));
-        }
 
         try
         {
-            var userTagsOfAllWordBook = await repository.UserTagRepository.GetUserTagOfAllWordBookAsync(userId.Value);
+            var userPlansOfAllWordBook =
+                await repository.UserPlansRepository.GetAllUserPlannedWordBooksAsync(userId.Value);
             var wordBooks = (await repository.WordBookRepository.GetAllAsync()).ToList();
 
             // 使用 HashSet 提高查询效率
-            var userWordBookIds = userTagsOfAllWordBook?.Select(x => x.WordBookId).ToHashSet() ?? [];
+            var userWordBookIds = userPlansOfAllWordBook?.Select(x => x.WordBookId).ToHashSet() ?? [];
 
             // 获取用户的单词本
             var userWordBooks = wordBooks.Where(u => userWordBookIds.Contains(u.Id)).ToList();
@@ -50,20 +52,25 @@ public class TagController(ILogger<UserController> logger, IRepositoryService re
             // 获取其他单词本
             var otherWordBooks = wordBooks.Except(userWordBooks).ToList();
 
-            // 建立一个字典，快速查找 userTagsOfAllWordBook 对应的实体
-            var userTagDict = userTagsOfAllWordBook?.ToDictionary(x => x.WordBookId) ?? [];
+            // 建立一个字典，快速查找 userPlansOfAllWordBook 对应的实体
+            var userPlanDict = userPlansOfAllWordBook?.ToDictionary(x => x.WordBookId) ?? [];
 
             // 生成最终结果
             var result = userWordBooks
-                .Where(u => userTagDict.ContainsKey(u.Id)) // 过滤无效数据
-                .Select(u => new WordBook
+                .Where(wordBook => userPlanDict.ContainsKey(wordBook.Id)) // 过滤无效数据
+                .Select(wordBook =>
                 {
-                    WordBookId = u.Id,
-                    WordBookName = u.WordBookName,
-                    WordCount = u.WordCount,
-                    LearnedWordCount = userTagDict[u.Id].LearnedCount,
-                    DailyPlan = userTagDict[u.Id].SetDailyPlan,
-                    RemainingDays = (u.WordCount - userTagDict[u.Id].LearnedCount) / userTagDict[u.Id].SetDailyPlan
+                    var wordCount = repository.WordWordBookRepository.GetBookWordCount(wordBook.Id);
+                    return new WordBook
+                    {
+                        WordBookId = wordBook.Id,
+                        WordBookName = wordBook.WordBookName,
+                        WordCount = wordCount,
+                        LearnedWordCount = userPlanDict[wordBook.Id].LearnedCount,
+                        DailyPlan = userPlanDict[wordBook.Id].SetDailyPlan,
+                        RemainingDays = (wordCount - userPlanDict[wordBook.Id].LearnedCount) /
+                                        userPlanDict[wordBook.Id].SetDailyPlan
+                    };
                 })
                 .ToList();
 
@@ -72,17 +79,17 @@ public class TagController(ILogger<UserController> logger, IRepositoryService re
             {
                 WordBookId = x.Id,
                 WordBookName = x.WordBookName,
-                WordCount = x.WordCount
+                WordCount = repository.WordWordBookRepository.GetBookWordCount(x.Id)
             }));
-            
+
             return Ok(WordBooksResp.Success(result));
         }
         catch (Exception e)
         {
-            logger.LogError(e,"User {} failed get all word bank", userId);
-            return StatusCode(StatusCodes.Status500InternalServerError,WordBooksResp.Fail(
+            logger.LogError(e, "User {} failed get all word bank", userId);
+            return StatusCode(StatusCodes.Status500InternalServerError, WordBooksResp.Fail(
                 StatusCodes.Status500InternalServerError,
-                ErrorMessages.Controller.UserTag.GetAllWordBankFailed
+                ErrorMessages.Controller.UserPlan.GetAllWordBankFailed
             ));
         }
     }
@@ -94,7 +101,8 @@ public class TagController(ILogger<UserController> logger, IRepositoryService re
     /// <returns>选择结果</returns>
     [HttpPost("select-word-bank", Name = "SelectWordBank")]
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-    [Authorize(Roles = $"{nameof(UserRole.User)},{nameof(UserRole.Creator)},{nameof(UserRole.Admin)},{nameof(UserRole.SuperAdmin)}")]
+    [Authorize(Roles =
+        $"{nameof(UserRole.User)},{nameof(UserRole.Creator)},{nameof(UserRole.Admin)},{nameof(UserRole.SuperAdmin)}")]
     [ProducesResponseType(typeof(BaseResp), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(BaseResp), StatusCodes.Status403Forbidden)]
     [ProducesResponseType(typeof(BaseResp), StatusCodes.Status500InternalServerError)]
@@ -102,58 +110,57 @@ public class TagController(ILogger<UserController> logger, IRepositoryService re
     {
         var userId = User.GetUserId();
         if (userId == null)
-        {
             return StatusCode(StatusCodes.Status403Forbidden, ResponseFactory.NewFailedBaseResponse(
                 StatusCodes.Status403Forbidden,
                 ErrorMessages.Controller.Any.InvalidJwtToken
             ));
-        }
 
-        var userExistingTagEntity = await repository.UserTagRepository.GetTagByUserIdAndWordLevelAsync(userId.Value, selectedWordBank.WordBookId);
-        if (userExistingTagEntity == null)
+        var existUserPlan =
+            await repository.UserPlansRepository.GetUserPlanAsync(userId.Value,
+                selectedWordBank.WordBookId);
+        if (existUserPlan == null)
         {
-            var userTagEntity = new UserTagEntity
+            var userPlanEntity = new UserPlanEntity
             {
                 UserId = userId.Value,
                 WordBookId = selectedWordBank.WordBookId,
                 SetDailyPlan = selectedWordBank.SetDailyPlan,
                 LearnedCount = 0
             };
-            repository.UserTagRepository.Create(userTagEntity);
-            if (await repository.UserTagRepository.SaveAsync())
-            {
-                return Ok(ResponseFactory.NewSuccessBaseResponse(SuccessMessages.Controller.UserTag.SelectWordBankSuccess));
-            }
-            
+            repository.UserPlansRepository.Create(userPlanEntity);
+            if (await repository.UserPlansRepository.SaveAsync())
+                return Ok(ResponseFactory.NewSuccessBaseResponse(SuccessMessages.Controller.UserPlan
+                    .SelectWordBankSuccess));
+
             logger.LogWarning("User {} failed select word bank", userId);
             return StatusCode(StatusCodes.Status500InternalServerError, ResponseFactory.NewFailedBaseResponse(
                 StatusCodes.Status500InternalServerError,
-                ErrorMessages.Controller.UserTag.SelectWordBankFailed
+                ErrorMessages.Controller.UserPlan.SelectWordBankFailed
             ));
         }
-        
-        userExistingTagEntity.SetDailyPlan = selectedWordBank.SetDailyPlan;
-        
-        repository.UserTagRepository.Update(userExistingTagEntity);
-        if (await repository.UserTagRepository.SaveAsync())
-        {
-            return Ok(ResponseFactory.NewSuccessBaseResponse(SuccessMessages.Controller.UserTag.SelectWordBankSuccess));
-        }
-            
+
+        existUserPlan.SetDailyPlan = selectedWordBank.SetDailyPlan;
+
+        repository.UserPlansRepository.Update(existUserPlan);
+        if (await repository.UserPlansRepository.SaveAsync())
+            return Ok(ResponseFactory.NewSuccessBaseResponse(SuccessMessages.Controller.UserPlan
+                .SelectWordBankSuccess));
+
         logger.LogWarning("User {} failed select word bank", userId);
         return StatusCode(StatusCodes.Status500InternalServerError, ResponseFactory.NewFailedBaseResponse(
             StatusCodes.Status500InternalServerError,
-            ErrorMessages.Controller.UserTag.SelectWordBankFailed
+            ErrorMessages.Controller.UserPlan.SelectWordBankFailed
         ));
     }
-    
+
     /// <summary>
     /// 获取当前选择的词库
     /// </summary>
     /// <returns>获取结果</returns>
     [HttpGet("current-word-bank", Name = "GetCurrentWordBank")]
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-    [Authorize(Roles = $"{nameof(UserRole.User)},{nameof(UserRole.Creator)},{nameof(UserRole.Admin)},{nameof(UserRole.SuperAdmin)}")]
+    [Authorize(Roles =
+        $"{nameof(UserRole.User)},{nameof(UserRole.Creator)},{nameof(UserRole.Admin)},{nameof(UserRole.SuperAdmin)}")]
     [ProducesResponseType(typeof(CurrentWordBankResp), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(CurrentWordBankResp), StatusCodes.Status403Forbidden)]
     [ProducesResponseType(typeof(CurrentWordBankResp), StatusCodes.Status404NotFound)]
@@ -161,32 +168,29 @@ public class TagController(ILogger<UserController> logger, IRepositoryService re
     {
         var userId = User.GetUserId();
         if (userId == null)
-        {
             return StatusCode(StatusCodes.Status403Forbidden, CurrentWordBankResp.Fail(
                 StatusCodes.Status403Forbidden,
                 ErrorMessages.Controller.Any.InvalidJwtToken
             ));
-        }
 
-        var currentWordBook = await repository.UserTagRepository.GetCurrentUserTagAsync(userId.Value);
+        var currentWordBook = await repository.UserPlansRepository.GetUserPlanAsync(userId.Value);
         if (currentWordBook == null)
-        {
             return StatusCode(StatusCodes.Status404NotFound, CurrentWordBankResp.Fail(
                 StatusCodes.Status404NotFound,
-                ErrorMessages.Controller.UserTag.CurrentUserTagNotFound
+                ErrorMessages.Controller.UserPlan.CurrentUserPlanNotFound
             ));
-        }
 
         var wordBook = await repository.WordBookRepository.GetByIdAsync(currentWordBook.WordBookId);
         if (wordBook == null)
-        {
             return StatusCode(StatusCodes.Status404NotFound, CurrentWordBankResp.Fail(
                 StatusCodes.Status404NotFound,
-                ErrorMessages.Controller.UserTag.CurrentUserTagNotFound
+                ErrorMessages.Controller.UserPlan.CurrentUserPlanNotFound
             ));
-        }
 
-        var remainDays = (wordBook.WordCount - currentWordBook.LearnedCount) / currentWordBook.SetDailyPlan;
+        var remainDays =
+            (await repository.WordWordBookRepository.GetBookWordCountAsync(currentWordBook.Id) -
+             currentWordBook.LearnedCount) /
+            currentWordBook.SetDailyPlan;
 
         var currentWordBankDetail = new CurrentWordBankDetail
         {
@@ -197,7 +201,7 @@ public class TagController(ILogger<UserController> logger, IRepositoryService re
             LearnedCount = currentWordBook.LearnedCount,
             ExpectedCompletionAt = DateTimeOffset.UtcNow.AddDays(remainDays)
         };
-        
+
         return Ok(CurrentWordBankResp.Success(currentWordBankDetail));
     }
 
@@ -209,43 +213,38 @@ public class TagController(ILogger<UserController> logger, IRepositoryService re
     [HttpPost("update-plan", Name = "UpdatePlan")]
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-    [Authorize(Roles = $"{nameof(UserRole.User)},{nameof(UserRole.Creator)},{nameof(UserRole.Admin)},{nameof(UserRole.SuperAdmin)}")]
+    [Authorize(Roles =
+        $"{nameof(UserRole.User)},{nameof(UserRole.Creator)},{nameof(UserRole.Admin)},{nameof(UserRole.SuperAdmin)}")]
     [ProducesResponseType(typeof(BaseResp), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(BaseResp), StatusCodes.Status403Forbidden)]
     [ProducesResponseType(typeof(BaseResp), StatusCodes.Status404NotFound)]
     [ProducesResponseType(typeof(BaseResp), StatusCodes.Status500InternalServerError)]
-    public async Task<IActionResult> UpdatePlan([FromBody] UserUpdatePlan userUpdatePlan )
+    public async Task<IActionResult> UpdatePlan([FromBody] UserUpdatePlan userUpdatePlan)
     {
         var userId = User.GetUserId();
         if (userId == null)
-        {
             return StatusCode(StatusCodes.Status403Forbidden, ResponseFactory.NewFailedBaseResponse(
                 StatusCodes.Status403Forbidden,
                 ErrorMessages.Controller.Any.InvalidJwtToken
             ));
-        }
-        
-        var userTagEntity = await repository.UserTagRepository.GetCurrentUserTagAsync(userId.Value);
-        if (userTagEntity == null)
-        {
+
+        var userPlanEntity = await repository.UserPlansRepository.GetUserPlanAsync(userId.Value);
+        if (userPlanEntity == null)
             return StatusCode(StatusCodes.Status404NotFound, ResponseFactory.NewFailedBaseResponse(
                 StatusCodes.Status404NotFound,
-                ErrorMessages.Controller.UserTag.CurrentUserTagNotFound
+                ErrorMessages.Controller.UserPlan.CurrentUserPlanNotFound
             ));
-        }
 
-        userTagEntity.SetDailyPlan = userUpdatePlan.SetDailyPlan;
-        
-        repository.UserTagRepository.Update(userTagEntity);
-        if (await repository.UserTagRepository.SaveAsync())
-        {
-            return Ok(ResponseFactory.NewSuccessBaseResponse(SuccessMessages.Controller.UserTag.UpdatePlanSuccess));
-        }
-        
+        userPlanEntity.SetDailyPlan = userUpdatePlan.SetDailyPlan;
+
+        repository.UserPlansRepository.Update(userPlanEntity);
+        if (await repository.UserPlansRepository.SaveAsync())
+            return Ok(ResponseFactory.NewSuccessBaseResponse(SuccessMessages.Controller.UserPlan.UpdatePlanSuccess));
+
         logger.LogWarning("User {} failed update plan", userId);
         return StatusCode(StatusCodes.Status500InternalServerError, ResponseFactory.NewFailedBaseResponse(
             StatusCodes.Status500InternalServerError,
-            ErrorMessages.Controller.UserTag.UpdatePlanFailed
+            ErrorMessages.Controller.UserPlan.UpdatePlanFailed
         ));
     }
 }

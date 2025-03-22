@@ -1,4 +1,3 @@
-
 namespace Seiun.Resources;
 
 public static class ErrorMessages
@@ -17,7 +16,7 @@ public static class ErrorMessages
         public const string InvalidUserName = "error.validation.invalid_username";
         public const string InvalidLikeCount = "error.validation.invalid_like_count";
         public const string InvalidDisLikeCount = "error.validation.invalid_dislike_count";
-        
+
         public const string OverPhoneNumberLength = "error.validation.over_phone_number_length";
         public const string OverNickNameLength = "error.validation.over_nickname_length";
         public const string OverUserNameLength = "error.validation.over_username_length";
@@ -25,7 +24,7 @@ public static class ErrorMessages
         public const string OverEmailLength = "error.validation.over_email_length";
         public const string OverContentLength = "error.validation.over_content_length";
         public const string OverWordDefinitionLength = "error.validation.over_word_definition_length";
-        public const string OverWordTextLength= "error.validation.over_word_text_length";
+        public const string OverWordTextLength = "error.validation.over_word_text_length";
         public const string OverPronunciationLength = "error.validation.over_pronunciation_length";
         public const string OverMaxQuestionAnswerLength = "error.validation.over_max_question_answer_length";
         public const string OverMaxQuestionAnalysisLength = "error.validation.over_max_question_analysis_length";
@@ -33,13 +32,13 @@ public static class ErrorMessages
         public const string OverMaxQuestionWordLength = "error.validation.over_max_question_word_length";
         public const string OverMaxQuestionTransitionLength = "error.validation.over_max_question_transition_length";
         public const string OverImgUrlLength = "error.validation.over_img_url_length";
-        
+
         public const string AtLeastOnePropertyRequired = "error.validation.at_least_one_property_is_required";
         public const string UserIdRequired = "error.validation.user_id_required";
 
         public const string WordBookIdRequired = "error.validation.word_book_id_required";
         public const string DailyPlanRequired = "error.validation.user_tag_set_daily_plan_required";
-        
+
         public const string CommentIdRequired = "error.validation.comment_id_required";
 
         public const string ContentRequired = "error.validation.Content_required";
@@ -68,6 +67,7 @@ public static class ErrorMessages
             public const string InvalidJwtToken = "error.controller.any.invalid_jwt_token";
             public const string InvalidReqType = "error.controller.any.invalid_req_type";
         }
+
         public static class User
         {
             public const string UserNotFound = "error.controller.user.not_found";
@@ -77,6 +77,7 @@ public static class ErrorMessages
             public const string RegisterFailed = "error.controller.user.register.register_failed";
             public const string UserCheckInFailed = "error.controller.user.checkin.checkin_failed";
         }
+
         public static class Admin
         {
             public const string ProfileUpdateFailed = "error.controller.admin.profile.update_failed";
@@ -85,6 +86,7 @@ public static class ErrorMessages
             public const string UserListFailed = "error.controller.admin.list.get_userlist_failed";
             public const string NotAdmin = "error.controller.admin.not_admin";
         }
+
         public static class Article
         {
             public const string PermissonDeniedError = "error.controller.article.permission_denied";
@@ -113,20 +115,22 @@ public static class ErrorMessages
             public const string NotAuthorized = "error.controller.publicannouncement.not_authorized";
             public const string DeleteFailed = "error.controller.publicannouncement.delete.delete_failed";
         }
+
         public static class Comment
         {
             public const string CreateFailed = "error.controller.comment.create_failed";
             public const string CommentNotFound = "error.controller.comment.not_found";
             public const string CommentDeleteFailed = "error.controller.comment.delete_failed";
-            public const string AlreadyLiked = "error.controller.comment.already_liked"; 
-            public const string GetLikeFailed = "error.controller.comment.like_failed"; 
-            public const string AlreadyCancelLiked = "error.controller.comment.already_cancel_liked"; 
-            public const string CancelLikeFailed = "error.controller.comment.cancel_like_failed"; 
+            public const string AlreadyLiked = "error.controller.comment.already_liked";
+            public const string GetLikeFailed = "error.controller.comment.like_failed";
+            public const string AlreadyCancelLiked = "error.controller.comment.already_cancel_liked";
+            public const string CancelLikeFailed = "error.controller.comment.cancel_like_failed";
             public const string GetDislikeFailed = "error.controller.comment.get_dislike_failed";
             public const string AlreadyDisliked = "error.controller.comment.already_dislike";
             public const string AlreadyCancelDisliked = "error.controller.comment.already_cancel_dislike";
             public const string CancelDislikeFailed = "error.controller.comment.cancel_dislike_failed";
         }
+
         public static class Reply
         {
             public const string CreateFailed = "error.controller.reply.create_failed";
@@ -135,21 +139,23 @@ public static class ErrorMessages
             public const string ParentReplyNotFound = "error.controller.reply.parent_reply_not_found";
             public const string ReplyNotFound = "error.controller.reply.not_found";
         }
+
         public static class Word
         {
             public const string FinishedWordCreatFailed = "error.controller.word.finishedword.create_failed";
             public const string ErrorWordCreatFailed = "error.controller.word.errorword.create_failed";
         }
-        
-        public static class UserTag
+
+        public static class UserPlan
         {
-            public const string UserTagNotFound = "error.controller.user_tag.not_found";
+            public const string UserPlanNotFound = "error.controller.user_tag.not_found";
             public const string GetAllWordBankFailed = "error.controller.user_tag.get_all_word_bank_failed";
             public const string SelectWordBankFailed = "error.controller.user_tag.select_word_bank_failed";
-            public const string CurrentUserTagNotFound = "error.controller.user_tag.user_tag_not_found";
+            public const string CurrentUserPlanNotFound = "error.controller.user_tag.user_tag_not_found";
             public const string UpdatePlanFailed = "error.controller.user_tag.update_plan_failed";
-            public const string UpdateUserTagFailed = "error.controller.user_tag.update_user_tag_failed";
+            public const string UpdateUserPlanFailed = "error.controller.user_tag.update_user_tag_failed";
         }
+
         public static class WordSession
         {
             public const string StartFailed = "error.controller.session.start_failed";

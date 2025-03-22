@@ -13,7 +13,7 @@ public class SeiunDbContext(DbContextOptions<SeiunDbContext> options) : DbContex
     public required DbSet<CommentLikeEntity> CommentLike { get; set; }
     public required DbSet<ReplyEntity> Replies { get; set; }
     public required DbSet<WordSessionEntity> Sessions { get; set; }
-    public required DbSet<UserTagEntity> UserTag { get; set; }
+    public required DbSet<UserPlanEntity> UserPlans { get; set; }
     public required DbSet<WordEntity> Words { get; set; }
     public required DbSet<ErrorWordRecordEntity> ErrorWords { get; set; }
     public required DbSet<FinishedWordRecordEntity> FinishedWords { get; set; }
@@ -28,7 +28,7 @@ public class SeiunDbContext(DbContextOptions<SeiunDbContext> options) : DbContex
     public required DbSet<ClozeTestSelectionEntity> ClozeTestSelections { get; set; }
     public required DbSet<ClozeTestAnswerEntity> ClozeTestAnswers { get; set; }
     public required DbSet<WordBookEntity> WordBooks { get; set; }
-    public required DbSet<WordBankWordBookEntity> WordBankWordBooks { get; set; }
+    public required DbSet<WordWordBookEntity> WordWordBooks { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
@@ -50,7 +50,7 @@ public class SeiunDbContext(DbContextOptions<SeiunDbContext> options) : DbContex
         ConfigureAiArticleEntity(modelBuilder);
         ConfigureErrorWordRecordEntity(modelBuilder);
         ConfigureWordSessionEntity(modelBuilder);
-        ConfigureUserTagEntity(modelBuilder);
+        ConfigureUserPlansEntity(modelBuilder);
         ConfigureUserCheckInEntity(modelBuilder);
         ConfigureFinishedWordRecordEntity(modelBuilder);
         ConfigureAiArticleEntity(modelBuilder);
@@ -60,9 +60,9 @@ public class SeiunDbContext(DbContextOptions<SeiunDbContext> options) : DbContex
         ConfigureUserQuestionEntity(modelBuilder);
         ConfigureWordEntity(modelBuilder);
         ConfigureWordDistractorEntity(modelBuilder);
-        ConfigureWordBankWordBookEntity(modelBuilder);
+        ConfigureWordWordBookEntity(modelBuilder);
 
-        modelBuilder.Entity<WordBankWordBookEntity>().HasKey(p => new { p.WordId, p.BookId });
+        modelBuilder.Entity<WordWordBookEntity>().HasKey(p => new { p.WordId, p.BookId });
 
         base.OnModelCreating(modelBuilder);
 
@@ -115,9 +115,9 @@ public class SeiunDbContext(DbContextOptions<SeiunDbContext> options) : DbContex
             .HasForeignKey(u => u.UserId)
             .OnDelete(DeleteBehavior.Cascade);
 
-        // user - UserTag
+        // user - UserPlans
         modelBuilder.Entity<UserEntity>()
-            .HasMany(u => u.UserTags)
+            .HasMany(u => u.UserPlans)
             .WithOne(u => u.User)
             .HasForeignKey(u => u.UserId)
             .OnDelete(DeleteBehavior.Cascade);
@@ -225,12 +225,11 @@ public class SeiunDbContext(DbContextOptions<SeiunDbContext> options) : DbContex
             .HasForeignKey(q => q.UserId);
     }
 
-    private static void ConfigureUserTagEntity(ModelBuilder modelBuilder)
+    private static void ConfigureUserPlansEntity(ModelBuilder modelBuilder)
     {
-        // UserTagEntity - User
-        modelBuilder.Entity<UserTagEntity>()
+        modelBuilder.Entity<UserPlanEntity>()
             .HasOne(t => t.User)
-            .WithMany(u => u.UserTags)
+            .WithMany(u => u.UserPlans)
             .HasForeignKey(t => t.UserId);
     }
 
@@ -262,16 +261,16 @@ public class SeiunDbContext(DbContextOptions<SeiunDbContext> options) : DbContex
             .HasForeignKey(d => d.WordId);
     }
 
-    private static void ConfigureWordBankWordBookEntity(ModelBuilder modelBuilder)
+    private static void ConfigureWordWordBookEntity(ModelBuilder modelBuilder)
     {
         // WordBankWordBook - word
-        modelBuilder.Entity<WordBankWordBookEntity>()
+        modelBuilder.Entity<WordWordBookEntity>()
             .HasOne(b => b.Word)
             .WithMany(b => b.Books)
             .HasForeignKey(b => b.WordId);
-        
+
         // WordBankWordBook - book
-        modelBuilder.Entity<WordBankWordBookEntity>()
+        modelBuilder.Entity<WordWordBookEntity>()
             .HasOne(b => b.Book)
             .WithMany(b => b.Words)
             .HasForeignKey(b => b.BookId);
