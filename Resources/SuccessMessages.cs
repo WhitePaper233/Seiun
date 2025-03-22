@@ -93,6 +93,7 @@ public static class SuccessMessages
         {
             public const string FinishedWordCreatSuccess = "controller.word.finishedword.create.create_success";
             public const string ErrorWordRecordCreatSuccess = "controller.word.errorword.record.record_success";
+            public const string GetWordSuccess = "controller.word.get.word_success";
         }
 
         public static class WordSession
