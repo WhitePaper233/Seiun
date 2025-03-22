@@ -50,7 +50,7 @@ public class UserRepository(SeiunDbContext dbContext, IMinioClient minioClient)
         DbContext.Users.Update(user);
         await DbContext.SaveChangesAsync();
     }
-    
+
     /// <summary>
     /// 获取头像文件流
     /// </summary>
@@ -64,7 +64,7 @@ public class UserRepository(SeiunDbContext dbContext, IMinioClient minioClient)
             .WithObject(fileName)
             .WithCallbackStream(data => data.CopyTo(avatarStream));
         await MinioCl.GetObjectAsync(getObjectArgs).ConfigureAwait(false);
-        avatarStream.Seek(0, SeekOrigin.Begin);  // 重置流位置
+        avatarStream.Seek(0, SeekOrigin.Begin); // 重置流位置
         return avatarStream;
     }
 
@@ -74,5 +74,4 @@ public class UserRepository(SeiunDbContext dbContext, IMinioClient minioClient)
             .Where(u => string.IsNullOrEmpty(keyword) || u.UserName.Contains(keyword))
             .ToListAsync();
     }
-
 }

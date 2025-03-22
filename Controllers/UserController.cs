@@ -339,12 +339,10 @@ public class UserController(ILogger<UserController> logger, IRepositoryService r
     {
         var user = await repository.UserRepository.GetByIdAsync(userId);
         if (user == null)
-        {
             return NotFound(UserCheckInResp.Fail(
                 StatusCodes.Status404NotFound,
                 ErrorMessages.Controller.User.UserNotFound
             ));
-        }
 
         var userPlan = await repository.UserPlansRepository.GetUserPlanAsync(userId);
         if (userPlan == null)

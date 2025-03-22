@@ -1,7 +1,6 @@
-
 using Seiun.Resources;
 
-namespace  Seiun.Models.Responses;
+namespace Seiun.Models.Responses;
 
 # region Question List
 
@@ -100,6 +99,5 @@ public sealed class ClozeTestResp(int code, string message, ClozeTestInfo? cloze
         return new ClozeTestResp(code, message, null);
     }
 }
-
 
 # endregion

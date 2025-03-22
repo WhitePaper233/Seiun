@@ -37,7 +37,7 @@ public static class ErrorMessages
         public const string UserIdRequired = "error.validation.user_id_required";
 
         public const string WordBookIdRequired = "error.validation.word_book_id_required";
-        public const string DailyPlanRequired = "error.validation.user_tag_set_daily_plan_required";
+        public const string DailyPlanRequired = "error.validation.user_plan_set_daily_plan_required";
 
         public const string CommentIdRequired = "error.validation.comment_id_required";
 
@@ -146,14 +146,17 @@ public static class ErrorMessages
             public const string ErrorWordCreatFailed = "error.controller.word.errorword.create_failed";
         }
 
+        public static class WordBook
+        {
+            public const string GetWordBookListFailed = "error.controller.user_plan.get_word_book_failed";
+            public const string SelectWordBookFailed = "error.controller.user_plan.select_word_book_failed";
+        }
+
         public static class UserPlan
         {
-            public const string UserPlanNotFound = "error.controller.user_tag.not_found";
-            public const string GetAllWordBankFailed = "error.controller.user_tag.get_all_word_bank_failed";
-            public const string SelectWordBankFailed = "error.controller.user_tag.select_word_bank_failed";
-            public const string CurrentUserPlanNotFound = "error.controller.user_tag.user_tag_not_found";
-            public const string UpdatePlanFailed = "error.controller.user_tag.update_plan_failed";
-            public const string UpdateUserPlanFailed = "error.controller.user_tag.update_user_tag_failed";
+            public const string UserPlanNotFound = "error.controller.user_plan.not_found";
+            public const string CurrentUserPlanNotFound = "error.controller.user_plan.user_plan_not_found";
+            public const string UpdatePlanFailed = "error.controller.user_plan.update_plan_failed";
         }
 
         public static class WordSession

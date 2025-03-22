@@ -8,7 +8,7 @@ public class FillInBlankAnswerRepository(SeiunDbContext dbContext, IMinioClient 
     : BaseRepository<FillInBlankAnswerEntity>(dbContext, minioClient), IFillInBlankAnswerRepository
 {
     public void BulkAdd(List<FillInBlankAnswerEntity> answers)
-    { 
+    {
         DbContext.FillInBlankAnswers.AddRange(answers);
     }
 

@@ -1,7 +1,5 @@
 namespace Seiun.Models.Responses;
 
-
-
 /// <summary>
 /// Comment 信息
 /// </summary>
@@ -46,6 +44,3 @@ public sealed class CommentListResp(int code, string message, List<CommentInfo>?
         return new CommentListResp(code, message, null);
     }
 }
-
-
-

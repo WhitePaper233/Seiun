@@ -7,4 +7,3 @@ public interface IClozeTestAnswerRepository : IBaseRepository<ClozeTestAnswerEnt
     void BulkAdd(List<ClozeTestAnswerEntity> answers);
     Task<List<ClozeTestAnswerEntity>?> GetByQuestionIdAsync(Guid questionId);
 }
-

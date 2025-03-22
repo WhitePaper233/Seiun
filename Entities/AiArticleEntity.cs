@@ -7,15 +7,15 @@ namespace Seiun.Entities;
 
 public class AiArticleEntity : BaseEntity
 {
-	public required Guid UserId { get; set; }	
-	
-	[MaxLength(Constants.Article.MaxArticleLength, ErrorMessage = ErrorMessages.ValidationError.OverArticleMaxLength)]
-	public required string Article {get; set; }
-	public required Guid SessionId { get; set; }
-	
-	[MaxLength(Constants.Article.MaxImgUrlLength, ErrorMessage = ErrorMessages.ValidationError.OverCoverUrlLength)]
-	public required string CoverUrl { get; set; }
-	
-	[ForeignKey(nameof(this.UserId))]
-	public virtual UserEntity User { get; set; } = null!;
+    public required Guid UserId { get; set; }
+
+    [MaxLength(Constants.Article.MaxArticleLength, ErrorMessage = ErrorMessages.ValidationError.OverArticleMaxLength)]
+    public required string Article { get; set; }
+
+    public required Guid SessionId { get; set; }
+
+    [MaxLength(Constants.Article.MaxImgUrlLength, ErrorMessage = ErrorMessages.ValidationError.OverCoverUrlLength)]
+    public required string CoverUrl { get; set; }
+
+    [ForeignKey(nameof(this.UserId))] public virtual UserEntity User { get; set; } = null!;
 }

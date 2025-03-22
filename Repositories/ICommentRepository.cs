@@ -11,4 +11,3 @@ public interface ICommentLikeRepository : IBaseRepository<CommentLikeEntity>
 {
     Task<CommentLikeEntity?> GetCommentLikeAsync(Guid userId, Guid commentId);
 }
-

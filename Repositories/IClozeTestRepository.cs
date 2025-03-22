@@ -4,5 +4,4 @@ namespace Seiun.Repositories;
 
 public interface IClozeTestRepository : IBaseRepository<ClozeTestEntity>
 {
-    
 }

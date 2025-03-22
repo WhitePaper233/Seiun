@@ -70,12 +70,16 @@ public static class SuccessMessages
             public const string DetailSuccess = "controller.reply.detail.detail_success";
         }
 
+        public static class WordBook
+        {
+            public const string GetWordBooksSuccess = "controller.word_book.get_word_books_success";
+            public const string SelectWordBookSuccess = "controller.word_book.select_word_book_success";
+        }
+
         public static class UserPlan
         {
-            public const string GetWordBooksSuccess = "controller.usertag.get_word_banks_success";
-            public const string SelectWordBankSuccess = "controller.usertag.select_word_bank_success";
-            public const string GetCurrentWordBookSuccess = "controller.usertag.get_current_word_book_success";
-            public const string UpdatePlanSuccess = "controller.usertag.update_plan.success";
+            public const string GetCurrentPlanSuccess = "controller.user_plan.get_current_plan_success";
+            public const string UpdatePlanSuccess = "controller.user_plan.update_plan.success";
         }
 
         public static class StudySession

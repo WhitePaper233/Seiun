@@ -4,6 +4,6 @@ namespace Seiun.Repositories;
 
 public interface IWordSessionRepository : IBaseRepository<WordSessionEntity>
 {
-	Task<WordSessionEntity?> GetSessionByUserIdAsync(Guid userId);
-	Task<List<WordSessionEntity>?> GetTodayAllSessionsByUserIdAsync(Guid userIds);
+    Task<WordSessionEntity?> GetSessionByUserIdAsync(Guid userId);
+    Task<List<WordSessionEntity>?> GetTodayAllSessionsByUserIdAsync(Guid userIds);
 }
