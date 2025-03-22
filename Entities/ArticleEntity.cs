@@ -1,15 +1,20 @@
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json.Serialization;
+using Seiun.Resources;
+using Seiun.Utils;
+using System.ComponentModel.DataAnnotations;
 
 namespace Seiun.Entities;
 
 public class ArticleEntity: BaseEntity
 {
 	// 文章
+	[MaxLength(Constants.Article.MaxArticleLength, ErrorMessage = ErrorMessages.ValidationError.OverArticleMaxLength)]
 	public required string Article { get; set; }
 	// 图片
 	public List<string>? ImageFileNames { get; set; }
 	// 封面
+	[MaxLength(Constants.Article.MaxImgUrlLength, ErrorMessage = ErrorMessages.ValidationError.OverImgUrlLength)]
 	public string? CoverFileName { get; set; }
 	// 发布者ID
 	public required Guid CreatorId { get; set; }

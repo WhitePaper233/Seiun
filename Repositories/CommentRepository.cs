@@ -23,10 +23,6 @@ public class CommentRepository(SeiunDbContext dbContext , IMinioClient minioClie
             .Where(comment => comment.PostId == postId)
             .ToListAsync();
 
-        if (comments.Count == 0)
-        {
-            return [];
-        }
-        return comments;
+        return comments.Count == 0 ? [] : comments;
     }
 }

@@ -112,16 +112,17 @@ public class ResourceController(ILogger<UserController> logger, IRepositoryServi
     /// <summary>
     /// 文章封面接口
     /// </summary>
-    /// <param name="fileName"></param>
+    /// <param name="fileName">文件URL</param>
+    /// <param name="width">图片宽度</param>>
     /// <returns></returns>
-    [HttpGet("article-cover/{filenName}")]
+    [HttpGet("article-cover/{fileName}")]
     [ProducesResponseType(typeof(FileResult), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<IActionResult> GetArticleCover(string fileName, [FromQuery] int Width = 0)
+    public async Task<IActionResult> GetArticleCover(string fileName, [FromQuery] int width = 0)
     {
-        if (string.IsNullOrWhiteSpace(fileName) || Width <=0)
+        if (string.IsNullOrWhiteSpace(fileName))
         {
             return BadRequest();
         }
@@ -142,7 +143,7 @@ public class ResourceController(ILogger<UserController> logger, IRepositoryServi
             return StatusCode(StatusCodes.Status500InternalServerError);
         }
 
-        if(Width == 0)
+        if(width <= 0)
         {
             return File(articleCoverStream, MediaTypeNames.Image.Webp);
         }
@@ -151,7 +152,7 @@ public class ResourceController(ILogger<UserController> logger, IRepositoryServi
         {
             // 调整图像大小
             using var image = await Image.LoadAsync(articleCoverStream);
-            image.Mutate(ipc => ipc.Resize(Width, 0));
+            image.Mutate(ipc => ipc.Resize(width, 0));
             
             // 保存为 webp 格式
             var ms = new MemoryStream();

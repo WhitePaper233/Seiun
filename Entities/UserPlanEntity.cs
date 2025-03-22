@@ -1,5 +1,4 @@
 using System.ComponentModel.DataAnnotations.Schema;
-using Seiun.Utils.Enums;
 
 namespace Seiun.Entities;
 
@@ -12,7 +11,6 @@ public class UserPlanEntity : BaseEntity
     public required int SetDailyPlan { get; set; }
 
     public required int LearnedCount { get; set; }
-
-
+    
     [ForeignKey(nameof(this.UserId))] public virtual UserEntity User { get; set; } = null!;
 }

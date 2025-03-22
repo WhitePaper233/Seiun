@@ -59,7 +59,7 @@ public class CommentController(ILogger<CommentController> logger, IRepositorySer
             Content = commentCreate.Content,
             PostId = commentCreate.ArticleId,
             LikeCount = 0,
-            DislikeCount = 0,
+            DislikeCount = 0
             // CreatedAt = DateTimeOffset.UtcNow
         };
         repository.CommentRepository.Create(comment);
@@ -253,8 +253,8 @@ public class CommentController(ILogger<CommentController> logger, IRepositorySer
             ));
         }
 
-        var existingLike = await repository.CommentLikeRepository.GetCommentLikeAsync((Guid)userId, commentId);
-        if (existingLike != null && existingLike.Action == ActionType.Like)
+        var existingLike = await repository.CommentLikeRepository.GetCommentLikeAsync(userId.Value, commentId);
+        if (existingLike is { Action: ActionType.Like })
         {
             return StatusCode(StatusCodes.Status400BadRequest, ResponseFactory.NewFailedBaseResponse(
                 StatusCodes.Status400BadRequest,
@@ -262,18 +262,18 @@ public class CommentController(ILogger<CommentController> logger, IRepositorySer
             ));
         }
 
-        if (existingLike != null && existingLike.Action == ActionType.Dislike)
+        if (existingLike is { Action: ActionType.Dislike })
         {
             repository.CommentLikeRepository.Delete(existingLike);
             comment.DislikeCount -= 1;
         }
 
+
         var likeRecord = new CommentLikeEntity
         {
             UserId = (Guid)userId,
             CommentId = commentId,
-            Action = ActionType.Like,
-            // CreatedAt = DateTime.UtcNow
+            Action = ActionType.Like
         };
         repository.CommentLikeRepository.Create(likeRecord);
 
@@ -333,8 +333,8 @@ public class CommentController(ILogger<CommentController> logger, IRepositorySer
             ));
         }
 
-        var existingLike = await repository.CommentLikeRepository.GetCommentLikeAsync((Guid)userId, commentId);
-        if (existingLike == null || existingLike.Action != ActionType.Like)
+        var existingLike = await repository.CommentLikeRepository.GetCommentLikeAsync(userId.Value, commentId);
+        if (existingLike is not { Action: ActionType.Like })
         {
             return StatusCode(StatusCodes.Status400BadRequest, ResponseFactory.NewFailedBaseResponse(
                 StatusCodes.Status400BadRequest,
@@ -400,7 +400,7 @@ public class CommentController(ILogger<CommentController> logger, IRepositorySer
         }
 
         var existingDislike = await repository.CommentLikeRepository.GetCommentLikeAsync((Guid)userId, commentId);
-        if (existingDislike != null && existingDislike.Action == ActionType.Dislike)
+        if (existingDislike is { Action: ActionType.Dislike })
         {
             return StatusCode(StatusCodes.Status400BadRequest, ResponseFactory.NewFailedBaseResponse(
                 StatusCodes.Status400BadRequest,
@@ -408,7 +408,8 @@ public class CommentController(ILogger<CommentController> logger, IRepositorySer
             ));
         }
 
-        if (existingDislike != null && existingDislike.Action == ActionType.Like)
+
+        if (existingDislike is { Action: ActionType.Like })
         {
             repository.CommentLikeRepository.Delete(existingDislike);
             comment.LikeCount -= 1;
@@ -418,8 +419,7 @@ public class CommentController(ILogger<CommentController> logger, IRepositorySer
         {
             UserId = (Guid)userId,
             CommentId = commentId,
-            Action = ActionType.Dislike,
-            // CreatedAt = DateTime.UtcNow
+            Action = ActionType.Dislike
         };
         repository.CommentLikeRepository.Create(dislikeRecord);
         comment.DislikeCount += 1;
@@ -476,13 +476,14 @@ public class CommentController(ILogger<CommentController> logger, IRepositorySer
             ));
         }
         var existingDislike = await repository.CommentLikeRepository.GetCommentLikeAsync((Guid)userId, commentId);
-        if (existingDislike == null || existingDislike.Action != ActionType.Dislike)
+        if (existingDislike is not { Action: ActionType.Dislike })
         {
             return StatusCode(StatusCodes.Status400BadRequest, ResponseFactory.NewFailedBaseResponse(
                 StatusCodes.Status400BadRequest,
                 ErrorMessages.Controller.Comment.AlreadyCancelDisliked
             ));
         }
+
 
         repository.CommentLikeRepository.Delete(existingDislike);
         comment.DislikeCount -= 1;

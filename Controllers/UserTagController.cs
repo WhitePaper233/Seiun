@@ -1,6 +1,5 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Seiun.Entities;
@@ -174,14 +173,14 @@ public class UserPlanController(ILogger<UserController> logger, IRepositoryServi
                 ErrorMessages.Controller.Any.InvalidJwtToken
             ));
 
-        var currentWordBook = await repository.UserPlansRepository.GetUserPlanAsync(userId.Value);
-        if (currentWordBook == null)
+        var currentPlanEntity = await repository.UserPlansRepository.GetUserPlanAsync(userId.Value);
+        if (currentPlanEntity == null)
             return StatusCode(StatusCodes.Status404NotFound, CurrentWordBankResp.Fail(
                 StatusCodes.Status404NotFound,
                 ErrorMessages.Controller.UserPlan.CurrentUserPlanNotFound
             ));
 
-        var wordBook = await repository.WordBookRepository.GetByIdAsync(currentWordBook.WordBookId);
+        var wordBook = await repository.WordBookRepository.GetByIdAsync(currentPlanEntity.WordBookId);
         if (wordBook == null)
             return StatusCode(StatusCodes.Status404NotFound, CurrentWordBankResp.Fail(
                 StatusCodes.Status404NotFound,
@@ -189,17 +188,16 @@ public class UserPlanController(ILogger<UserController> logger, IRepositoryServi
             ));
 
         var remainDays =
-            (await repository.WordWordBookRepository.GetBookWordCountAsync(currentWordBook.Id) -
-             currentWordBook.LearnedCount) /
-            currentWordBook.SetDailyPlan;
-
+            (await repository.WordWordBookRepository.GetBookWordCountAsync(currentPlanEntity.WordBookId) -
+             currentPlanEntity.LearnedCount) /
+            currentPlanEntity.SetDailyPlan;
         var currentWordBankDetail = new CurrentWordBankDetail
         {
             WordBookId = wordBook.Id,
             WordBookName = wordBook.WordBookName,
-            SetDailyPlan = currentWordBook.SetDailyPlan,
+            SetDailyPlan = currentPlanEntity.SetDailyPlan,
             RemainingDays = remainDays,
-            LearnedCount = currentWordBook.LearnedCount,
+            LearnedCount = currentPlanEntity.LearnedCount,
             ExpectedCompletionAt = DateTimeOffset.UtcNow.AddDays(remainDays)
         };
 

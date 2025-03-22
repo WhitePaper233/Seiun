@@ -144,7 +144,6 @@ public class AdminController(ILogger<AdminController> logger, IRepositoryService
     /// <param name="userId">用户ID</param>
     /// <param name="userUpdate">用户更新信息DTO</param>
     /// <returns>更新结果DTO</returns>
-    /// <summary>
     [HttpPost("user/update", Name = "UpdateUser")]
     [Authorize(Roles = $"{nameof(UserRole.SuperAdmin)}")]
     [ProducesResponseType(typeof(BaseResp), StatusCodes.Status200OK)]

@@ -158,7 +158,7 @@ public class AiRequestService(IServiceScopeFactory serviceScopeFactory, ILogger<
 			UserId = userId,
 			SessionId = latestFinishedWordGroup.Key,
 			Article = aiArticle,
-			CoverUrl = articleImgName,
+			CoverUrl = articleImgName
 		};
 		repository.AiArticleRepository.Create(aIArticleEntity);
 		if (!await repository.AiArticleRepository.SaveAsync())
@@ -203,7 +203,7 @@ public class AiRequestService(IServiceScopeFactory serviceScopeFactory, ILogger<
 			messages = new[]
 			{
 				new { role = "system", content = $"{prompt}" },
-				new { role = "user", content = $"{wordText}" },
+				new { role = "user", content = $"{wordText}" }
 			},
 			text = new
 			{
@@ -267,7 +267,7 @@ public class AiRequestService(IServiceScopeFactory serviceScopeFactory, ILogger<
 							"words",
 							"content",
 							"transition",
-							"answers",
+							"answers"
 						},
 						additionalProperties = false
 					},
@@ -313,14 +313,14 @@ public class AiRequestService(IServiceScopeFactory serviceScopeFactory, ILogger<
 		var fillInBlank = new FillInBlankEntity
 		{
 			Content = content,
-			Transition = transition,
+			Transition = transition
 		};
 
 		var fillInBlankWord = wordsElement.EnumerateArray().Select(w =>
 			new FillInBlankWordEntity
 			{
 				QuestionId = fillInBlank.Id,
-				Word = w.GetString() ?? string.Empty,
+				Word = w.GetString() ?? string.Empty
 			}).ToList();
 
 		var fillInBlankAnswer = answersElement.EnumerateArray().Select(w =>
@@ -329,7 +329,7 @@ public class AiRequestService(IServiceScopeFactory serviceScopeFactory, ILogger<
 				QuestionId = fillInBlank.Id,
 				Key = w.GetProperty("key").GetInt32(),
 				Answer = w.GetProperty("answer").GetString() ?? string.Empty,
-				Analysis = w.GetProperty("analysis").GetString() ?? string.Empty,
+				Analysis = w.GetProperty("analysis").GetString() ?? string.Empty
 			}).ToList();
 		
 		repository.FillInBlankRepository.Create(fillInBlank);
@@ -347,7 +347,7 @@ public class AiRequestService(IServiceScopeFactory serviceScopeFactory, ILogger<
 		{
 			UserId = userId,
 			QuestionId = fillInBlank.Id,
-			Type = QuestionType.FillInBlank,
+			Type = QuestionType.FillInBlank
 		};
 		repository.UserQuestionRepository.Create(userQuestion);
 		if (!await repository.UserQuestionRepository.SaveAsync())
@@ -391,7 +391,7 @@ public class AiRequestService(IServiceScopeFactory serviceScopeFactory, ILogger<
 		    messages = new[]
 		    {
 		        new {role = "system", content = $"{prompt}"},
-		        new {role = "user", content = $"{wordText}"},
+		        new {role = "user", content = $"{wordText}"}
 		    },
 		    text = new
 		    {
@@ -424,7 +424,7 @@ public class AiRequestService(IServiceScopeFactory serviceScopeFactory, ILogger<
 		                            _12 = new { type = "array", items = new { type = "string" } },
 		                            _13 = new { type = "array", items = new { type = "string" } },
 		                            _14 = new { type = "array", items = new { type = "string" } },
-		                            _15 = new { type = "array", items = new { type = "string" } },
+		                            _15 = new { type = "array", items = new { type = "string" } }
 		                        },
 		                        required = new[] {"_1", "_2", "_3", "_4", "_5", "_6", "_7", "_8", "_9", "_10", "_11", "_12", "_13", "_14", "_15"},
 		                        additionalProperties = false
@@ -450,7 +450,7 @@ public class AiRequestService(IServiceScopeFactory serviceScopeFactory, ILogger<
 		                                    type = "string"
 		                                }
 		                            },
-		                            required = new[] { "key", "answer", "analysis" },
+		                            required = new[] { "key", "answer", "analysis" }
 		                        }
 		                    }
 		                },
@@ -517,7 +517,7 @@ public class AiRequestService(IServiceScopeFactory serviceScopeFactory, ILogger<
 				QuestionId = clozeTest.Id,
 				Key = a.GetProperty("key").GetInt32(),
 				Answer = a.GetProperty("answer").GetString() ?? string.Empty,
-				Analysis = a.GetProperty("analysis").GetString() ?? string.Empty,
+				Analysis = a.GetProperty("analysis").GetString() ?? string.Empty
 			}).ToList();
 		
 		repository.ClozeTestRepository.Create(clozeTest);
@@ -535,7 +535,7 @@ public class AiRequestService(IServiceScopeFactory serviceScopeFactory, ILogger<
 		{
 			UserId = userId,
 			QuestionId = clozeTest.Id,
-			Type = QuestionType.ClozeTest,
+			Type = QuestionType.ClozeTest
 		};
 		repository.UserQuestionRepository.Create(userQuestion);
 		if (!await repository.UserQuestionRepository.SaveAsync())

@@ -57,29 +57,6 @@ public sealed class ArticleListResp(int code, string message, ArticleList? artic
 	}
 }
 
-public class ArticleCover
-{
-	public required string ArticleCoverName	{ get; set; }
-}
-
-public sealed class ArticleCoverResp(int code, string message, ArticleCover? articleCover)
-	: BaseRespWithData<ArticleCover>(code, message, articleCover)
-{
-	public static ArticleCoverResp Success(string articleCoverName)
-	{
-		return new ArticleCoverResp(StatusCodes.Status200OK, SuccessMessages.Controller.Article.GetArticleCoverNameSuccess,
-			new ArticleCover
-			{
-				ArticleCoverName = articleCoverName
-			});
-	}
-
-	public static ArticleCoverResp Fail(int code, string message)
-	{
-		return new ArticleCoverResp(code, message, null);
-	}
-}
-
 # endregion
 
 # region ArticleDetailResponse
@@ -91,7 +68,7 @@ public class ArticleDetail
 {
 	public required Guid CreatorId { get; set; }
 	public required string Article { get; set; }
-	public List<string>? ArticleImgURLs { get; set; }
+	public List<string>? ArticleImgUrls { get; set; }
 	public required DateTimeOffset CreateAt { get; set; }
 	public required int Like { get; set; }
 	public required bool IsPinned { get; set; }
@@ -102,13 +79,13 @@ public sealed class ArticleDetailResp(int code, string message, ArticleDetail? a
 {
 	public static ArticleDetailResp Success(ArticleEntity articleEntity, int articleLikedCount)
 	{
-		var articleImgURLs = articleEntity.ImageFileNames?.Select(imgName => $"/resources/article-image/{imgName}").ToList();
+		var articleImgUrls = articleEntity.ImageFileNames?.Select(imgName => $"/resources/article-image/{imgName}").ToList();
 		return new ArticleDetailResp(StatusCodes.Status200OK, SuccessMessages.Controller.Article.GetArticleDetailSuccess,
 			new ArticleDetail
 			{
 				CreatorId = articleEntity.CreatorId,
 				Article = articleEntity.Article,
-				ArticleImgURLs = articleImgURLs,
+				ArticleImgUrls = articleImgUrls,
 				CreateAt = articleEntity.CreatedAt,
 				Like = articleLikedCount,
 				IsPinned = articleEntity.IsPinned

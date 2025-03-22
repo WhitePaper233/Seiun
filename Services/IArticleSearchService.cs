@@ -1,4 +1,3 @@
-using Seiun.Entities;
 
 namespace Seiun.Services;
 

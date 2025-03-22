@@ -9,11 +9,11 @@ public class AiArticleEntity : BaseEntity
 {
 	public required Guid UserId { get; set; }	
 	
-	[MaxLength(Constants.Article.MaxArticleLength, ErrorMessage = ErrorMessages.ValidationError.OverArticleLength)]
+	[MaxLength(Constants.Article.MaxArticleLength, ErrorMessage = ErrorMessages.ValidationError.OverArticleMaxLength)]
 	public required string Article {get; set; }
 	public required Guid SessionId { get; set; }
 	
-	[MaxLength(Constants.Article.MaxCoverUrlLength, ErrorMessage = ErrorMessages.ValidationError.OverCoverUrlLength)]
+	[MaxLength(Constants.Article.MaxImgUrlLength, ErrorMessage = ErrorMessages.ValidationError.OverCoverUrlLength)]
 	public required string CoverUrl { get; set; }
 	
 	[ForeignKey(nameof(this.UserId))]
