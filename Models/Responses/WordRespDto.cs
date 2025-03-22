@@ -3,6 +3,17 @@ using Seiun.Resources;
 
 namespace Seiun.Models.Responses;
 
+//单词Dto
+public class WordDto
+{
+	public required Guid WordId { get; set; }
+	public required string WordText { get; set; }
+	public string? Pronunciation { get; set; }
+	public required string Definition { get; set; }
+	public required List<Guid> DistractorIds { get; set; }
+	public required List<string> WordBookName { get; set; }
+}
+
 # region ReviewingWordListResponse
 
 public class ReviewingWords
@@ -29,3 +40,26 @@ public sealed class ReviewingWordListResp(int code, string message, ReviewingWor
 }
 
 # endregion
+
+#region WordResponse
+public class WordListResponse
+{
+	public required IEnumerable<WordDto> Words { get; set; }
+	public required int TotalWords { get; set; }
+}
+
+public sealed class WordListResp(int code, string message, WordListResponse? wordListResponse)
+	: BaseRespWithData<WordListResponse>(code, message, wordListResponse)
+{
+	public static WordListResp Success(WordListResponse wordListResponse)
+    {
+        return new WordListResp(200, SuccessMessages.Controller.Word.GetWordSuccess, wordListResponse);
+    }
+
+	public static WordListResp Fail(int code, string message)
+	{
+		return new WordListResp(code, message, null);
+	}
+}
+
+#endregion

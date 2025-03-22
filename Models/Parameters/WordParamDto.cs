@@ -10,3 +10,11 @@ public class WordResultDto
     [Required(ErrorMessage = ErrorMessages.ValidationError.SessionIdRequired)]
     public required Guid SessionId { get; set; }
 }
+
+// 获取所有单词Dto
+public class GetWordssByAdmin
+{
+    public required int Index { get; set; }
+    public required int Size { get; set; }
+    public Guid? Keyword { get; set; }
+}

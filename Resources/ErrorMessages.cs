@@ -79,6 +79,8 @@ public static class ErrorMessages
             public const string AdminNotFound = "error.controller.admin.not_found";
             public const string UserListFailed = "error.controller.admin.list.get_userlist_failed";
             public const string NotAdmin = "error.controller.admin.not_admin";
+            public const string GetAllWordsFailed = "error.controller.admin.word.get_all_words_failed";
+            public const string WordsNotFound = "error.controller.admin.word.words_not_found";
         }
 
         public static class Article

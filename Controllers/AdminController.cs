@@ -17,18 +17,18 @@ public class AdminController(ILogger<AdminController> logger, IRepositoryService
     : ControllerBase
 {
     [HttpGet("user-list", Name = "GetUserList")]
-    // [Authorize(Roles = $"{nameof(UserRole.SuperAdmin)}")]
-    // [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    [Authorize(Roles = $"{nameof(UserRole.SuperAdmin)}")]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     [ProducesResponseType(typeof(BaseResp), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(BaseResp), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(BaseResp), StatusCodes.Status403Forbidden)]
     [ProducesResponseType(typeof(BaseResp), StatusCodes.Status500InternalServerError)]
-    public async Task<IActionResult> GetUserList([FromQuery] GetUsersByAdmin parameters)
+    public async Task<IActionResult> GetUserList([FromQuery] GetUsersByAdmin parames)
     {
         try
         {
             // 获取所有符合条件的用户
-            var users = await repository.UserRepository.GetUsersByUserNameAsync(parameters.Keyword);
+            var users = await repository.UserRepository.GetUsersByUserNameAsync(parames.Keyword);
 
             // 如果没有找到用户，返回空列表和总数为0
             if (users.Count == 0)
@@ -45,8 +45,8 @@ public class AdminController(ILogger<AdminController> logger, IRepositoryService
 
             // 对结果进行分页
             var pagedUsers = users
-                .Skip((parameters.Index - 1) * parameters.Size) // 跳过前面的页数
-                .Take(parameters.Size) // 获取当前页的数据
+                .Skip((parames.Index - 1) * parames.Size) // 跳过前面的页数
+                .Take(parames.Size) // 获取当前页的数据
                 .Select(user => new UserList
                 {
                     UserId = user.Id,
@@ -93,7 +93,6 @@ public class AdminController(ILogger<AdminController> logger, IRepositoryService
     /// <param name="userLogin">管理员登录信息DTO</param>
     /// <returns>登录结果DTO</returns>
     [HttpPost("login", Name = "AdminLogin")]
-    // [Authorize(Roles = $"{nameof(UserRole.SuperAdmin)}")]
     [ProducesResponseType(typeof(UserLoginResp), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(UserLoginResp), StatusCodes.Status403Forbidden)]
     [ProducesResponseType(typeof(UserLoginResp), StatusCodes.Status500InternalServerError)]
@@ -215,5 +214,53 @@ public class AdminController(ILogger<AdminController> logger, IRepositoryService
             ErrorMessages.Controller.Admin.ProfileUpdateFailed
         ));
     }
+    
+    // 获取所有单词
+    [HttpGet("word-list", Name = "GetWordList")]
+    [Authorize(Roles = $"{nameof(UserRole.SuperAdmin)}")]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    [ProducesResponseType(typeof(BaseResp), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(BaseResp), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(BaseResp), StatusCodes.Status500InternalServerError)]
+    public async Task<IActionResult> GetAllWords([FromQuery] GetWordssByAdmin parameters)
+    {
+        try
+        {
+            var words = await repository.WordRepository.GetAllWordsAsync(parameters.Index, parameters.Size,parameters.Keyword);
+            var totalWords = await repository.WordRepository.GetTotalWordsAsync(parameters.Keyword);
+            if (words == null || words.Count == 0)
+            {
+                logger.LogError("Get all words failed");
+                return StatusCode(StatusCodes.Status404NotFound, ResponseFactory.NewFailedBaseResponse(
+                    StatusCodes.Status404NotFound,
+                    ErrorMessages.Controller.Admin.WordsNotFound
+                ));
+            }
+            var wordListResponse = new WordListResponse
+            {
+                Words = [.. words.Select(w => new WordDto
+                {
+                    WordId = w.Id,
+                    WordText = w.WordText,
+                    Pronunciation = w.Pronunciation,
+                    Definition = w.Definition,
+                    DistractorIds = w.WordDistractors.Select(d => d.DistractorId).ToList(), 
+                    WordBookName = w.Books.Select(b => b.Book.WordBookName).Distinct().ToList() 
+                })],
+                TotalWords = totalWords
+            };
+
+            return Ok(WordListResp.Success(wordListResponse));
+        }
+        catch (Exception ex)
+        {
+            logger.LogError("Get all words failed: {Exception}", ex);
+            return StatusCode(StatusCodes.Status500InternalServerError, ResponseFactory.NewFailedBaseResponse(
+                StatusCodes.Status500InternalServerError,
+                ErrorMessages.Controller.Admin.GetAllWordsFailed
+            ));
+        }
+    }
+
     
 }
