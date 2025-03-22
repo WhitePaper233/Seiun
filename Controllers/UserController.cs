@@ -329,16 +329,16 @@ public class UserController(ILogger<UserController> logger, IRepositoryService r
     /// </summary>
     /// <param name="userId">用户ID</param>
     /// <returns>打卡状态</returns>
-    [HttpGet("checkin/{userId:Guid}", Name = "GetCheckin")]
+    [HttpGet("checkin", Name = "GetCheckin")]
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     [Authorize(Roles =
         $"{nameof(UserRole.User)},{nameof(UserRole.Creator)},{nameof(UserRole.Admin)},{nameof(UserRole.SuperAdmin)}")]
     [ProducesResponseType(typeof(UserCheckInResp), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(UserCheckInResp), StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> GetCheckin(Guid userId)
+    public async Task<IActionResult> GetCheckin()
     {
-        var user = await repository.UserRepository.GetByIdAsync(userId);
-        if (user == null)
+        var userId = User.GetUserId();
+        if (userId == null)
         {
             return NotFound(UserCheckInResp.Fail(
                 StatusCodes.Status404NotFound,
@@ -346,21 +346,21 @@ public class UserController(ILogger<UserController> logger, IRepositoryService r
             ));
         }
 
-        var userPlan = await repository.UserPlansRepository.GetUserPlanAsync(userId);
+        var userPlan = await repository.UserPlansRepository.GetUserPlanAsync(userId.Value);
         if (userPlan == null)
             return NotFound(UserCheckInResp.Fail(
                 StatusCodes.Status404NotFound,
                 ErrorMessages.Controller.UserPlan.UserPlanNotFound
             ));
 
-        var todayAllSessions = await repository.SessionRepository.GetTodayAllSessionsByUserIdAsync(userId);
+        var todayAllSessions = await repository.SessionRepository.GetTodayAllSessionsByUserIdAsync(userId.Value);
         if (todayAllSessions == null)
             return NotFound(UserCheckInResp.Fail(
                 StatusCodes.Status404NotFound,
                 ErrorMessages.Controller.WordSession.NotFoundSession
             ));
 
-        var lastCheckIn = await repository.UserCheckInRepository.LastCheckInAsync(userId);
+        var lastCheckIn = await repository.UserCheckInRepository.LastCheckInAsync(userId.Value);
         if (lastCheckIn == null || DateTimeOffset.UtcNow.Date != lastCheckIn.CreatedAt.Date)
         {
             var notCheckInStatus = new UserCheckInDetail
@@ -392,19 +392,22 @@ public class UserController(ILogger<UserController> logger, IRepositoryService r
     /// </summary>
     /// <param name="userId">用户ID</param>
     /// <returns>连续打卡天数</returns>
-    [HttpGet("checkin/consecutive/{userId:Guid}", Name = "GetConsecutiveCheckInDays")]
+    [HttpGet("checkin/consecutive", Name = "GetConsecutiveCheckInDays")]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    [Authorize(Roles =
+        $"{nameof(UserRole.User)},{nameof(UserRole.Creator)},{nameof(UserRole.Admin)},{nameof(UserRole.SuperAdmin)}")]
     [ProducesResponseType(typeof(ConsecutiveCheckInDaysResp), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ConsecutiveCheckInDaysResp), StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> GetConsecutiveCheckInDays(Guid userId)
+    public async Task<IActionResult> GetConsecutiveCheckInDays()
     {
-        var user = await repository.UserRepository.GetByIdAsync(userId);
-        if (user == null)
+        var userId = User.GetUserId();
+        if (userId == null)
             return NotFound(UserProfileResp.Fail(
                 StatusCodes.Status404NotFound,
                 ErrorMessages.Controller.User.UserNotFound
             ));
 
-        var userCheckInRecords = await repository.UserCheckInRepository.GetUserAllCheckInsAsync(userId);
+        var userCheckInRecords = await repository.UserCheckInRepository.GetUserAllCheckInsAsync(userId.Value);
         if (userCheckInRecords.Count == 0)
             return Ok(ConsecutiveCheckInDaysResp.Success(new ConsecutiveCheckInDaysDetail
             {

@@ -128,6 +128,13 @@ public class SeiunDbContext(DbContextOptions<SeiunDbContext> options) : DbContex
             .WithOne(c => c.User)
             .HasForeignKey(c => c.UserId)
             .OnDelete(DeleteBehavior.Cascade);
+        
+        // user - session
+        modelBuilder.Entity<UserEntity>()
+            .HasMany(u => u.WordSession)
+            .WithOne(w => w.User)
+            .HasForeignKey(w => w.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 
     private static void ConfigureArticleEntity(ModelBuilder modelBuilder)
@@ -238,8 +245,8 @@ public class SeiunDbContext(DbContextOptions<SeiunDbContext> options) : DbContex
         // WordSessionEntity - User
         modelBuilder.Entity<WordSessionEntity>()
             .HasOne(s => s.User)
-            .WithOne(u => u.WordSession)
-            .HasForeignKey<WordSessionEntity>(w => w.UserId);
+            .WithMany(u => u.WordSession)
+            .HasForeignKey(s => s.UserId);
     }
 
     private static void ConfigureWordEntity(ModelBuilder modelBuilder)
