@@ -6,7 +6,7 @@ using Seiun.Models.Responses;
 using Seiun.Services;
 using Seiun.Utils;
 using Seiun.Utils.Enums;
-
+using System.Text.Json;
 
 namespace Seiun.Controllers;
 
@@ -16,7 +16,7 @@ namespace Seiun.Controllers;
 /// <param name="repository">日志</param>
 [ApiController]
 [Route("/api/challenge")]
-public class ChallengeController(IRepositoryService repository) : ControllerBase
+public class ChallengeController(IRepositoryService repository, ILogger<ChallengeController> logger) : ControllerBase
 {
     /// <summary>
     /// 获取题目列表
@@ -44,8 +44,8 @@ public class ChallengeController(IRepositoryService repository) : ControllerBase
             case ChallengeType.Cloze:
             {
                 questionList =
-                    (await repository.UserQuestionRepository.GetByUserIdAndQuestionType(userId.Value,
-                        ChallengeType.Cloze)).Select(u => u.QuestionId).ToList();
+                    (await repository.UserChallengeRepository.GetByUserIdAndQuestionType(userId.Value,
+                        ChallengeType.Cloze)).Select(u => u.ChallengeId).ToList();
                 break;
             }
             default:
@@ -56,36 +56,7 @@ public class ChallengeController(IRepositoryService repository) : ControllerBase
                 ));
             }
         }
-        // switch (questionType)
-        // {
-        //     case "":
-        //     case "all":
-        //         questionList = (await repository.UserQuestionRepository.GetByUserId(userId.Value))
-        //             .Select(u => u.QuestionId).ToList();
-        //         break;
-        //     case "fill-in-blank":
-        //         questionList =
-        //             (await repository.UserQuestionRepository.GetByUserIdAndQuestionType(userId.Value,
-        //                 QuestionType.FillInBlank)).Select(u => u.QuestionId).ToList();
-        //         break;
-        //     case "cloze-test":
-        //         questionList =
-        //             (await repository.UserQuestionRepository.GetByUserIdAndQuestionType(userId.Value,
-        //                 QuestionType.ClozeTest)).Select(u => u.QuestionId).ToList();
-        //         break;
-        //     default:
-        //         return BadRequest(QuestionListResp.Fail(
-        //             StatusCodes.Status400BadRequest,
-        //             ErrorMessages.Controller.Any.InvalidReqType
-        //         ));
-        // }
-
-        // if (questionList.Count == 0)
-        //     return StatusCode(StatusCodes.Status404NotFound, QuestionListResp.Fail(
-        //         StatusCodes.Status404NotFound,
-        //         ErrorMessages.Controller.Question.QuestionNotFound
-        //     ));
-
+        
         return Ok(QuestionListResp.Success(questionList));
     }
 
@@ -160,6 +131,7 @@ public class ChallengeController(IRepositoryService repository) : ControllerBase
     [ProducesResponseType(typeof(ClozeTestResp), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ClozeTestResp), StatusCodes.Status403Forbidden)]
     [ProducesResponseType(typeof(ClozeTestResp), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ClozeTestResp), StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> ClozeTest([FromQuery] Guid questionId)
     {
         var userId = User.GetUserId();
@@ -169,18 +141,24 @@ public class ChallengeController(IRepositoryService repository) : ControllerBase
                 ErrorMessages.Controller.Any.InvalidJwtToken
             ));
 
-        var challenge = await repository.ClozeTestRepository.GetByIdAsync(questionId);
-        if (challenge == null)
+        var clozeTestEntity = await repository.ClozeTestRepository.GetByIdAsync(questionId);
+        if (clozeTestEntity == null)
             return StatusCode(StatusCodes.Status404NotFound, ClozeTestResp.Fail(
                 StatusCodes.Status404NotFound,
                 ErrorMessages.Controller.Challenge.QuestionNotFound
             ));
+    
 
-        var qes = new ClozeTest
+        var clozeTest = JsonSerializer.Deserialize<ClozeTestDetail>(clozeTestEntity.ClozeTestJson);
+        if (clozeTest != null)
         {
-            ClozeDetail = challenge.ClozeDetail
-        };
-
-        return Ok(ClozeTestResp.Success(qes));
+            return Ok(ClozeTestResp.Success(clozeTest));
+        }
+        
+        logger.LogWarning("User {} failed get cloze test", userId);
+        return StatusCode(StatusCodes.Status500InternalServerError, ClozeTestResp.Fail(
+            StatusCodes.Status500InternalServerError,
+            ErrorMessages.Controller.Challenge.GetClozeTestSuccess
+        ));
     }
 }

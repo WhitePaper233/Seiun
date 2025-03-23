@@ -1,6 +1,6 @@
-using System.Text.Json.Serialization;
 using Seiun.Resources;
 using Seiun.Utils.Enums;
+using System.Text.Json.Serialization;
 
 namespace Seiun.Models.Responses;
 
@@ -67,18 +67,25 @@ public sealed class FillInBlankResp(int code, string message, FillInBlankInfo? f
 
 # region Cloze Test
 
-public class ClozeTest
+public class ClozeTestDetail
 {
-    public required string ClozeDetail { get; set; }
+    [JsonPropertyName("type")]
+    public required ChallengeType Type { get; set; }
+    [JsonPropertyName("content")]
+    public required string Content { get; set; }
+    [JsonPropertyName("selections")]
+    public required Dictionary<string, List<string>> Selections { get; set; }
+    [JsonPropertyName("answers")]
+    public required Dictionary<string, string> Answers { get; set; }
 }
 
-public sealed class ClozeTestResp(int code, string message, ClozeTest? clozeTest)
-    : BaseRespWithData<ClozeTest>(code, message, clozeTest)
+public sealed class ClozeTestResp(int code, string message, ClozeTestDetail? clozeTest)
+    : BaseRespWithData<ClozeTestDetail>(code, message, clozeTest)
 {
-    public static ClozeTestResp Success(ClozeTest qes)
+    public static ClozeTestResp Success(ClozeTestDetail clozeTest)
     {
         return new ClozeTestResp(StatusCodes.Status200OK, SuccessMessages.Controller.Challenge.GetClozeTestSuccess,
-            qes);
+            clozeTest);
     }
 
     public static ClozeTestResp Fail(int code, string message)

@@ -5,10 +5,10 @@ using Seiun.Utils.Enums;
 
 namespace Seiun.Repositories;
 
-public class UserQuestionRepository(SeiunDbContext dbContext, IMinioClient minioClient)
-    : BaseRepository<UserQuestionEntity>(dbContext, minioClient), IUserQuestionRepository
+public class UserChallengeRepository(SeiunDbContext dbContext, IMinioClient minioClient)
+    : BaseRepository<UserChallengeEntity>(dbContext, minioClient), IUserChallengeRepository
 {
-    public async Task<List<UserQuestionEntity>> GetByUserIdAndQuestionType(Guid userId, ChallengeType questionType)
+    public async Task<List<UserChallengeEntity>> GetByUserIdAndQuestionType(Guid userId, ChallengeType questionType)
     {
         return await DbContext.UserQuestions
             .Where(u => u.UserId == userId && u.Type == questionType)
@@ -16,7 +16,7 @@ public class UserQuestionRepository(SeiunDbContext dbContext, IMinioClient minio
             .ToListAsync();
     }
 
-    public async Task<List<UserQuestionEntity>> GetByUserId(Guid userId)
+    public async Task<List<UserChallengeEntity>> GetByUserId(Guid userId)
     {
         return await DbContext.UserQuestions
             .Where(u => u.UserId == userId)

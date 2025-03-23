@@ -46,7 +46,7 @@ public class UserEntity : BaseEntity
 
     [JsonIgnore] public virtual ICollection<PublicAnnouncementEntity> PublicAnnouncements { get; set; } = [];
 
-    [JsonIgnore] public virtual ICollection<UserQuestionEntity> UserQuestions { get; set; } = [];
+    [JsonIgnore] public virtual ICollection<UserChallengeEntity> UserQuestions { get; set; } = [];
 
     [JsonIgnore] public virtual ICollection<UserPlanEntity> UserPlans { get; set; } = null!;
 
