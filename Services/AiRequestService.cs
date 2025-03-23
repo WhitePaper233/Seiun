@@ -5,7 +5,6 @@ using RestSharp;
 using System.Text.Json;
 using Seiun.Controllers;
 using Seiun.Entities;
-using Seiun.Models.Responses;
 using Seiun.Utils;
 using SixLabors.ImageSharp;
 using Seiun.Utils.Enums;
@@ -346,14 +345,14 @@ public class AiRequestService(IServiceScopeFactory serviceScopeFactory, ILogger<
             return;
         }
 
-        var userQuestion = new UserQuestionEntity
+        var userQuestion = new UserChallengeEntity
         {
             UserId = userId,
-            QuestionId = fillInBlank.Id,
+            ChallengeId = fillInBlank.Id,
             Type = ChallengeType.FillInBlank
         };
-        repository.UserQuestionRepository.Create(userQuestion);
-        if (!await repository.UserQuestionRepository.SaveAsync())
+        repository.UserChallengeRepository.Create(userQuestion);
+        if (!await repository.UserChallengeRepository.SaveAsync())
             logger.LogWarning("User {} failed generate ai filled in word book", userId);
     }
 
@@ -404,7 +403,7 @@ public class AiRequestService(IServiceScopeFactory serviceScopeFactory, ILogger<
 
         var clozeTest = new ClozeTestEntity
         {
-            ClozeDetail = completion.Content[0].Text
+            ClozeTestJson = completion.Content[0].Text
         };
         
 
@@ -415,14 +414,14 @@ public class AiRequestService(IServiceScopeFactory serviceScopeFactory, ILogger<
             return;
         }
 
-        var userQuestion = new UserQuestionEntity
+        var userChallenge = new UserChallengeEntity
         {
             UserId = userId,
-            QuestionId = clozeTest.Id,
+            ChallengeId = clozeTest.Id,
             Type = ChallengeType.Cloze
         };
-        repository.UserQuestionRepository.Create(userQuestion);
-        if (!await repository.UserQuestionRepository.SaveAsync())
+        repository.UserChallengeRepository.Create(userChallenge);
+        if (!await repository.UserChallengeRepository.SaveAsync())
             logger.LogWarning("User {} failed generate ai filled in word book", userId);
     }
 }

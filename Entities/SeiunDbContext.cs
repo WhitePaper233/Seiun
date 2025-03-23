@@ -23,7 +23,7 @@ public class SeiunDbContext(DbContextOptions<SeiunDbContext> options) : DbContex
     public required DbSet<FillInBlankAnswerEntity> FillInBlankAnswers { get; set; }
     public required DbSet<FillInBlankWordEntity> FillInBlankWords { get; set; }
     public required DbSet<WordDistractorEntity> WordDistractors { get; set; }
-    public required DbSet<UserQuestionEntity> UserQuestions { get; set; }
+    public required DbSet<UserChallengeEntity> UserQuestions { get; set; }
     public required DbSet<ClozeTestEntity> ClozeTests { get; set; }
     
     public required DbSet<WordBookEntity> WordBooks { get; set; }
@@ -225,7 +225,7 @@ public class SeiunDbContext(DbContextOptions<SeiunDbContext> options) : DbContex
     private static void ConfigureUserQuestionEntity(ModelBuilder modelBuilder)
     {
         // UserQuestion - user
-        modelBuilder.Entity<UserQuestionEntity>()
+        modelBuilder.Entity<UserChallengeEntity>()
             .HasOne(q => q.User)
             .WithMany(u => u.UserQuestions)
             .HasForeignKey(q => q.UserId);

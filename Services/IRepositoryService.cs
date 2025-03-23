@@ -22,7 +22,7 @@ public interface IRepositoryService
     IFillInBlankRepository FillInBlankRepository { get; }
     IFillInBlankAnswerRepository FillInBlankAnswerRepository { get; }
     IFillInBlankWordRepository FillInBlankWordRepository { get; }
-    IUserQuestionRepository UserQuestionRepository { get; }
+    IUserChallengeRepository UserChallengeRepository { get; }
     IClozeTestRepository ClozeTestRepository { get; }
     IWordBookRepository WordBookRepository { get; }
     IWordWordBookRepository WordWordBookRepository { get; }

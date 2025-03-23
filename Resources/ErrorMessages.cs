@@ -175,6 +175,7 @@ public static class ErrorMessages
             public const string QuestionNotFound = "error.controller.question.not_found";
             public const string QuestionWordNotFound = "error.controller.question.word_not_found";
             public const string QuestionAnswerNotFound = "error.controller.question.answer_not_found";
+            public const string GetClozeTestSuccess = "error.controller.question.get_cloze_test_success";
         }
     }
 }

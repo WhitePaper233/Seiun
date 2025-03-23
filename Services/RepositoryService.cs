@@ -1,4 +1,3 @@
-using System.Runtime.Intrinsics.X86;
 using Minio;
 using Seiun.Entities;
 using Seiun.Repositories;
@@ -15,10 +14,10 @@ public class RepositoryService(SeiunDbContext seiunDbContext, IMinioClient minio
 
     public IArticleRepository ArticleRepository => _articleRepository.Value;
 
-    private readonly Lazy<IArticleLikeRepository> _ArticleLikeRepository =
+    private readonly Lazy<IArticleLikeRepository> _articleLikeRepository =
         new(() => new ArticleLikeRepository(seiunDbContext, minioClient));
 
-    public IArticleLikeRepository ArticleLikeRepository => _ArticleLikeRepository.Value;
+    public IArticleLikeRepository ArticleLikeRepository => _articleLikeRepository.Value;
 
     private readonly Lazy<IPublicAnnouncementRepository> _publicAnnouncementRepository =
         new(() => new PublicAnnouncementRepository(seiunDbContext, minioClient));
@@ -93,10 +92,10 @@ public class RepositoryService(SeiunDbContext seiunDbContext, IMinioClient minio
 
     public IWordDistractorRepository WordDistractorRepository => _wordDistractorRepository.Value;
 
-    private readonly Lazy<IUserQuestionRepository> _userQuestionRepository =
-        new(() => new UserQuestionRepository(seiunDbContext, minioClient));
+    private readonly Lazy<IUserChallengeRepository> _userQuestionRepository =
+        new(() => new UserChallengeRepository(seiunDbContext, minioClient));
 
-    public IUserQuestionRepository UserQuestionRepository => _userQuestionRepository.Value;
+    public IUserChallengeRepository UserChallengeRepository => _userQuestionRepository.Value;
 
     private readonly Lazy<IClozeTestRepository> _clozeTestRepository =
         new(() => new ClozeTestRepository(seiunDbContext, minioClient));

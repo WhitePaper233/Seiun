@@ -36,9 +36,6 @@ public static class SuccessMessages
 
             public const string GetArticleImgNameSuccess =
                 "controller.article.articleimgs.get_articleimgname_success";
-
-            public const string GetArticleCoverNameSuccess =
-                "controller.article.articlecover.get_articlecovername_success";
         }
 
         public static class PublicAnnouncement
