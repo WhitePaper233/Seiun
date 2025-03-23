@@ -24,13 +24,13 @@ public class WordBookController(ILogger<UserController> logger, IRepositoryServi
     [Authorize(Roles =
         $"{nameof(UserRole.User)},{nameof(UserRole.Creator)},{nameof(UserRole.Admin)},{nameof(UserRole.SuperAdmin)}")]
     [ProducesResponseType(typeof(WordBookListResp), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(BaseResp), StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(WordBookListResp), StatusCodes.Status403Forbidden)]
     [ProducesResponseType(typeof(WordBookListResp), StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> GetWordBookList()
     {
         var userId = User.GetUserId();
         if (userId == null)
-            return StatusCode(StatusCodes.Status403Forbidden, ResponseFactory.NewFailedBaseResponse(
+            return StatusCode(StatusCodes.Status403Forbidden, WordBookListResp.Fail(
                 StatusCodes.Status403Forbidden,
                 ErrorMessages.Controller.Any.InvalidJwtToken
             ));

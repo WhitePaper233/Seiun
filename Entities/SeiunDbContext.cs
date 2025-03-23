@@ -128,7 +128,7 @@ public class SeiunDbContext(DbContextOptions<SeiunDbContext> options) : DbContex
             .WithOne(c => c.User)
             .HasForeignKey(c => c.UserId)
             .OnDelete(DeleteBehavior.Cascade);
-        
+
         // user - session
         modelBuilder.Entity<UserEntity>()
             .HasMany(u => u.WordSession)

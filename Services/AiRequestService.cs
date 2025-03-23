@@ -5,9 +5,9 @@ using RestSharp;
 using System.Text.Json;
 using Seiun.Controllers;
 using Seiun.Entities;
+using Seiun.Utils;
 using SixLabors.ImageSharp;
 using Seiun.Utils.Enums;
-using Seiun.Utils;
 
 namespace Seiun.Services;
 
@@ -84,7 +84,7 @@ public class AiRequestService(IServiceScopeFactory serviceScopeFactory, ILogger<
 
         // 生成封面
         aiArticle = aiArticle.Length > 900 ? aiArticle[..900] : aiArticle;
-
+        
         var coverClient = new RestClient("https://api.chatanywhere.tech/v1/images/generations");
         var coverRequest = new RestRequest
         {
@@ -92,7 +92,7 @@ public class AiRequestService(IServiceScopeFactory serviceScopeFactory, ILogger<
         };
         coverRequest.AddHeader("Authorization", $"Bearer {cApiKey}");
         coverRequest.AddHeader("Content-Type", "application/json");
-
+        
         var coverBody = new
         {
             prompt = $"根据以下英文文章生成图片，要求阳光，二次元风格。文章：{aiArticle}",
@@ -100,16 +100,16 @@ public class AiRequestService(IServiceScopeFactory serviceScopeFactory, ILogger<
             model = "dall-e-2",
             size = "512x512"
         };
-
+        
         coverRequest.AddJsonBody(coverBody);
-
+        
         var coverResponse = await coverClient.ExecuteAsync(coverRequest);
         if (coverResponse.Content == null)
         {
             logger.LogWarning("User {} failed generate ai cover", userId);
             return;
         }
-
+        
         using var doc = JsonDocument.Parse(coverResponse.Content);
         var root = doc.RootElement;
         var dataArray = root.GetProperty("data");
@@ -120,7 +120,7 @@ public class AiRequestService(IServiceScopeFactory serviceScopeFactory, ILogger<
             logger.LogWarning("User {} failed generate ai cover", userId);
             return;
         }
-
+        
         // 下载图片
         var imageClient = new RestClient(aiCoverUrl);
         var imageRequest = new RestRequest
@@ -133,9 +133,9 @@ public class AiRequestService(IServiceScopeFactory serviceScopeFactory, ILogger<
             logger.LogWarning("User {} failed upload cover image", userId);
             return;
         }
-
+        
         var imageBytes = imageResponse.RawBytes;
-
+        
         // 处理图片
         string articleImgName;
         try
@@ -156,6 +156,7 @@ public class AiRequestService(IServiceScopeFactory serviceScopeFactory, ILogger<
         }
 
         // 存储ai文章
+        Console.WriteLine($"1111111111111111111111111 {aiArticle}");
         var aIArticleEntity = new AiArticleEntity
         {
             UserId = userId,
