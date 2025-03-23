@@ -97,10 +97,14 @@ public class WordSessionController(
             foreach (var word in studyWords)
                 wordQueue.Enqueue(word);
 
+
         // // 额外线程开始生成题目
-        // var words = studyWords.Select(x => x.WordText).ToList();
-        // _ = Task.Run(() => aiRequest.GenerateAiFillInBlankAsync(words, userId.Value));
-        // _ = Task.Run(() => aiRequest.GenerateAiClozeTest(words, userId.Value));
+        if (studyWords != null)
+        {
+            var words = studyWords.Select(x => x.WordText).ToList();
+            // _ = Task.Run(() => aiRequest.GenerateAiFillInBlankAsync(words, userId.Value));
+            _ = Task.Run(() => aiRequest.GenerateAiClozeTest(words, userId.Value));
+        }
 
         var session = new WordSessionEntity
         {
@@ -116,7 +120,6 @@ public class WordSessionController(
         if (newSessionResult && await repository.SessionRepository.SaveAsync())
             return Ok(StartStudyResp.Success(session.Id, reviewingWordCount, studyingWordCount, wordQueue));
 
-        Console.WriteLine("1111111111111111111111111111111111");
         logger.LogWarning("User {} start study session failed", userId);
         return StatusCode(StatusCodes.Status500InternalServerError, StartStudyResp.Fail(
             StatusCodes.Status500InternalServerError,

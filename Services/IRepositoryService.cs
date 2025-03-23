@@ -24,8 +24,6 @@ public interface IRepositoryService
     IFillInBlankWordRepository FillInBlankWordRepository { get; }
     IUserQuestionRepository UserQuestionRepository { get; }
     IClozeTestRepository ClozeTestRepository { get; }
-    IClozeTestSelectionRepository ClozeTestSelectionRepository { get; }
-    IClozeTestAnswerRepository ClozeTestAnswerRepository { get; }
     IWordBookRepository WordBookRepository { get; }
     IWordWordBookRepository WordWordBookRepository { get; }
 }

@@ -5,6 +5,6 @@ namespace Seiun.Repositories;
 
 public interface IUserQuestionRepository : IBaseRepository<UserQuestionEntity>
 {
-    Task<List<UserQuestionEntity>> GetByUserIdAndQuestionType(Guid userId, QuestionType questionType);
+    Task<List<UserQuestionEntity>> GetByUserIdAndQuestionType(Guid userId, ChallengeType questionType);
     Task<List<UserQuestionEntity>> GetByUserId(Guid userId);
 }

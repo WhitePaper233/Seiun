@@ -5,6 +5,7 @@ using RestSharp;
 using System.Text.Json;
 using Seiun.Controllers;
 using Seiun.Entities;
+using Seiun.Models.Responses;
 using Seiun.Utils;
 using SixLabors.ImageSharp;
 using Seiun.Utils.Enums;
@@ -84,7 +85,7 @@ public class AiRequestService(IServiceScopeFactory serviceScopeFactory, ILogger<
 
         // 生成封面
         aiArticle = aiArticle.Length > 900 ? aiArticle[..900] : aiArticle;
-        
+
         var coverClient = new RestClient("https://api.chatanywhere.tech/v1/images/generations");
         var coverRequest = new RestRequest
         {
@@ -92,7 +93,7 @@ public class AiRequestService(IServiceScopeFactory serviceScopeFactory, ILogger<
         };
         coverRequest.AddHeader("Authorization", $"Bearer {cApiKey}");
         coverRequest.AddHeader("Content-Type", "application/json");
-        
+
         var coverBody = new
         {
             prompt = $"根据以下英文文章生成图片，要求阳光，二次元风格。文章：{aiArticle}",
@@ -100,16 +101,16 @@ public class AiRequestService(IServiceScopeFactory serviceScopeFactory, ILogger<
             model = "dall-e-2",
             size = "512x512"
         };
-        
+
         coverRequest.AddJsonBody(coverBody);
-        
+
         var coverResponse = await coverClient.ExecuteAsync(coverRequest);
         if (coverResponse.Content == null)
         {
             logger.LogWarning("User {} failed generate ai cover", userId);
             return;
         }
-        
+
         using var doc = JsonDocument.Parse(coverResponse.Content);
         var root = doc.RootElement;
         var dataArray = root.GetProperty("data");
@@ -120,7 +121,7 @@ public class AiRequestService(IServiceScopeFactory serviceScopeFactory, ILogger<
             logger.LogWarning("User {} failed generate ai cover", userId);
             return;
         }
-        
+
         // 下载图片
         var imageClient = new RestClient(aiCoverUrl);
         var imageRequest = new RestRequest
@@ -133,9 +134,9 @@ public class AiRequestService(IServiceScopeFactory serviceScopeFactory, ILogger<
             logger.LogWarning("User {} failed upload cover image", userId);
             return;
         }
-        
+
         var imageBytes = imageResponse.RawBytes;
-        
+
         // 处理图片
         string articleImgName;
         try
@@ -349,7 +350,7 @@ public class AiRequestService(IServiceScopeFactory serviceScopeFactory, ILogger<
         {
             UserId = userId,
             QuestionId = fillInBlank.Id,
-            Type = QuestionType.FillInBlank
+            Type = ChallengeType.FillInBlank
         };
         repository.UserQuestionRepository.Create(userQuestion);
         if (!await repository.UserQuestionRepository.SaveAsync())
@@ -363,170 +364,52 @@ public class AiRequestService(IServiceScopeFactory serviceScopeFactory, ILogger<
         var repository = scope.ServiceProvider.GetRequiredService<IRepositoryService>();
 
         var apiKey = _config["CA:ApiKey"];
+        var wordText = string.Join('|', words.Take(15));
 
-        var client = new RestClient("https://api.chatanywhere.tech/v1/chat/completions");
-        var request = new RestRequest
+        var clientOptions = new OpenAIClientOptions
         {
-            Method = Method.Post
+            Endpoint = new Uri("https://api.chatanywhere.tech")
         };
-        request.AddHeader("Authorization", $"Bearer {apiKey}");
-        request.AddHeader("Content-Type", "application/json");
-
-        var newWords = words.Take(15).ToList();
-        var wordText = string.Join(',', newWords);
-        const string prompt = """
-                              请根据我给出的单词，使用逗号分隔，不区分大小写，生成一篇完型填空题目，每个空除了正确答案外有三个干扰项。
-                              返回内容包含以下字段，并严格按照JSON字符串规则，不可有不合JSON规则字符
-                              1、完形填空文章放在 content 字段, 要选择的空用下划线代替，并给每个空按顺序编号
-                              2、每个空的选项单词数组放在 selections 对象下对应编号字段中
-                              3、所有空的答案对象放在 answers 数组中，每个空的答案封装为对象，对象字段 key为该空编号，answer 该空答案，analysis 为解析，
-                              """;
-
-        # region Body
-
-        var body = new
-        {
-            model = "o1-2024-12-17",
-            temperature = 0.6,
-            messages = new[]
-            {
-                new { role = "system", content = $"{prompt}" },
-                new { role = "user", content = $"{wordText}" }
-            },
-            text = new
-            {
-                format = new
-                {
-                    type = "json_schema",
-                    name = "research_paper_extraction",
-                    schema = new
-                    {
-                        type = "object",
-                        properties = new
-                        {
-                            content = new { type = "string" },
-                            selections = new
-                            {
-                                type = "object",
-                                properties = new
-                                {
-                                    _1 = new { type = "array", items = new { type = "string" } },
-                                    _2 = new { type = "array", items = new { type = "string" } },
-                                    _3 = new { type = "array", items = new { type = "string" } },
-                                    _4 = new { type = "array", items = new { type = "string" } },
-                                    _5 = new { type = "array", items = new { type = "string" } },
-                                    _6 = new { type = "array", items = new { type = "string" } },
-                                    _7 = new { type = "array", items = new { type = "string" } },
-                                    _8 = new { type = "array", items = new { type = "string" } },
-                                    _9 = new { type = "array", items = new { type = "string" } },
-                                    _10 = new { type = "array", items = new { type = "string" } },
-                                    _11 = new { type = "array", items = new { type = "string" } },
-                                    _12 = new { type = "array", items = new { type = "string" } },
-                                    _13 = new { type = "array", items = new { type = "string" } },
-                                    _14 = new { type = "array", items = new { type = "string" } },
-                                    _15 = new { type = "array", items = new { type = "string" } }
-                                },
-                                required = new[]
-                                {
-                                    "_1", "_2", "_3", "_4", "_5", "_6", "_7", "_8", "_9", "_10", "_11", "_12", "_13",
-                                    "_14", "_15"
-                                },
-                                additionalProperties = false
-                            },
-                            answers = new
-                            {
-                                type = "array",
-                                items = new
-                                {
-                                    type = "object",
-                                    properties = new
+        var clientCredentials = new ApiKeyCredential($"{apiKey}");
+        var client = new OpenAIClient(clientCredentials, clientOptions).GetChatClient("o3-mini");
+        const string systemPrompt = """
+                                    我将提供给你几个英语单词，使用｜分隔，请你将这些单词作为考察内容出一篇完型填空题，帮助用户巩固单词记忆。不要出现连续的填空，使用JSON格式回复。
+                                    EXAMPLE INPUT: 
+                                    hello|world
+                                    EXAMPLE JSON OUTPUT:
                                     {
-                                        key = new
-                                        {
-                                            type = "integer"
+                                        "type": 1,
+                                        "content": "The program outputs say {$1} to the {$2}!",
+                                        "selections": {
+                                            "1":  ["ground", "player", "do", "hello"],
+                                            "2": ["back", "judge", "world", "tick"]
                                         },
-                                        answer = new
-                                        {
-                                            type = "string"
-                                        },
-                                        analysis = new
-                                        {
-                                            type = "string"
+                                        "answers": {
+                                            "1": "hello",
+                                            "2": "world",
                                         }
-                                    },
-                                    required = new[] { "key", "answer", "analysis" }
-                                }
-                            }
-                        },
-                        required = new[] { "content", "selections", "answers" },
-                        additionalProperties = false
-                    }
-                },
-                strict = true
-            }
+                                    }
+                                    """;
+        var userPrompt = $"{wordText}";
+        var completionOptions = new ChatCompletionOptions
+        {
+            ResponseFormat = ChatResponseFormat.CreateJsonObjectFormat()
         };
-
-        # endregion
-
-        request.AddJsonBody(body);
-
-        var response = await client.ExecuteAsync(request);
-        if (response.Content == null) return;
-
-        using var doc = JsonDocument.Parse(response.Content);
-        var root = doc.RootElement;
-
-        var questionEntity = root.GetProperty("choices")[0].GetProperty("message").GetProperty("content").GetString();
-        if (questionEntity == null)
+        var messages = new ChatMessage[]
         {
-            logger.LogWarning("User {} failed generate ai cloze test", userId);
-            return;
-        }
-
-        using var docAgain = JsonDocument.Parse(questionEntity);
-        var rootAgain = docAgain.RootElement;
-
-        // 解析 content
-        var content = rootAgain.GetProperty("content").GetString();
-        // 解析 selections
-        var selections = rootAgain.GetProperty("selections");
-        // 解析 answers 数组
-        var answersElement = rootAgain.GetProperty("answers");
-
-        if (content == null || answersElement.GetArrayLength() == 0)
-        {
-            logger.LogWarning("User {} failed generate ai cloze test", userId);
-            return;
-        }
+            new SystemChatMessage(systemPrompt),
+            new UserChatMessage(userPrompt)
+        };
+        ChatCompletion completion = await client.CompleteChatAsync(messages, completionOptions);
 
         var clozeTest = new ClozeTestEntity
         {
-            Content = content
+            ClozeDetail = completion.Content[0].Text
         };
-
-        var clozeTestSelection = selections.EnumerateObject()
-            .Select(x => new ClozeTestSelectionEntity
-            {
-                QuestionId = clozeTest.Id,
-                Key = int.Parse(x.Name),
-                Words = x.Value.EnumerateArray().Select(a => a.GetString() ?? string.Empty).ToList()
-            }).ToList();
-
-        var clozeTestAnswer = answersElement.EnumerateArray().Select(a =>
-            new ClozeTestAnswerEntity
-            {
-                QuestionId = clozeTest.Id,
-                Key = a.GetProperty("key").GetInt32(),
-                Answer = a.GetProperty("answer").GetString() ?? string.Empty,
-                Analysis = a.GetProperty("analysis").GetString() ?? string.Empty
-            }).ToList();
+        
 
         repository.ClozeTestRepository.Create(clozeTest);
-        repository.ClozeTestSelectionRepository.BulkAdd(clozeTestSelection);
-        repository.ClozeTestAnswerRepository.BulkAdd(clozeTestAnswer);
-        if (!await repository.ClozeTestRepository.SaveAsync() ||
-            !await repository.ClozeTestRepository.SaveAsync() ||
-            !await repository.ClozeTestRepository.SaveAsync())
+        if (!await repository.ClozeTestRepository.SaveAsync())
         {
             logger.LogWarning("User {} failed generate ai cloze test", userId);
             return;
@@ -536,7 +419,7 @@ public class AiRequestService(IServiceScopeFactory serviceScopeFactory, ILogger<
         {
             UserId = userId,
             QuestionId = clozeTest.Id,
-            Type = QuestionType.ClozeTest
+            Type = ChallengeType.Cloze
         };
         repository.UserQuestionRepository.Create(userQuestion);
         if (!await repository.UserQuestionRepository.SaveAsync())

@@ -58,15 +58,15 @@ public class WordBookController(ILogger<UserController> logger, IRepositoryServi
                 .Select(wordBook =>
                 {
                     var wordCount = repository.WordWordBookRepository.GetBookWordCount(wordBook.Id);
+                    var learnedCount = repository.FinishedWordRepository.GetLearnedCount(userId.Value, wordBook.Id);
                     return new WordBook
                     {
                         WordBookId = wordBook.Id,
                         WordBookName = wordBook.WordBookName,
                         WordCount = wordCount,
-                        LearnedWordCount = userPlanDict[wordBook.Id].LearnedCount,
+                        LearnedWordCount = learnedCount,
                         DailyPlan = userPlanDict[wordBook.Id].DailyPlan,
-                        RemainingDays = (wordCount - userPlanDict[wordBook.Id].LearnedCount) /
-                                        userPlanDict[wordBook.Id].DailyPlan
+                        RemainingDays = (wordCount - learnedCount) / userPlanDict[wordBook.Id].DailyPlan
                     };
                 })
                 .ToList();

@@ -15,21 +15,21 @@ namespace Seiun.Controllers;
 /// </summary>
 /// <param name="repository">日志</param>
 [ApiController]
-[Route("/api/question")]
-public class QuestionController(IRepositoryService repository) : ControllerBase
+[Route("/api/challenge")]
+public class ChallengeController(IRepositoryService repository) : ControllerBase
 {
     /// <summary>
     /// 获取题目列表
     /// </summary>
     /// <returns>题目列表</returns>
-    [HttpGet("list", Name = "QuestionList")]
+    [HttpGet("list", Name = "ChallengeList")]
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     [Authorize(Roles =
         $"{nameof(UserRole.User)},{nameof(UserRole.Creator)},{nameof(UserRole.Admin)},{nameof(UserRole.SuperAdmin)}")]
-    [ProducesResponseType(typeof(FillInBlankResp), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(FillInBlankResp), StatusCodes.Status403Forbidden)]
-    [ProducesResponseType(typeof(FillInBlankResp), StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> QuestionList([FromQuery] string questionType)
+    [ProducesResponseType(typeof(QuestionListResp), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(QuestionListResp), StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(QuestionListResp), StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetChallengeList([FromQuery] ChallengeType challengeType)
     {
         var userId = User.GetUserId();
         if (userId == null)
@@ -39,35 +39,52 @@ public class QuestionController(IRepositoryService repository) : ControllerBase
             ));
 
         List<Guid>? questionList;
-        switch (questionType)
+        switch (challengeType)
         {
-            case "":
-            case "all":
-                questionList = (await repository.UserQuestionRepository.GetByUserId(userId.Value))
-                    .Select(u => u.QuestionId).ToList();
-                break;
-            case "fill-in-blank":
+            case ChallengeType.Cloze:
+            {
                 questionList =
                     (await repository.UserQuestionRepository.GetByUserIdAndQuestionType(userId.Value,
-                        QuestionType.FillInBlank)).Select(u => u.QuestionId).ToList();
+                        ChallengeType.Cloze)).Select(u => u.QuestionId).ToList();
                 break;
-            case "cloze-test":
-                questionList =
-                    (await repository.UserQuestionRepository.GetByUserIdAndQuestionType(userId.Value,
-                        QuestionType.ClozeTest)).Select(u => u.QuestionId).ToList();
-                break;
+            }
             default:
+            {
                 return BadRequest(QuestionListResp.Fail(
                     StatusCodes.Status400BadRequest,
                     ErrorMessages.Controller.Any.InvalidReqType
                 ));
+            }
         }
+        // switch (questionType)
+        // {
+        //     case "":
+        //     case "all":
+        //         questionList = (await repository.UserQuestionRepository.GetByUserId(userId.Value))
+        //             .Select(u => u.QuestionId).ToList();
+        //         break;
+        //     case "fill-in-blank":
+        //         questionList =
+        //             (await repository.UserQuestionRepository.GetByUserIdAndQuestionType(userId.Value,
+        //                 QuestionType.FillInBlank)).Select(u => u.QuestionId).ToList();
+        //         break;
+        //     case "cloze-test":
+        //         questionList =
+        //             (await repository.UserQuestionRepository.GetByUserIdAndQuestionType(userId.Value,
+        //                 QuestionType.ClozeTest)).Select(u => u.QuestionId).ToList();
+        //         break;
+        //     default:
+        //         return BadRequest(QuestionListResp.Fail(
+        //             StatusCodes.Status400BadRequest,
+        //             ErrorMessages.Controller.Any.InvalidReqType
+        //         ));
+        // }
 
-        if (questionList.Count == 0)
-            return StatusCode(StatusCodes.Status404NotFound, QuestionListResp.Fail(
-                StatusCodes.Status404NotFound,
-                ErrorMessages.Controller.Question.QuestionNotFound
-            ));
+        // if (questionList.Count == 0)
+        //     return StatusCode(StatusCodes.Status404NotFound, QuestionListResp.Fail(
+        //         StatusCodes.Status404NotFound,
+        //         ErrorMessages.Controller.Question.QuestionNotFound
+        //     ));
 
         return Ok(QuestionListResp.Success(questionList));
     }
@@ -97,21 +114,21 @@ public class QuestionController(IRepositoryService repository) : ControllerBase
         if (question == null)
             return StatusCode(StatusCodes.Status404NotFound, FillInBlankResp.Fail(
                 StatusCodes.Status404NotFound,
-                ErrorMessages.Controller.Question.QuestionNotFound
+                ErrorMessages.Controller.Challenge.QuestionNotFound
             ));
 
         var questionWord = await repository.FillInBlankWordRepository.GetByQuestionIdAsync(questionId);
         if (questionWord == null || questionWord.Count == 0)
             return StatusCode(StatusCodes.Status404NotFound, FillInBlankResp.Fail(
                 StatusCodes.Status404NotFound,
-                ErrorMessages.Controller.Question.QuestionWordNotFound
+                ErrorMessages.Controller.Challenge.QuestionWordNotFound
             ));
 
         var questionAnswer = await repository.FillInBlankAnswerRepository.GetByQuestionIdAsync(questionId);
         if (questionAnswer == null || questionAnswer.Count == 0)
             return StatusCode(StatusCodes.Status404NotFound, FillInBlankResp.Fail(
                 StatusCodes.Status404NotFound,
-                ErrorMessages.Controller.Question.QuestionAnswerNotFound
+                ErrorMessages.Controller.Challenge.QuestionAnswerNotFound
             ));
 
         var qes = new FillInBlankInfo
@@ -140,9 +157,9 @@ public class QuestionController(IRepositoryService repository) : ControllerBase
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     [Authorize(Roles =
         $"{nameof(UserRole.User)},{nameof(UserRole.Creator)},{nameof(UserRole.Admin)},{nameof(UserRole.SuperAdmin)}")]
-    [ProducesResponseType(typeof(FillInBlankResp), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(FillInBlankResp), StatusCodes.Status403Forbidden)]
-    [ProducesResponseType(typeof(FillInBlankResp), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ClozeTestResp), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ClozeTestResp), StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(ClozeTestResp), StatusCodes.Status404NotFound)]
     public async Task<IActionResult> ClozeTest([FromQuery] Guid questionId)
     {
         var userId = User.GetUserId();
@@ -152,43 +169,16 @@ public class QuestionController(IRepositoryService repository) : ControllerBase
                 ErrorMessages.Controller.Any.InvalidJwtToken
             ));
 
-        var question = await repository.ClozeTestRepository.GetByIdAsync(questionId);
-        if (question == null)
+        var challenge = await repository.ClozeTestRepository.GetByIdAsync(questionId);
+        if (challenge == null)
             return StatusCode(StatusCodes.Status404NotFound, ClozeTestResp.Fail(
                 StatusCodes.Status404NotFound,
-                ErrorMessages.Controller.Question.QuestionNotFound
+                ErrorMessages.Controller.Challenge.QuestionNotFound
             ));
 
-        var questionSelection = await repository.ClozeTestSelectionRepository.GetByQuestionIdAsync(questionId);
-        if (questionSelection == null || questionSelection.Count == 0)
-            return StatusCode(StatusCodes.Status404NotFound, ClozeTestResp.Fail(
-                StatusCodes.Status404NotFound,
-                ErrorMessages.Controller.Question.QuestionWordNotFound
-            ));
-
-        var questionAnswer = await repository.ClozeTestAnswerRepository.GetByQuestionIdAsync(questionId);
-        if (questionAnswer == null || questionAnswer.Count == 0)
-            return StatusCode(StatusCodes.Status404NotFound, ClozeTestResp.Fail(
-                StatusCodes.Status404NotFound,
-                ErrorMessages.Controller.Question.QuestionAnswerNotFound
-            ));
-
-        var qes = new ClozeTestInfo
+        var qes = new ClozeTest
         {
-            Selections = questionSelection.Select(q =>
-                new ClozeTestSelectionInfo
-                {
-                    Key = q.Key,
-                    Words = q.Words
-                }).ToList(),
-            Content = question.Content,
-            Answers = questionAnswer.Select(q =>
-                new ClozeTestAnswerInfo
-                {
-                    Key = q.Key,
-                    Answer = q.Answer,
-                    Analysis = q.Analysis
-                }).ToList()
+            ClozeDetail = challenge.ClozeDetail
         };
 
         return Ok(ClozeTestResp.Success(qes));

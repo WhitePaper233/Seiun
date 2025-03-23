@@ -25,8 +25,7 @@ public class SeiunDbContext(DbContextOptions<SeiunDbContext> options) : DbContex
     public required DbSet<WordDistractorEntity> WordDistractors { get; set; }
     public required DbSet<UserQuestionEntity> UserQuestions { get; set; }
     public required DbSet<ClozeTestEntity> ClozeTests { get; set; }
-    public required DbSet<ClozeTestSelectionEntity> ClozeTestSelections { get; set; }
-    public required DbSet<ClozeTestAnswerEntity> ClozeTestAnswers { get; set; }
+    
     public required DbSet<WordBookEntity> WordBooks { get; set; }
     public required DbSet<WordWordBookEntity> WordWordBooks { get; set; }
 
