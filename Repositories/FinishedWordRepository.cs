@@ -18,4 +18,25 @@ public class FinishedWordRepository(SeiunDbContext dbContext, IMinioClient minio
             .GroupBy(x => x.SessionId)
             .FirstOrDefault();
     }
+
+    public async Task<int> GetLearnedCountAsync(Guid userId, Guid wordBookId)
+    {
+        return await DbContext.FinishedWords
+            .Join(DbContext.WordWordBooks,
+                word => word.WordId,
+                wordWordBook => wordWordBook.WordId,
+                (word, wordWordBook) => new { word, wordWordBook })
+            .Where(joined => joined.word.UserId == userId && joined.wordWordBook.BookId == wordBookId)
+            .CountAsync();
+    }
+
+    public int GetLearnedCount(Guid userId, Guid wordBookId)
+    {
+        return DbContext.FinishedWords
+            .Join(DbContext.WordWordBooks,
+                word => word.WordId,
+                wordWordBook => wordWordBook.WordId,
+                (word, wordWordBook) => new { word, wordWordBook })
+            .Count(joined => joined.word.UserId == userId && joined.wordWordBook.BookId == wordBookId);
+    }
 }

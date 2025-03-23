@@ -170,7 +170,7 @@ public static class ErrorMessages
             public const string WordSessionFailOver = "error.controller.session.word_session_fail_over";
         }
 
-        public static class Question
+        public static class Challenge
         {
             public const string QuestionNotFound = "error.controller.question.not_found";
             public const string QuestionWordNotFound = "error.controller.question.word_not_found";

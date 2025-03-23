@@ -8,7 +8,7 @@ namespace Seiun.Repositories;
 public class UserQuestionRepository(SeiunDbContext dbContext, IMinioClient minioClient)
     : BaseRepository<UserQuestionEntity>(dbContext, minioClient), IUserQuestionRepository
 {
-    public async Task<List<UserQuestionEntity>> GetByUserIdAndQuestionType(Guid userId, QuestionType questionType)
+    public async Task<List<UserQuestionEntity>> GetByUserIdAndQuestionType(Guid userId, ChallengeType questionType)
     {
         return await DbContext.UserQuestions
             .Where(u => u.UserId == userId && u.Type == questionType)

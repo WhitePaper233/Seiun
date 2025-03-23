@@ -1,4 +1,6 @@
+using System.Text.Json.Serialization;
 using Seiun.Resources;
+using Seiun.Utils.Enums;
 
 namespace Seiun.Models.Responses;
 
@@ -14,7 +16,7 @@ public sealed class QuestionListResp(int code, string message, QuestionListInfo?
 {
     public static QuestionListResp Success(List<Guid> qesIds)
     {
-        return new QuestionListResp(StatusCodes.Status200OK, SuccessMessages.Controller.Question.GetQuestionListSuccess,
+        return new QuestionListResp(StatusCodes.Status200OK, SuccessMessages.Controller.Challenge.GetQuestionListSuccess,
             new QuestionListInfo
             {
                 QuestionIds = qesIds
@@ -51,7 +53,7 @@ public sealed class FillInBlankResp(int code, string message, FillInBlankInfo? f
 {
     public static FillInBlankResp Success(FillInBlankInfo qes)
     {
-        return new FillInBlankResp(StatusCodes.Status200OK, SuccessMessages.Controller.Question.GetFillInBlankSuccess,
+        return new FillInBlankResp(StatusCodes.Status200OK, SuccessMessages.Controller.Challenge.GetFillInBlankSuccess,
             qes);
     }
 
@@ -65,32 +67,17 @@ public sealed class FillInBlankResp(int code, string message, FillInBlankInfo? f
 
 # region Cloze Test
 
-public class ClozeTestAnswerInfo
+public class ClozeTest
 {
-    public required int Key { get; set; }
-    public required string Answer { get; set; }
-    public required string Analysis { get; set; }
+    public required string ClozeDetail { get; set; }
 }
 
-public class ClozeTestSelectionInfo
+public sealed class ClozeTestResp(int code, string message, ClozeTest? clozeTest)
+    : BaseRespWithData<ClozeTest>(code, message, clozeTest)
 {
-    public required int Key { get; set; }
-    public required List<string> Words { get; set; }
-}
-
-public class ClozeTestInfo
-{
-    public required List<ClozeTestSelectionInfo> Selections { get; set; }
-    public required string Content { get; set; }
-    public required List<ClozeTestAnswerInfo> Answers { get; set; }
-}
-
-public sealed class ClozeTestResp(int code, string message, ClozeTestInfo? clozeTestInfoQuestion)
-    : BaseRespWithData<ClozeTestInfo>(code, message, clozeTestInfoQuestion)
-{
-    public static ClozeTestResp Success(ClozeTestInfo qes)
+    public static ClozeTestResp Success(ClozeTest qes)
     {
-        return new ClozeTestResp(StatusCodes.Status200OK, SuccessMessages.Controller.Question.GetClozeTestSuccess,
+        return new ClozeTestResp(StatusCodes.Status200OK, SuccessMessages.Controller.Challenge.GetClozeTestSuccess,
             qes);
     }
 

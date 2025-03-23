@@ -1,7 +1,6 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Seiun.Entities;
 using Seiun.Models.Parameters;
 using Seiun.Models.Responses;
 using Seiun.Resources;
@@ -50,7 +49,9 @@ public class UserPlanController(ILogger<UserController> logger, IRepositoryServi
             ));
 
         var wordCount = await repository.WordWordBookRepository.GetBookWordCountAsync(currentUserPlan.WordBookId);
-        var remainDays = (wordCount - currentUserPlan.LearnedCount) / currentUserPlan.DailyPlan;
+        var learnedCount =
+            await repository.FinishedWordRepository.GetLearnedCountAsync(userId.Value, currentUserPlan.WordBookId);
+        var remainDays = (wordCount - learnedCount) / currentUserPlan.DailyPlan;
 
         var currentPlanData = new CurrentPlanData
         {
@@ -58,7 +59,7 @@ public class UserPlanController(ILogger<UserController> logger, IRepositoryServi
             WordBookName = wordBook.WordBookName,
             DailyPlan = currentUserPlan.DailyPlan,
             RemainingDays = remainDays,
-            LearnedCount = currentUserPlan.LearnedCount,
+            LearnedCount = learnedCount,
             BookWordCount = wordCount,
             ExpectedCompletionAt = DateTimeOffset.UtcNow.AddDays(remainDays).ToUnixTimeSeconds()
         };

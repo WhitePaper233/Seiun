@@ -98,20 +98,10 @@ public class RepositoryService(SeiunDbContext seiunDbContext, IMinioClient minio
 
     public IUserQuestionRepository UserQuestionRepository => _userQuestionRepository.Value;
 
-    private readonly Lazy<IClozeTestSelectionRepository> _clozeTestSelectionRepository =
-        new(() => new ClozeTestSelectionRepository(seiunDbContext, minioClient));
-
-    public IClozeTestSelectionRepository ClozeTestSelectionRepository => _clozeTestSelectionRepository.Value;
-
     private readonly Lazy<IClozeTestRepository> _clozeTestRepository =
         new(() => new ClozeTestRepository(seiunDbContext, minioClient));
 
     public IClozeTestRepository ClozeTestRepository => _clozeTestRepository.Value;
-
-    private readonly Lazy<IClozeTestAnswerRepository> _clozeTestAnswerRepository =
-        new(() => new ClozeTestAnswerRepository(seiunDbContext, minioClient));
-
-    public IClozeTestAnswerRepository ClozeTestAnswerRepository => _clozeTestAnswerRepository.Value;
 
     private readonly Lazy<IWordBookRepository> _wordBookRepository =
         new(() => new WordBookRepository(seiunDbContext, minioClient));
