@@ -15,10 +15,12 @@ public class ErrorWordRepository(SeiunDbContext dbContext, IMinioClient minioCli
             .ToListAsync();
     }
 
-    public void BulkDelete(Guid userId)
+    public void BulkDelete(List<Guid> reviewingWordIds)
     {
-        DbContext.ErrorWords
-            .Where(x => x.UserId == userId)
-            .ExecuteDelete();
+        var wordsToDelete = DbContext.ErrorWords
+            .Where(w => reviewingWordIds.Contains(w.WordId))
+            .ToList();
+
+        DbContext.ErrorWords.RemoveRange(wordsToDelete);
     }
 }

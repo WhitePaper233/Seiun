@@ -23,23 +23,18 @@ public class WordRepository(SeiunDbContext dbContext, IMinioClient minioClient)
             .ThenInclude(b => b.Book)
             .AsQueryable();
 
-        if (keyword.HasValue)
-        {
-            query = query.Where(w => w.Id == keyword.Value);
-        }
+        if (keyword.HasValue) query = query.Where(w => w.Id == keyword.Value);
 
         return await query
-            .Skip((index - 1) * size) 
+            .Skip((index - 1) * size)
             .Take(size)
             .ToListAsync();
     }
+
     public async Task<int> GetTotalWordsAsync(Guid? keyword)
     {
         var query = DbContext.Words.AsQueryable();
-        if (keyword.HasValue)
-        {
-            query = query.Where(w => w.Id == keyword.Value);
-        }
+        if (keyword.HasValue) query = query.Where(w => w.Id == keyword.Value);
         return await query.CountAsync();
     }
 }

@@ -56,18 +56,31 @@ public sealed class StartStudyResp(int code, string message, WordSessionDetail? 
 public class ContinueStudyDetail
 {
     public required Guid SessionId { get; set; }
+    public required int ReviewingWordCount { get; set; }
+    public required int StudyingWordCount { get; set; }
+    public required List<WordDetail> Words { get; set; }
 }
 
 public sealed class ContinueStudyResp(int code, string message, ContinueStudyDetail? sessionDetail)
     : BaseRespWithData<ContinueStudyDetail>(code, message, sessionDetail)
 {
-    public static ContinueStudyResp Success(Guid sessionId)
+    public static ContinueStudyResp Success(Guid sessionId, Queue<WordEntity> studyingWordQueue,
+        WordSessionEntity wordSession)
     {
         return new ContinueStudyResp(StatusCodes.Status200OK,
             SuccessMessages.Controller.StudySession.ContinueSessionSuccess,
             new ContinueStudyDetail
             {
-                SessionId = sessionId
+                SessionId = sessionId,
+                ReviewingWordCount = wordSession.ReviewingWords?.Count ?? 0,
+                StudyingWordCount = wordSession.StudyingWords?.Count ?? 0,
+                Words = studyingWordQueue.Select(w =>
+                    new WordDetail
+                    {
+                        WordText = w.WordText,
+                        Pronunciation = w.Pronunciation,
+                        Definition = w.Definition
+                    }).ToList()
             });
     }
 }

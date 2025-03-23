@@ -167,6 +167,7 @@ public static class ErrorMessages
             public const string NotFoundSession = "error.controller.session.not_found_session";
             public const string GetNextWordFailed = "error.controller.session.get_next_word_failed";
             public const string NotFoundStudyingWords = "error.controller.session.not_found_studying_words";
+            public const string WordSessionFailOver = "error.controller.session.word_session_fail_over";
         }
 
         public static class Question
