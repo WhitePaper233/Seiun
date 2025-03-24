@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace Seiun.Entities;
 
@@ -16,4 +17,6 @@ public class WordSessionEntity : BaseEntity
     public required List<Guid>? StudyingWords { get; set; }
 
     [ForeignKey(nameof(this.UserId))] public virtual UserEntity User { get; set; } = null!;
+
+    [JsonIgnore] public virtual ICollection<ChallengeEntity> Challenges { get; set; } = [];
 }

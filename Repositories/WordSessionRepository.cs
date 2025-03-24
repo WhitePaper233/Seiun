@@ -23,4 +23,12 @@ public class WordSessionRepository(SeiunDbContext dbContext, IMinioClient minioC
             .OrderBy(s => s.UpdatedAt)
             .ToListAsync();
     }
+
+    public async Task<WordSessionEntity?> GetChallengeByIdAsync(Guid sessionId)
+    {
+        return await DbContext.Sessions
+            .Where(s => s.Id == sessionId)
+            .Include(s => s.Challenges)
+            .FirstOrDefaultAsync();
+    }
 }

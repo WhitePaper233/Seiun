@@ -40,13 +40,11 @@ public class UserEntity : BaseEntity
 
     [JsonIgnore] public virtual ICollection<AiArticleEntity> AiArticles { get; set; } = [];
 
-    [JsonIgnore] public virtual ICollection<ErrorWordRecordEntity> ErrorWordRecords { get; set; } = [];
+    [JsonIgnore] public virtual ICollection<WrongWordRecordEntity> ErrorWordRecords { get; set; } = [];
 
     [JsonIgnore] public virtual ICollection<FinishedWordRecordEntity> FinishedWordRecords { get; set; } = [];
 
     [JsonIgnore] public virtual ICollection<PublicAnnouncementEntity> PublicAnnouncements { get; set; } = [];
-
-    [JsonIgnore] public virtual ICollection<UserChallengeEntity> UserQuestions { get; set; } = [];
 
     [JsonIgnore] public virtual ICollection<UserPlanEntity> UserPlans { get; set; } = null!;
 

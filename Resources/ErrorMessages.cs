@@ -172,10 +172,10 @@ public static class ErrorMessages
 
         public static class Challenge
         {
-            public const string QuestionNotFound = "error.controller.question.not_found";
-            public const string QuestionWordNotFound = "error.controller.question.word_not_found";
-            public const string QuestionAnswerNotFound = "error.controller.question.answer_not_found";
-            public const string GetClozeTestSuccess = "error.controller.question.get_cloze_test_success";
+            public const string ChallengeNotFound = "error.controller.challenge.not_found";
+            public const string GetChallengeSuccess = "error.controller.question.get_challenge_success";
+            public const string SessionIdRequired = "error.controller.session.id_required";
+            public const string GetChallengeFailed = "error.controller.challenge.get_challenge_failed";
         }
     }
 }

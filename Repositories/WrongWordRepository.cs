@@ -4,12 +4,12 @@ using Seiun.Entities;
 
 namespace Seiun.Repositories;
 
-public class ErrorWordRepository(SeiunDbContext dbContext, IMinioClient minioClient)
-    : BaseRepository<ErrorWordRecordEntity>(dbContext, minioClient), IErrorWordRepository
+public class WrongWordRepository(SeiunDbContext dbContext, IMinioClient minioClient)
+    : BaseRepository<WrongWordRecordEntity>(dbContext, minioClient), IWrongWordRepository
 {
     public async Task<List<Guid>?> GetErrorWordIdsByUserIdAsync(Guid userId)
     {
-        return await DbContext.ErrorWords
+        return await DbContext.WrongWords
             .Where(a => a.UserId == userId)
             .Select(a => a.WordId)
             .ToListAsync();
@@ -17,10 +17,10 @@ public class ErrorWordRepository(SeiunDbContext dbContext, IMinioClient minioCli
 
     public void BulkDelete(List<Guid> reviewingWordIds)
     {
-        var wordsToDelete = DbContext.ErrorWords
+        var wordsToDelete = DbContext.WrongWords
             .Where(w => reviewingWordIds.Contains(w.WordId))
             .ToList();
 
-        DbContext.ErrorWords.RemoveRange(wordsToDelete);
+        DbContext.WrongWords.RemoveRange(wordsToDelete);
     }
 }
