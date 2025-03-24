@@ -6,26 +6,27 @@ namespace Seiun.Models.Responses;
 
 # region Question List
 
-public class QuestionListInfo
+public class ChallengeListInfo
 {
-    public required List<Guid> QuestionIds { get; set; }
+    public required List<Guid>? QuestionIds { get; set; }
 }
 
-public sealed class QuestionListResp(int code, string message, QuestionListInfo? question)
-    : BaseRespWithData<QuestionListInfo>(code, message, question)
+public sealed class ChallengeListResp(int code, string message, ChallengeListInfo? question)
+    : BaseRespWithData<ChallengeListInfo>(code, message, question)
 {
-    public static QuestionListResp Success(List<Guid> qesIds)
+    public static ChallengeListResp Success(List<Guid>? qesIds)
     {
-        return new QuestionListResp(StatusCodes.Status200OK, SuccessMessages.Controller.Challenge.GetQuestionListSuccess,
-            new QuestionListInfo
+        return new ChallengeListResp(StatusCodes.Status200OK,
+            SuccessMessages.Controller.Challenge.GetChallengeListSuccess,
+            new ChallengeListInfo
             {
                 QuestionIds = qesIds
             });
     }
 
-    public static QuestionListResp Fail(int code, string message)
+    public static ChallengeListResp Fail(int code, string message)
     {
-        return new QuestionListResp(code, message, null);
+        return new ChallengeListResp(code, message, null);
     }
 }
 
@@ -33,28 +34,21 @@ public sealed class QuestionListResp(int code, string message, QuestionListInfo?
 
 # region Fill in Blank
 
-public class FillInBlankAnswerInfo
+public class FillInBlankDetail
 {
-    public required int Key { get; set; }
-    public required string Answer { get; set; }
-    public required string Analysis { get; set; }
+    [JsonPropertyName("type")] public required ChallengeType Type { get; set; }
+    [JsonPropertyName("content")] public required string Content { get; set; }
+    [JsonPropertyName("selections")] public required List<string> Selections { get; set; }
+    [JsonPropertyName("answers")] public required Dictionary<string, string> Answers { get; set; }
 }
 
-public class FillInBlankInfo
+public sealed class FillInBlankResp(int code, string message, FillInBlankDetail? fillInBlankQuestion)
+    : BaseRespWithData<FillInBlankDetail>(code, message, fillInBlankQuestion)
 {
-    public required List<string> Words { get; set; }
-    public required string Content { get; set; }
-    public required string Transition { get; set; }
-    public required List<FillInBlankAnswerInfo> Answers { get; set; }
-}
-
-public sealed class FillInBlankResp(int code, string message, FillInBlankInfo? fillInBlankQuestion)
-    : BaseRespWithData<FillInBlankInfo>(code, message, fillInBlankQuestion)
-{
-    public static FillInBlankResp Success(FillInBlankInfo qes)
+    public static FillInBlankResp Success(FillInBlankDetail fillInBlank)
     {
         return new FillInBlankResp(StatusCodes.Status200OK, SuccessMessages.Controller.Challenge.GetFillInBlankSuccess,
-            qes);
+            fillInBlank);
     }
 
     public static FillInBlankResp Fail(int code, string message)
@@ -69,14 +63,10 @@ public sealed class FillInBlankResp(int code, string message, FillInBlankInfo? f
 
 public class ClozeTestDetail
 {
-    [JsonPropertyName("type")]
-    public required ChallengeType Type { get; set; }
-    [JsonPropertyName("content")]
-    public required string Content { get; set; }
-    [JsonPropertyName("selections")]
-    public required Dictionary<string, List<string>> Selections { get; set; }
-    [JsonPropertyName("answers")]
-    public required Dictionary<string, string> Answers { get; set; }
+    [JsonPropertyName("type")] public required ChallengeType Type { get; set; }
+    [JsonPropertyName("content")] public required string Content { get; set; }
+    [JsonPropertyName("selections")] public required Dictionary<string, List<string>> Selections { get; set; }
+    [JsonPropertyName("answers")] public required Dictionary<string, string> Answers { get; set; }
 }
 
 public sealed class ClozeTestResp(int code, string message, ClozeTestDetail? clozeTest)

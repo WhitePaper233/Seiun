@@ -60,7 +60,7 @@ public class WordSessionController(
         var wordQueue = new Queue<WordEntity>();
 
         var reviewingWordCount = 0;
-        var reviewingWordIds = await repository.ErrorWordRepository.GetErrorWordIdsByUserIdAsync(userId.Value);
+        var reviewingWordIds = await repository.WrongWordRepository.GetErrorWordIdsByUserIdAsync(userId.Value);
         if (reviewingWordIds != null && reviewingWordIds.Count != 0)
         {
             reviewingWordCount = reviewingWordIds.Count;
@@ -69,8 +69,8 @@ public class WordSessionController(
 
             foreach (var studyingWord in reviewingWords) wordQueue.Enqueue(studyingWord);
 
-            repository.ErrorWordRepository.BulkDelete(reviewingWordIds);
-            if (!await repository.ErrorWordRepository.SaveAsync())
+            repository.WrongWordRepository.BulkDelete(reviewingWordIds);
+            if (!await repository.WrongWordRepository.SaveAsync())
             {
                 logger.LogWarning("User {} start study session failed", userId);
                 return StatusCode(StatusCodes.Status500InternalServerError, StartStudyResp.Fail(
@@ -97,15 +97,6 @@ public class WordSessionController(
             foreach (var word in studyWords)
                 wordQueue.Enqueue(word);
 
-
-        // // 额外线程开始生成题目
-        if (studyWords != null)
-        {
-            var words = studyWords.Select(x => x.WordText).ToList();
-            // _ = Task.Run(() => aiRequest.GenerateAiFillInBlankAsync(words, userId.Value));
-            _ = Task.Run(() => aiRequest.GenerateAiClozeTest(words, userId.Value));
-        }
-
         var session = new WordSessionEntity
         {
             UserId = userId.Value,
@@ -117,14 +108,24 @@ public class WordSessionController(
 
         repository.SessionRepository.Create(session);
         var newSessionResult = currentStudySession.AddSession(session.Id, wordQueue);
-        if (newSessionResult && await repository.SessionRepository.SaveAsync())
+        if (!newSessionResult || !await repository.SessionRepository.SaveAsync())
+        {
+            logger.LogWarning("User {} start study session failed", userId);
+            return StatusCode(StatusCodes.Status500InternalServerError, StartStudyResp.Fail(
+                StatusCodes.Status500InternalServerError,
+                ErrorMessages.Controller.WordSession.StartFailed
+            ));
+        }
+
+        // 额外线程开始生成题目
+        if (studyWords == null)
             return Ok(StartStudyResp.Success(session.Id, reviewingWordCount, studyingWordCount, wordQueue));
 
-        logger.LogWarning("User {} start study session failed", userId);
-        return StatusCode(StatusCodes.Status500InternalServerError, StartStudyResp.Fail(
-            StatusCodes.Status500InternalServerError,
-            ErrorMessages.Controller.WordSession.StartFailed
-        ));
+        var words = studyWords.Select(x => x.WordText).ToList();
+        // _ = Task.Run(() => aiRequest.GenerateAiFillInBlankAsync(words, userId.Value));
+        _ = Task.Run(() => aiRequest.GenerateAiClozeTest(words, userId.Value, session.Id));
+
+        return Ok(StartStudyResp.Success(session.Id, reviewingWordCount, studyingWordCount, wordQueue));
     }
 
     /// <summary>
@@ -315,15 +316,15 @@ public class WordSessionController(
                 ErrorMessages.Controller.WordSession.NotFoundSession
             ));
 
-        var errorRecord = new ErrorWordRecordEntity
+        var errorRecord = new WrongWordRecordEntity
         {
             UserId = userId.Value,
             SessionId = wordResultDto.SessionId,
             WordId = wordResultDto.WordId
         };
-        repository.ErrorWordRepository.Create(errorRecord);
+        repository.WrongWordRepository.Create(errorRecord);
         currentStudySession.InsertErrorWord(session.Id);
-        if (await repository.ErrorWordRepository.SaveAsync())
+        if (await repository.WrongWordRepository.SaveAsync())
             return Ok(ResponseFactory.NewSuccessBaseResponse(
                 SuccessMessages.Controller.Word.ErrorWordRecordCreatSuccess));
 

@@ -19,51 +19,141 @@ namespace Seiun.Controllers;
 public class ChallengeController(IRepositoryService repository, ILogger<ChallengeController> logger) : ControllerBase
 {
     /// <summary>
-    /// 获取题目列表
+    /// 根据 challengeType 获取用户所有的该类型题目 Id
     /// </summary>
     /// <returns>题目列表</returns>
     [HttpGet("list", Name = "ChallengeList")]
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     [Authorize(Roles =
         $"{nameof(UserRole.User)},{nameof(UserRole.Creator)},{nameof(UserRole.Admin)},{nameof(UserRole.SuperAdmin)}")]
-    [ProducesResponseType(typeof(QuestionListResp), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(QuestionListResp), StatusCodes.Status403Forbidden)]
-    [ProducesResponseType(typeof(QuestionListResp), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ChallengeListResp), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ChallengeListResp), StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(ChallengeListResp), StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetChallengeList([FromQuery] ChallengeType challengeType)
     {
         var userId = User.GetUserId();
         if (userId == null)
-            return StatusCode(StatusCodes.Status403Forbidden, QuestionListResp.Fail(
+            return StatusCode(StatusCodes.Status403Forbidden, ChallengeListResp.Fail(
                 StatusCodes.Status403Forbidden,
                 ErrorMessages.Controller.Any.InvalidJwtToken
             ));
 
-        List<Guid>? questionList;
+        List<Guid>? challengeIds;
         switch (challengeType)
         {
-            case ChallengeType.Cloze:
+            case ChallengeType.All:
             {
-                questionList =
-                    (await repository.UserChallengeRepository.GetByUserIdAndQuestionType(userId.Value,
-                        ChallengeType.Cloze)).Select(u => u.ChallengeId).ToList();
+                challengeIds = await repository.ChallengeRepository.GetByUserId(userId.Value);
+                break;
+            }
+            case ChallengeType.Cloze:
+            case ChallengeType.FillInBlank:
+            {
+                challengeIds = await repository.ChallengeRepository.GetByUserId(userId.Value, challengeType);
                 break;
             }
             default:
             {
-                return BadRequest(QuestionListResp.Fail(
+                return BadRequest(ChallengeListResp.Fail(
                     StatusCodes.Status400BadRequest,
                     ErrorMessages.Controller.Any.InvalidReqType
                 ));
             }
         }
-        
-        return Ok(QuestionListResp.Success(questionList));
+
+        return Ok(ChallengeListResp.Success(challengeIds));
+    }
+
+    /// <summary>
+    /// 根据 sessionId 获取该会话下的 challengeType 类型题目
+    /// </summary>
+    /// <param name="sessionId"></param>
+    /// <param name="challengeType"></param>
+    /// <returns></returns>
+    [HttpGet("session-challenge", Name = "GetSessionChallenge")]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    [Authorize(Roles =
+        $"{nameof(UserRole.User)},{nameof(UserRole.Creator)},{nameof(UserRole.Admin)},{nameof(UserRole.SuperAdmin)}")]
+    [ProducesResponseType(typeof(ClozeTestResp), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ClozeTestResp), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ClozeTestResp), StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(ClozeTestResp), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ClozeTestResp), StatusCodes.Status500InternalServerError)]
+    public async Task<IActionResult> GetChallengeBySessionId([FromQuery] Guid sessionId,
+        [FromQuery] ChallengeType challengeType)
+    {
+        var userId = User.GetUserId();
+        if (userId == null)
+            return StatusCode(StatusCodes.Status403Forbidden, ClozeTestResp.Fail(
+                StatusCodes.Status403Forbidden,
+                ErrorMessages.Controller.Any.InvalidJwtToken
+            ));
+
+        if (sessionId == Guid.Empty)
+            return BadRequest(ClozeTestResp.Fail(
+                StatusCodes.Status400BadRequest,
+                ErrorMessages.Controller.Any.InvalidReqType
+            ));
+
+        var userSession = await repository.SessionRepository.GetChallengeByIdAsync(sessionId);
+        if (userSession == null)
+            return NotFound(ResponseFactory.NewFailedBaseResponse(
+                StatusCodes.Status404NotFound,
+                ErrorMessages.Controller.WordSession.NotFoundSession
+            ));
+
+        switch (challengeType)
+        {
+            case ChallengeType.FillInBlank:
+            {
+                var challenge = userSession.Challenges.FirstOrDefault(c => c.Type == challengeType);
+                if (challenge == null)
+                    return NotFound(ResponseFactory.NewFailedBaseResponse(
+                        StatusCodes.Status404NotFound,
+                        ErrorMessages.Controller.Challenge.ChallengeNotFound
+                    ));
+
+                var fillInBlank = JsonSerializer.Deserialize<FillInBlankDetail>(challenge.ChallengeJson);
+                if (fillInBlank == null)
+                    return StatusCode(StatusCodes.Status500InternalServerError, FillInBlankResp.Fail(
+                        StatusCodes.Status500InternalServerError,
+                        ErrorMessages.Controller.Challenge.GetChallengeFailed
+                    ));
+
+                return Ok(FillInBlankResp.Success(fillInBlank));
+            }
+            case ChallengeType.Cloze:
+            {
+                var challenge = userSession.Challenges.FirstOrDefault(c => c.Type == challengeType);
+                if (challenge == null)
+                    return NotFound(ResponseFactory.NewFailedBaseResponse(
+                        StatusCodes.Status404NotFound,
+                        ErrorMessages.Controller.Challenge.ChallengeNotFound
+                    ));
+
+                var clozeTest = JsonSerializer.Deserialize<ClozeTestDetail>(challenge.ChallengeJson);
+                if (clozeTest == null)
+                    return StatusCode(StatusCodes.Status500InternalServerError, ClozeTestResp.Fail(
+                        StatusCodes.Status500InternalServerError,
+                        ErrorMessages.Controller.Challenge.GetChallengeFailed
+                    ));
+
+                return Ok(ClozeTestResp.Success(clozeTest));
+            }
+            default:
+            {
+                return BadRequest(ClozeTestResp.Fail(
+                    StatusCodes.Status400BadRequest,
+                    ErrorMessages.Controller.Any.InvalidReqType
+                ));
+            }
+        }
     }
 
     /// <summary>
     /// 获取选词填空题目
     /// </summary>
-    /// <param name="questionId"></param>
+    /// <param name="challengeId"></param>
     /// <returns>题目</returns>
     [HttpGet("fill-blank", Name = "FillBlank")]
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
@@ -72,7 +162,8 @@ public class ChallengeController(IRepositoryService repository, ILogger<Challeng
     [ProducesResponseType(typeof(FillInBlankResp), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(FillInBlankResp), StatusCodes.Status403Forbidden)]
     [ProducesResponseType(typeof(FillInBlankResp), StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> FillInBlank([FromQuery] Guid questionId)
+    [ProducesResponseType(typeof(ClozeTestResp), StatusCodes.Status500InternalServerError)]
+    public async Task<IActionResult> FillInBlank([FromQuery] Guid challengeId)
     {
         var userId = User.GetUserId();
         if (userId == null)
@@ -81,48 +172,27 @@ public class ChallengeController(IRepositoryService repository, ILogger<Challeng
                 ErrorMessages.Controller.Any.InvalidJwtToken
             ));
 
-        var question = await repository.FillInBlankRepository.GetByIdAsync(questionId);
-        if (question == null)
+        var fillInBlankEntity = await repository.ChallengeRepository.GetByIdAsync(challengeId);
+        if (fillInBlankEntity == null)
             return StatusCode(StatusCodes.Status404NotFound, FillInBlankResp.Fail(
                 StatusCodes.Status404NotFound,
-                ErrorMessages.Controller.Challenge.QuestionNotFound
+                ErrorMessages.Controller.Challenge.ChallengeNotFound
             ));
 
-        var questionWord = await repository.FillInBlankWordRepository.GetByQuestionIdAsync(questionId);
-        if (questionWord == null || questionWord.Count == 0)
-            return StatusCode(StatusCodes.Status404NotFound, FillInBlankResp.Fail(
-                StatusCodes.Status404NotFound,
-                ErrorMessages.Controller.Challenge.QuestionWordNotFound
-            ));
+        var fillInBlank = JsonSerializer.Deserialize<FillInBlankDetail>(fillInBlankEntity.ChallengeJson);
+        if (fillInBlank != null) return Ok(FillInBlankResp.Success(fillInBlank));
 
-        var questionAnswer = await repository.FillInBlankAnswerRepository.GetByQuestionIdAsync(questionId);
-        if (questionAnswer == null || questionAnswer.Count == 0)
-            return StatusCode(StatusCodes.Status404NotFound, FillInBlankResp.Fail(
-                StatusCodes.Status404NotFound,
-                ErrorMessages.Controller.Challenge.QuestionAnswerNotFound
-            ));
-
-        var qes = new FillInBlankInfo
-        {
-            Words = questionWord.Select(a => a.Word).ToList(),
-            Content = question.Content,
-            Transition = question.Transition,
-            Answers = questionAnswer.Select(a =>
-                new FillInBlankAnswerInfo
-                {
-                    Key = a.Key,
-                    Answer = a.Answer,
-                    Analysis = a.Analysis
-                }).ToList()
-        };
-
-        return Ok(FillInBlankResp.Success(qes));
+        logger.LogWarning("User {} failed get fill in blank", userId);
+        return StatusCode(StatusCodes.Status500InternalServerError, FillInBlankResp.Fail(
+            StatusCodes.Status500InternalServerError,
+            ErrorMessages.Controller.Challenge.GetChallengeSuccess
+        ));
     }
 
     /// <summary>
     /// 获取完形填空题目
     /// </summary>
-    /// <param name="questionId"></param>
+    /// <param name="challengeId"></param>
     /// <returns>题目</returns>
     [HttpGet("cloze-test", Name = "ClozeTest")]
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
@@ -132,7 +202,7 @@ public class ChallengeController(IRepositoryService repository, ILogger<Challeng
     [ProducesResponseType(typeof(ClozeTestResp), StatusCodes.Status403Forbidden)]
     [ProducesResponseType(typeof(ClozeTestResp), StatusCodes.Status404NotFound)]
     [ProducesResponseType(typeof(ClozeTestResp), StatusCodes.Status500InternalServerError)]
-    public async Task<IActionResult> ClozeTest([FromQuery] Guid questionId)
+    public async Task<IActionResult> ClozeTest([FromQuery] Guid challengeId)
     {
         var userId = User.GetUserId();
         if (userId == null)
@@ -141,24 +211,21 @@ public class ChallengeController(IRepositoryService repository, ILogger<Challeng
                 ErrorMessages.Controller.Any.InvalidJwtToken
             ));
 
-        var clozeTestEntity = await repository.ClozeTestRepository.GetByIdAsync(questionId);
+        var clozeTestEntity = await repository.ChallengeRepository.GetByIdAsync(challengeId);
         if (clozeTestEntity == null)
             return StatusCode(StatusCodes.Status404NotFound, ClozeTestResp.Fail(
                 StatusCodes.Status404NotFound,
-                ErrorMessages.Controller.Challenge.QuestionNotFound
+                ErrorMessages.Controller.Challenge.ChallengeNotFound
             ));
-    
 
-        var clozeTest = JsonSerializer.Deserialize<ClozeTestDetail>(clozeTestEntity.ClozeTestJson);
-        if (clozeTest != null)
-        {
-            return Ok(ClozeTestResp.Success(clozeTest));
-        }
-        
+
+        var clozeTest = JsonSerializer.Deserialize<ClozeTestDetail>(clozeTestEntity.ChallengeJson);
+        if (clozeTest != null) return Ok(ClozeTestResp.Success(clozeTest));
+
         logger.LogWarning("User {} failed get cloze test", userId);
         return StatusCode(StatusCodes.Status500InternalServerError, ClozeTestResp.Fail(
             StatusCodes.Status500InternalServerError,
-            ErrorMessages.Controller.Challenge.GetClozeTestSuccess
+            ErrorMessages.Controller.Challenge.GetChallengeSuccess
         ));
     }
 }
