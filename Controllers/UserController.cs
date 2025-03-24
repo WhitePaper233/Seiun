@@ -338,12 +338,10 @@ public class UserController(ILogger<UserController> logger, IRepositoryService r
     {
         var userId = User.GetUserId();
         if (userId == null)
-        {
             return NotFound(UserCheckInResp.Fail(
                 StatusCodes.Status404NotFound,
                 ErrorMessages.Controller.User.UserNotFound
             ));
-        }
 
         var userPlan = await repository.UserPlansRepository.GetUserPlanAsync(userId.Value);
         if (userPlan == null)
@@ -365,9 +363,9 @@ public class UserController(ILogger<UserController> logger, IRepositoryService r
             var notCheckInStatus = new UserCheckInDetail
             {
                 TodayUserIsCheckIn = false,
-                DailyPlan = userPlan.SetDailyPlan,
+                DailyPlan = userPlan.DailyPlan,
                 TodayPlanReviewedCount = todayAllSessions[0].ReviewingCount,
-                ToDayStudiedCount = todayAllSessions.Sum(s => s.StudyingCount - s.StudyingWords.Count),
+                ToDayStudiedCount = todayAllSessions.Sum(s => s.StudyingCount - s.StudyingWords?.Count ?? 0),
                 ToDayReviewedCount = todayAllSessions.Sum(s => s.ReviewingCount - s.ReviewingWords?.Count ?? 0)
             };
 
@@ -377,9 +375,9 @@ public class UserController(ILogger<UserController> logger, IRepositoryService r
         var checkInStatus = new UserCheckInDetail
         {
             TodayUserIsCheckIn = true,
-            DailyPlan = userPlan.SetDailyPlan,
+            DailyPlan = userPlan.DailyPlan,
             TodayPlanReviewedCount = todayAllSessions[0].ReviewingCount,
-            ToDayStudiedCount = todayAllSessions.Sum(s => s.StudyingCount - s.StudyingWords.Count),
+            ToDayStudiedCount = todayAllSessions.Sum(s => s.StudyingCount - s.StudyingWords?.Count ?? 0),
             ToDayReviewedCount = todayAllSessions.Sum(s => s.ReviewingCount - s.ReviewingWords?.Count ?? 0)
         };
 

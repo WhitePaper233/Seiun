@@ -2,7 +2,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Seiun.Entities;
 
-public class ErrorWordRecordEntity : BaseEntity
+public class WrongWordRecordEntity : BaseEntity
 {
     public required Guid UserId { get; set; }
     public required Guid WordId { get; set; }

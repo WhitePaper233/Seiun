@@ -29,14 +29,15 @@ public class WordSessionController(
     [Authorize(Roles =
         $"{nameof(UserRole.User)},{nameof(UserRole.Creator)},{nameof(UserRole.Admin)},{nameof(UserRole.SuperAdmin)}")]
     [ProducesResponseType(typeof(StartStudyResp), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(BaseResp), StatusCodes.Status403Forbidden)]
-    [ProducesResponseType(typeof(BaseResp), StatusCodes.Status404NotFound)]
-    [ProducesResponseType(typeof(BaseResp), StatusCodes.Status500InternalServerError)]
+    [ProducesResponseType(typeof(ContinueStudyResp), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(StartStudyResp), StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(StartStudyResp), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(StartStudyResp), StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> Init()
     {
         var userId = User.GetUserId();
         if (userId == null)
-            return StatusCode(StatusCodes.Status403Forbidden, ResponseFactory.NewFailedBaseResponse(
+            return StatusCode(StatusCodes.Status403Forbidden, StartStudyResp.Fail(
                 StatusCodes.Status403Forbidden,
                 ErrorMessages.Controller.Any.InvalidJwtToken
             ));
@@ -52,13 +53,14 @@ public class WordSessionController(
         if (existingSession != null)
         {
             var existingQueue = currentStudySession.GetAllWords(existingSession.Id);
-            if (existingQueue != null) return Ok(ContinueStudyResp.Success(existingSession.Id));
+            if (existingQueue != null)
+                return Ok(ContinueStudyResp.Success(existingSession.Id, existingQueue, existingSession));
         }
 
         var wordQueue = new Queue<WordEntity>();
 
         var reviewingWordCount = 0;
-        var reviewingWordIds = await repository.ErrorWordRepository.GetErrorWordIdsByUserIdAsync(userId.Value);
+        var reviewingWordIds = await repository.WrongWordRepository.GetErrorWordIdsByUserIdAsync(userId.Value);
         if (reviewingWordIds != null && reviewingWordIds.Count != 0)
         {
             reviewingWordCount = reviewingWordIds.Count;
@@ -67,8 +69,8 @@ public class WordSessionController(
 
             foreach (var studyingWord in reviewingWords) wordQueue.Enqueue(studyingWord);
 
-            repository.ErrorWordRepository.BulkDelete(userId.Value);
-            if (!await repository.ErrorWordRepository.SaveAsync())
+            repository.WrongWordRepository.BulkDelete(reviewingWordIds);
+            if (!await repository.WrongWordRepository.SaveAsync())
             {
                 logger.LogWarning("User {} start study session failed", userId);
                 return StatusCode(StatusCodes.Status500InternalServerError, StartStudyResp.Fail(
@@ -80,23 +82,20 @@ public class WordSessionController(
 
         var studyWords =
             await repository.WordWordBookRepository.GetUnfinishedWordsByPlanAsync(selectedPlan.WordBookId,
-                selectedPlan.SetDailyPlan, userId.Value);
-        if (studyWords == null || studyWords.Count == 0)
+                selectedPlan.DailyPlan, userId.Value);
+        if ((studyWords == null || studyWords.Count == 0) && reviewingWordCount == 0)
         {
             logger.LogWarning("No studying words found for {}", selectedPlan.WordBookId);
-            return StatusCode(StatusCodes.Status404NotFound, StartStudyResp.Fail(
+            return NotFound(StartStudyResp.Fail(
                 StatusCodes.Status404NotFound,
                 ErrorMessages.Controller.WordSession.NotFoundStudyingWords
             ));
         }
 
-        var studyingWordCount = studyWords.Count;
-        foreach (var word in studyWords) wordQueue.Enqueue(word);
-
-        // // 额外线程开始生成题目
-        var words = studyWords.Select(x => x.WordText).ToList();
-        _ = Task.Run(() => aiRequest.GenerateAiFillInBlankAsync(words, userId.Value));
-        _ = Task.Run(() => aiRequest.GenerateAiClozeTest(words, userId.Value));
+        var studyingWordCount = studyWords?.Count ?? 0;
+        if (studyWords != null)
+            foreach (var word in studyWords)
+                wordQueue.Enqueue(word);
 
         var session = new WordSessionEntity
         {
@@ -104,19 +103,29 @@ public class WordSessionController(
             ReviewingCount = reviewingWordCount,
             StudyingCount = studyingWordCount,
             ReviewingWords = reviewingWordIds,
-            StudyingWords = studyWords.Select(x => x.Id).ToList()
+            StudyingWords = studyWords?.Select(x => x.Id).ToList()
         };
 
         repository.SessionRepository.Create(session);
         var newSessionResult = currentStudySession.AddSession(session.Id, wordQueue);
-        if (newSessionResult && await repository.SessionRepository.SaveAsync())
+        if (!newSessionResult || !await repository.SessionRepository.SaveAsync())
+        {
+            logger.LogWarning("User {} start study session failed", userId);
+            return StatusCode(StatusCodes.Status500InternalServerError, StartStudyResp.Fail(
+                StatusCodes.Status500InternalServerError,
+                ErrorMessages.Controller.WordSession.StartFailed
+            ));
+        }
+
+        // 额外线程开始生成题目
+        if (studyWords == null)
             return Ok(StartStudyResp.Success(session.Id, reviewingWordCount, studyingWordCount, wordQueue));
 
-        logger.LogWarning("User {} start study session failed", userId);
-        return StatusCode(StatusCodes.Status500InternalServerError, StartStudyResp.Fail(
-            StatusCodes.Status500InternalServerError,
-            ErrorMessages.Controller.WordSession.StartFailed
-        ));
+        var words = studyWords.Select(x => x.WordText).ToList();
+        // _ = Task.Run(() => aiRequest.GenerateAiFillInBlankAsync(words, userId.Value));
+        _ = Task.Run(() => aiRequest.GenerateAiClozeTest(words, userId.Value, session.Id));
+
+        return Ok(StartStudyResp.Success(session.Id, reviewingWordCount, studyingWordCount, wordQueue));
     }
 
     /// <summary>
@@ -128,15 +137,15 @@ public class WordSessionController(
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     [Authorize(Roles =
         $"{nameof(UserRole.User)},{nameof(UserRole.Creator)},{nameof(UserRole.Admin)},{nameof(UserRole.SuperAdmin)}")]
-    [ProducesResponseType(typeof(BaseResp), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(BaseResp), StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(GetNextWordResp), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(GetNextWordResp), StatusCodes.Status403Forbidden)]
     [ProducesResponseType(typeof(GetNextWordResp), StatusCodes.Status404NotFound)]
-    [ProducesResponseType(typeof(BaseResp), StatusCodes.Status500InternalServerError)]
+    [ProducesResponseType(typeof(GetNextWordResp), StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> GetNextWord([FromQuery] Guid sessionId)
     {
         var userId = User.GetUserId();
         if (userId == null)
-            return StatusCode(StatusCodes.Status403Forbidden, ResponseFactory.NewFailedBaseResponse(
+            return StatusCode(StatusCodes.Status403Forbidden, GetNextWordResp.Fail(
                 StatusCodes.Status403Forbidden,
                 ErrorMessages.Controller.Any.InvalidJwtToken
             ));
@@ -163,14 +172,14 @@ public class WordSessionController(
             }
 
             var reviewingWordCount = session.ReviewingWords?.Count ?? 0;
-            var studyingWordCount = session.StudyingWords.Count;
+            var studyingWordCount = session.StudyingWords?.Count ?? 0;
 
             return Ok(GetNextWordResp.Success(word, distractorWords, reviewingWordCount, studyingWordCount));
         }
 
         // 下一个单词为空，表示会话已经结束
         // 生成AI文章
-        _ = Task.Run(() => aiRequest.GenerateAiArticleAsync(userId.Value));
+        // _ = Task.Run(() => aiRequest.GenerateAiArticleAsync(userId.Value));
 
         // 打卡
         var lastCheckIn = await repository.UserCheckInRepository.LastCheckInAsync(userId.Value);
@@ -185,7 +194,7 @@ public class WordSessionController(
             if (!await repository.UserCheckInRepository.SaveAsync())
             {
                 logger.LogWarning("User {} failed check in", userId);
-                return StatusCode(StatusCodes.Status500InternalServerError, ResponseFactory.NewFailedBaseResponse(
+                return StatusCode(StatusCodes.Status500InternalServerError, GetNextWordResp.Fail(
                     StatusCodes.Status500InternalServerError,
                     ErrorMessages.Controller.User.UserCheckInFailed
                 ));
@@ -198,24 +207,22 @@ public class WordSessionController(
         // 更新用户计划
         var userPlanEntity = await repository.UserPlansRepository.GetUserPlanAsync(userId.Value);
         if (userPlanEntity == null)
-            return StatusCode(StatusCodes.Status404NotFound, ResponseFactory.NewFailedBaseResponse(
+            return NotFound(GetNextWordResp.Fail(
                 StatusCodes.Status404NotFound,
                 ErrorMessages.Controller.UserPlan.CurrentUserPlanNotFound
             ));
 
-        userPlanEntity.LearnedCount += userPlanEntity.SetDailyPlan;
+        userPlanEntity.LearnedCount += userPlanEntity.DailyPlan;
         repository.UserPlansRepository.Update(userPlanEntity);
-        if (!await repository.UserPlansRepository.SaveAsync())
-        {
-            logger.LogWarning("User {} failed over session", userId);
-            return StatusCode(StatusCodes.Status500InternalServerError, ResponseFactory.NewFailedBaseResponse(
-                StatusCodes.Status500InternalServerError,
-                ErrorMessages.Controller.UserPlan.UpdatePlanFailed
-            ));
-        }
+        if (await repository.UserPlansRepository.SaveAsync())
+            // 返回会话结束信息
+            return Ok(ResponseFactory.NewSuccessBaseResponse(SuccessMessages.Controller.WordSession.WordSessionOver));
 
-        // 返回会话结束信息
-        return Ok(SuccessMessages.Controller.WordSession.WordSessionOver);
+        logger.LogWarning("User {} failed over session", userId);
+        return StatusCode(StatusCodes.Status500InternalServerError, GetNextWordResp.Fail(
+            StatusCodes.Status500InternalServerError,
+            ErrorMessages.Controller.WordSession.WordSessionFailOver
+        ));
     }
 
     /// <summary>
@@ -250,7 +257,8 @@ public class WordSessionController(
         if (session.ReviewingWords != null && session.ReviewingWords.Contains(wordResultDto.WordId))
             session.ReviewingWords.Remove(wordResultDto.WordId);
 
-        if (session.StudyingWords.Contains(wordResultDto.WordId)) session.StudyingWords.Remove(wordResultDto.WordId);
+        if (session.StudyingWords != null && session.StudyingWords.Contains(wordResultDto.WordId))
+            session.StudyingWords.Remove(wordResultDto.WordId);
 
         repository.SessionRepository.Update(session);
         if (!await repository.UserCheckInRepository.SaveAsync())
@@ -308,15 +316,15 @@ public class WordSessionController(
                 ErrorMessages.Controller.WordSession.NotFoundSession
             ));
 
-        var errorRecord = new ErrorWordRecordEntity
+        var errorRecord = new WrongWordRecordEntity
         {
             UserId = userId.Value,
             SessionId = wordResultDto.SessionId,
             WordId = wordResultDto.WordId
         };
-        repository.ErrorWordRepository.Create(errorRecord);
+        repository.WrongWordRepository.Create(errorRecord);
         currentStudySession.InsertErrorWord(session.Id);
-        if (await repository.ErrorWordRepository.SaveAsync())
+        if (await repository.WrongWordRepository.SaveAsync())
             return Ok(ResponseFactory.NewSuccessBaseResponse(
                 SuccessMessages.Controller.Word.ErrorWordRecordCreatSuccess));
 

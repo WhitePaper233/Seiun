@@ -206,7 +206,7 @@ public class AdminController(ILogger<AdminController> logger, IRepositoryService
             ErrorMessages.Controller.Admin.ProfileUpdateFailed
         ));
     }
-    
+
     // 获取所有单词
     [HttpGet("word-list", Name = "GetWordList")]
     [Authorize(Roles = $"{nameof(UserRole.SuperAdmin)}")]
@@ -218,7 +218,8 @@ public class AdminController(ILogger<AdminController> logger, IRepositoryService
     {
         try
         {
-            var words = await repository.WordRepository.GetAllWordsAsync(parameters.Index, parameters.Size,parameters.Keyword);
+            var words = await repository.WordRepository.GetAllWordsAsync(parameters.Index, parameters.Size,
+                parameters.Keyword);
             var totalWords = await repository.WordRepository.GetTotalWordsAsync(parameters.Keyword);
             if (words == null || words.Count == 0)
             {
@@ -228,17 +229,21 @@ public class AdminController(ILogger<AdminController> logger, IRepositoryService
                     ErrorMessages.Controller.Admin.WordsNotFound
                 ));
             }
+
             var wordListResponse = new WordListResponse
             {
-                Words = [.. words.Select(w => new WordDto
-                {
-                    WordId = w.Id,
-                    WordText = w.WordText,
-                    Pronunciation = w.Pronunciation,
-                    Definition = w.Definition,
-                    DistractorIds = w.WordDistractors.Select(d => d.DistractorId).ToList(), 
-                    WordBookName = w.Books.Select(b => b.Book.WordBookName).Distinct().ToList() 
-                })],
+                Words =
+                [
+                    .. words.Select(w => new WordDto
+                    {
+                        WordId = w.Id,
+                        WordText = w.WordText,
+                        Pronunciation = w.Pronunciation,
+                        Definition = w.Definition,
+                        DistractorIds = w.WordDistractors.Select(d => d.DistractorId).ToList(),
+                        WordBookName = w.Books.Select(b => b.Book.WordBookName).Distinct().ToList()
+                    })
+                ],
                 TotalWords = totalWords
             };
 
@@ -253,6 +258,7 @@ public class AdminController(ILogger<AdminController> logger, IRepositoryService
             ));
         }
     }
+
 
     // 获取所有文章
     [HttpGet("article-list", Name = "GetArticleList")]

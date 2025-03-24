@@ -169,13 +169,15 @@ public static class ErrorMessages
             public const string NotFoundSession = "error.controller.session.not_found_session";
             public const string GetNextWordFailed = "error.controller.session.get_next_word_failed";
             public const string NotFoundStudyingWords = "error.controller.session.not_found_studying_words";
+            public const string WordSessionFailOver = "error.controller.session.word_session_fail_over";
         }
 
-        public static class Question
+        public static class Challenge
         {
-            public const string QuestionNotFound = "error.controller.question.not_found";
-            public const string QuestionWordNotFound = "error.controller.question.word_not_found";
-            public const string QuestionAnswerNotFound = "error.controller.question.answer_not_found";
+            public const string ChallengeNotFound = "error.controller.challenge.not_found";
+            public const string GetChallengeSuccess = "error.controller.question.get_challenge_success";
+            public const string SessionIdRequired = "error.controller.session.id_required";
+            public const string GetChallengeFailed = "error.controller.challenge.get_challenge_failed";
         }
     }
 }

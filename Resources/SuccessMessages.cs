@@ -36,9 +36,6 @@ public static class SuccessMessages
 
             public const string GetArticleImgNameSuccess =
                 "controller.article.articleimgs.get_articleimgname_success";
-
-            public const string GetArticleCoverNameSuccess =
-                "controller.article.articlecover.get_articlecovername_success";
         }
 
         public static class PublicAnnouncement
@@ -101,11 +98,11 @@ public static class SuccessMessages
             public const string WordSessionOver = "controller.session.word_session_over";
         }
 
-        public static class Question
+        public static class Challenge
         {
             public const string GetFillInBlankSuccess = "controller.question.get.fill_in_blank_success";
             public const string GetClozeTestSuccess = "controller.question.get.cloze_test.success";
-            public const string GetQuestionListSuccess = "controller.question.get.list_success";
+            public const string GetChallengeListSuccess = "controller.question.get.list_success";
         }
 
         public static class CheckIn

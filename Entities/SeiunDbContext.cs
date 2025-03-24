@@ -15,18 +15,14 @@ public class SeiunDbContext(DbContextOptions<SeiunDbContext> options) : DbContex
     public required DbSet<WordSessionEntity> Sessions { get; set; }
     public required DbSet<UserPlanEntity> UserPlans { get; set; }
     public required DbSet<WordEntity> Words { get; set; }
-    public required DbSet<ErrorWordRecordEntity> ErrorWords { get; set; }
+    public required DbSet<WrongWordRecordEntity> WrongWords { get; set; }
     public required DbSet<FinishedWordRecordEntity> FinishedWords { get; set; }
     public required DbSet<AiArticleEntity> AiArticles { get; set; }
     public required DbSet<UserCheckInEntity> UserCheckIns { get; set; }
-    public required DbSet<FillInBlankEntity> FillInBlanks { get; set; }
-    public required DbSet<FillInBlankAnswerEntity> FillInBlankAnswers { get; set; }
-    public required DbSet<FillInBlankWordEntity> FillInBlankWords { get; set; }
+
     public required DbSet<WordDistractorEntity> WordDistractors { get; set; }
-    public required DbSet<UserQuestionEntity> UserQuestions { get; set; }
-    public required DbSet<ClozeTestEntity> ClozeTests { get; set; }
-    public required DbSet<ClozeTestSelectionEntity> ClozeTestSelections { get; set; }
-    public required DbSet<ClozeTestAnswerEntity> ClozeTestAnswers { get; set; }
+    public required DbSet<ChallengeEntity> Challenges { get; set; }
+
     public required DbSet<WordBookEntity> WordBooks { get; set; }
     public required DbSet<WordWordBookEntity> WordWordBooks { get; set; }
 
@@ -57,10 +53,10 @@ public class SeiunDbContext(DbContextOptions<SeiunDbContext> options) : DbContex
         ConfigureUserCheckInEntity(modelBuilder);
         ConfigurePublicAnnouncementEntity(modelBuilder);
         ConfigureReplyEntity(modelBuilder);
-        ConfigureUserQuestionEntity(modelBuilder);
         ConfigureWordEntity(modelBuilder);
         ConfigureWordDistractorEntity(modelBuilder);
         ConfigureWordWordBookEntity(modelBuilder);
+        ConfigureClozeTestEntity(modelBuilder);
 
         modelBuilder.Entity<WordWordBookEntity>().HasKey(p => new { p.WordId, p.BookId });
 
@@ -108,13 +104,6 @@ public class SeiunDbContext(DbContextOptions<SeiunDbContext> options) : DbContex
             .HasForeignKey(p => p.AdminId)
             .OnDelete(DeleteBehavior.Cascade);
 
-        // user - UserQuestions
-        modelBuilder.Entity<UserEntity>()
-            .HasMany(u => u.UserQuestions)
-            .WithOne(u => u.User)
-            .HasForeignKey(u => u.UserId)
-            .OnDelete(DeleteBehavior.Cascade);
-
         // user - UserPlans
         modelBuilder.Entity<UserEntity>()
             .HasMany(u => u.UserPlans)
@@ -128,7 +117,7 @@ public class SeiunDbContext(DbContextOptions<SeiunDbContext> options) : DbContex
             .WithOne(c => c.User)
             .HasForeignKey(c => c.UserId)
             .OnDelete(DeleteBehavior.Cascade);
-        
+
         // user - session
         modelBuilder.Entity<UserEntity>()
             .HasMany(u => u.WordSession)
@@ -181,7 +170,7 @@ public class SeiunDbContext(DbContextOptions<SeiunDbContext> options) : DbContex
     private static void ConfigureErrorWordRecordEntity(ModelBuilder modelBuilder)
     {
         // ErrorWordRecordEntity - user
-        modelBuilder.Entity<ErrorWordRecordEntity>()
+        modelBuilder.Entity<WrongWordRecordEntity>()
             .HasOne(e => e.User)
             .WithMany(u => u.ErrorWordRecords)
             .HasForeignKey(u => u.UserId);
@@ -223,15 +212,6 @@ public class SeiunDbContext(DbContextOptions<SeiunDbContext> options) : DbContex
             .HasForeignKey(c => c.UserId);
     }
 
-    private static void ConfigureUserQuestionEntity(ModelBuilder modelBuilder)
-    {
-        // UserQuestion - user
-        modelBuilder.Entity<UserQuestionEntity>()
-            .HasOne(q => q.User)
-            .WithMany(u => u.UserQuestions)
-            .HasForeignKey(q => q.UserId);
-    }
-
     private static void ConfigureUserPlansEntity(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<UserPlanEntity>()
@@ -247,6 +227,13 @@ public class SeiunDbContext(DbContextOptions<SeiunDbContext> options) : DbContex
             .HasOne(s => s.User)
             .WithMany(u => u.WordSession)
             .HasForeignKey(s => s.UserId);
+
+        // WordSessionEntity - clozeTest
+        modelBuilder.Entity<WordSessionEntity>()
+            .HasMany(s => s.Challenges)
+            .WithOne(c => c.Session)
+            .HasForeignKey(c => c.SessionId)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 
     private static void ConfigureWordEntity(ModelBuilder modelBuilder)
@@ -281,6 +268,15 @@ public class SeiunDbContext(DbContextOptions<SeiunDbContext> options) : DbContex
             .HasOne(b => b.Book)
             .WithMany(b => b.Words)
             .HasForeignKey(b => b.BookId);
+    }
+
+    private static void ConfigureClozeTestEntity(ModelBuilder modelBuilder)
+    {
+        // ClozeTestEntity - session
+        modelBuilder.Entity<ChallengeEntity>()
+            .HasOne(c => c.Session)
+            .WithMany(s => s.Challenges)
+            .HasForeignKey(c => c.SessionId);
     }
 
     #endregion

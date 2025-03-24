@@ -24,13 +24,13 @@ public class WordBookController(ILogger<UserController> logger, IRepositoryServi
     [Authorize(Roles =
         $"{nameof(UserRole.User)},{nameof(UserRole.Creator)},{nameof(UserRole.Admin)},{nameof(UserRole.SuperAdmin)}")]
     [ProducesResponseType(typeof(WordBookListResp), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(BaseResp), StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(WordBookListResp), StatusCodes.Status403Forbidden)]
     [ProducesResponseType(typeof(WordBookListResp), StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> GetWordBookList()
     {
         var userId = User.GetUserId();
         if (userId == null)
-            return StatusCode(StatusCodes.Status403Forbidden, ResponseFactory.NewFailedBaseResponse(
+            return StatusCode(StatusCodes.Status403Forbidden, WordBookListResp.Fail(
                 StatusCodes.Status403Forbidden,
                 ErrorMessages.Controller.Any.InvalidJwtToken
             ));
@@ -58,15 +58,15 @@ public class WordBookController(ILogger<UserController> logger, IRepositoryServi
                 .Select(wordBook =>
                 {
                     var wordCount = repository.WordWordBookRepository.GetBookWordCount(wordBook.Id);
+                    var learnedCount = repository.FinishedWordRepository.GetLearnedCount(userId.Value, wordBook.Id);
                     return new WordBook
                     {
                         WordBookId = wordBook.Id,
                         WordBookName = wordBook.WordBookName,
                         WordCount = wordCount,
-                        LearnedWordCount = userPlanDict[wordBook.Id].LearnedCount,
-                        DailyPlan = userPlanDict[wordBook.Id].SetDailyPlan,
-                        RemainingDays = (wordCount - userPlanDict[wordBook.Id].LearnedCount) /
-                                        userPlanDict[wordBook.Id].SetDailyPlan
+                        LearnedWordCount = learnedCount,
+                        DailyPlan = userPlanDict[wordBook.Id].DailyPlan,
+                        RemainingDays = (wordCount - learnedCount) / userPlanDict[wordBook.Id].DailyPlan
                     };
                 })
                 .ToList();
@@ -121,7 +121,7 @@ public class WordBookController(ILogger<UserController> logger, IRepositoryServi
             {
                 UserId = userId.Value,
                 WordBookId = selectedWordBook.WordBookId,
-                SetDailyPlan = selectedWordBook.SetDailyPlan,
+                DailyPlan = selectedWordBook.DailyPlan,
                 LearnedCount = 0
             };
             repository.UserPlansRepository.Create(userPlanEntity);
@@ -136,7 +136,7 @@ public class WordBookController(ILogger<UserController> logger, IRepositoryServi
             ));
         }
 
-        existUserPlan.SetDailyPlan = selectedWordBook.SetDailyPlan;
+        existUserPlan.DailyPlan = selectedWordBook.DailyPlan;
 
         repository.UserPlansRepository.Update(existUserPlan);
         if (await repository.UserPlansRepository.SaveAsync())

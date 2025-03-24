@@ -14,18 +14,12 @@ public interface IRepositoryService
     IWordRepository WordRepository { get; }
     IUserPlansRepository UserPlansRepository { get; }
     IWordSessionRepository SessionRepository { get; }
-    IErrorWordRepository ErrorWordRepository { get; }
+    IWrongWordRepository WrongWordRepository { get; }
     IFinishedWordRepository FinishedWordRepository { get; }
 
     IUserCheckInRepository UserCheckInRepository { get; }
     IAiArticleRepository AiArticleRepository { get; }
-    IFillInBlankRepository FillInBlankRepository { get; }
-    IFillInBlankAnswerRepository FillInBlankAnswerRepository { get; }
-    IFillInBlankWordRepository FillInBlankWordRepository { get; }
-    IUserQuestionRepository UserQuestionRepository { get; }
-    IClozeTestRepository ClozeTestRepository { get; }
-    IClozeTestSelectionRepository ClozeTestSelectionRepository { get; }
-    IClozeTestAnswerRepository ClozeTestAnswerRepository { get; }
+    IChallengeRepository ChallengeRepository { get; }
     IWordBookRepository WordBookRepository { get; }
     IWordWordBookRepository WordWordBookRepository { get; }
 }
