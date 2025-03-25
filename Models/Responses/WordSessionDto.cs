@@ -93,10 +93,9 @@ public class NextWordDetail
 {
     public required List<OptionDetail> Options { get; set; }
     public required AnswerDetail Answer { get; set; }
-
     public required int ReviewingWordCount { get; set; }
-
     public required int StudyingWordCount { get; set; }
+    public required string ExampleSentence { get; set; }
 }
 
 public class OptionDetail
@@ -136,7 +135,8 @@ public sealed class GetNextWordResp(int code, string message, NextWordDetail? ne
                 Options = options,
                 Answer = answer,
                 ReviewingWordCount = reviewingWordCount,
-                StudyingWordCount = studyingWordCount
+                StudyingWordCount = studyingWordCount,
+                ExampleSentence = nextWord.ExampleSentence
             });
     }
 

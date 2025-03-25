@@ -7,7 +7,6 @@ namespace Seiun.Entities;
 
 public class WordEntity : BaseEntity
 {
-    [Required]
     [MaxLength(Constants.Word.MaxWordTextLength, ErrorMessage = ErrorMessages.ValidationError.OverWordTextLength)]
     public required string WordText { get; set; }
 
@@ -15,10 +14,13 @@ public class WordEntity : BaseEntity
         ErrorMessage = ErrorMessages.ValidationError.OverPronunciationLength)]
     public string? Pronunciation { get; set; }
 
-    [Required]
     [MaxLength(Constants.Word.MaxWordDefinitionLength,
         ErrorMessage = ErrorMessages.ValidationError.OverWordDefinitionLength)]
     public required string Definition { get; set; }
+
+    [MaxLength(Constants.Word.MaxWordExampleSentenceLength,
+        ErrorMessage = ErrorMessages.ValidationError.OverWordExampleSentenceLength)]
+    public required string ExampleSentence { get; set; }
 
     public virtual ICollection<WordDistractorEntity> WordDistractors { get; set; } = [];
 

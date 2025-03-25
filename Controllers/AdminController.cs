@@ -240,6 +240,7 @@ public class AdminController(ILogger<AdminController> logger, IRepositoryService
                         WordText = w.WordText,
                         Pronunciation = w.Pronunciation,
                         Definition = w.Definition,
+                        ExampleSentence = w.ExampleSentence,
                         DistractorIds = w.WordDistractors.Select(d => d.DistractorId).ToList(),
                         WordBookName = w.Books.Select(b => b.Book.WordBookName).Distinct().ToList()
                     })
