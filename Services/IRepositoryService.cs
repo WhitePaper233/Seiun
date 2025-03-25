@@ -22,4 +22,5 @@ public interface IRepositoryService
     IChallengeRepository ChallengeRepository { get; }
     IWordBookRepository WordBookRepository { get; }
     IWordWordBookRepository WordWordBookRepository { get; }
+    IMistakeBookRepository MistakeBookRepository { get; }
 }

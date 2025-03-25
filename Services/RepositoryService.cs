@@ -93,4 +93,9 @@ public class RepositoryService(SeiunDbContext seiunDbContext, IMinioClient minio
         new(() => new WordWordBookRepository(seiunDbContext, minioClient));
 
     public IWordWordBookRepository WordWordBookRepository => _wordWordBookRepository.Value;
+
+    private readonly Lazy<IMistakeBookRepository> _mistakeBookRepository =
+        new(() => new MistakeBookRepository(seiunDbContext, minioClient));
+
+    public IMistakeBookRepository MistakeBookRepository => _mistakeBookRepository.Value;
 }

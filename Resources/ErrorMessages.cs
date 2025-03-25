@@ -26,12 +26,8 @@ public static class ErrorMessages
         public const string OverWordDefinitionLength = "error.validation.over_word_definition_length";
         public const string OverWordTextLength = "error.validation.over_word_text_length";
         public const string OverPronunciationLength = "error.validation.over_pronunciation_length";
-        public const string OverMaxQuestionAnswerLength = "error.validation.over_max_question_answer_length";
-        public const string OverMaxQuestionAnalysisLength = "error.validation.over_max_question_analysis_length";
-        public const string OverMaxQuestionContentLength = "error.validation.over_max_question_content_length";
-        public const string OverMaxQuestionWordLength = "error.validation.over_max_question_word_length";
-        public const string OverMaxQuestionTransitionLength = "error.validation.over_max_question_transition_length";
         public const string OverImgUrlLength = "error.validation.over_img_url_length";
+        public const string OverWordExampleSentenceLength = "error.validation.over_word_example_sentence_length";
 
         public const string AtLeastOnePropertyRequired = "error.validation.at_least_one_property_is_required";
         public const string UserIdRequired = "error.validation.user_id_required";
@@ -176,7 +172,6 @@ public static class ErrorMessages
         {
             public const string ChallengeNotFound = "error.controller.challenge.not_found";
             public const string GetChallengeSuccess = "error.controller.question.get_challenge_success";
-            public const string SessionIdRequired = "error.controller.session.id_required";
             public const string GetChallengeFailed = "error.controller.challenge.get_challenge_failed";
         }
     }

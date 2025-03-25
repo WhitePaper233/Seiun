@@ -26,6 +26,8 @@ public class SeiunDbContext(DbContextOptions<SeiunDbContext> options) : DbContex
     public required DbSet<WordBookEntity> WordBooks { get; set; }
     public required DbSet<WordWordBookEntity> WordWordBooks { get; set; }
 
+    public required DbSet<MistakeBookEntity> MistakeBook { get; set; }
+
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
         #region 拦截器
@@ -56,7 +58,8 @@ public class SeiunDbContext(DbContextOptions<SeiunDbContext> options) : DbContex
         ConfigureWordEntity(modelBuilder);
         ConfigureWordDistractorEntity(modelBuilder);
         ConfigureWordWordBookEntity(modelBuilder);
-        ConfigureClozeTestEntity(modelBuilder);
+        ConfigureChallengeEntity(modelBuilder);
+        ConfigureMistakeBookEntity(modelBuilder);
 
         modelBuilder.Entity<WordWordBookEntity>().HasKey(p => new { p.WordId, p.BookId });
 
@@ -123,6 +126,13 @@ public class SeiunDbContext(DbContextOptions<SeiunDbContext> options) : DbContex
             .HasMany(u => u.WordSession)
             .WithOne(w => w.User)
             .HasForeignKey(w => w.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // user - MistakeBook
+        modelBuilder.Entity<UserEntity>()
+            .HasMany(u => u.MistakeBook)
+            .WithOne(m => m.User)
+            .HasForeignKey(m => m.UserId)
             .OnDelete(DeleteBehavior.Cascade);
     }
 
@@ -270,13 +280,22 @@ public class SeiunDbContext(DbContextOptions<SeiunDbContext> options) : DbContex
             .HasForeignKey(b => b.BookId);
     }
 
-    private static void ConfigureClozeTestEntity(ModelBuilder modelBuilder)
+    private static void ConfigureChallengeEntity(ModelBuilder modelBuilder)
     {
-        // ClozeTestEntity - session
+        // ChallengeEntity - session
         modelBuilder.Entity<ChallengeEntity>()
             .HasOne(c => c.Session)
             .WithMany(s => s.Challenges)
             .HasForeignKey(c => c.SessionId);
+    }
+
+    private static void ConfigureMistakeBookEntity(ModelBuilder modelBuilder)
+    {
+        // MistakeBook - user
+        modelBuilder.Entity<MistakeBookEntity>()
+            .HasOne(m => m.User)
+            .WithMany(u => u.MistakeBook)
+            .HasForeignKey(m => m.UserId);
     }
 
     #endregion
