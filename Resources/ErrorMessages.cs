@@ -9,6 +9,7 @@ public static class ErrorMessages
         public const string PublicAnnouncementTitleRequired = "error.validation.public_announcement_title_required";
         public const string PublicAnnouncementContentRequired = "error.validation.public_announcement_content_required";
         public const string ArticleRequired = "error.validation.article_required";
+        public const string ArticleTitleRequired = "error.validation.article_title_required";
 
         public const string InvalidPhone = "error.validation.invalid_phone_number";
         public const string InvalidEmail = "error.validation.invalid_email";
@@ -16,6 +17,7 @@ public static class ErrorMessages
         public const string InvalidUserName = "error.validation.invalid_username";
         public const string InvalidLikeCount = "error.validation.invalid_like_count";
         public const string InvalidDisLikeCount = "error.validation.invalid_dislike_count";
+        public const string SelectedWordIdRequired = "error.validation.selected_word_id_required";
 
         public const string OverPhoneNumberLength = "error.validation.over_phone_number_length";
         public const string OverNickNameLength = "error.validation.over_nickname_length";
@@ -48,6 +50,9 @@ public static class ErrorMessages
         public const string OverCoverUrlLength = "error.validation.over_cover_url_length";
         public const string OverPublicAnnouncementLength = "error.validation.over_public_announcement_length";
         public const string OverWordBookNameLength = "error.validation.over_word_book_name_length";
+        public const string OverArticleTitleMaxLength = "error.validation.over_article_title_max_length";
+        public const string OverArticleDescriptionMaxLength = "error.validation.over_article_description_max_length";
+        public const string OverArticleVocabularyMaxLength = "error.validation.over_article_vocabulary_max_length";
     }
 
     public static class Controller
@@ -143,7 +148,7 @@ public static class ErrorMessages
         public static class Word
         {
             public const string FinishedWordCreatFailed = "error.controller.word.finishedword.create_failed";
-            public const string ErrorWordCreatFailed = "error.controller.word.errorword.create_failed";
+            public const string WrongWordCreatFailed = "error.controller.word.errorword.create_failed";
         }
 
         public static class WordBook
@@ -173,6 +178,11 @@ public static class ErrorMessages
             public const string ChallengeNotFound = "error.controller.challenge.not_found";
             public const string GetChallengeSuccess = "error.controller.question.get_challenge_success";
             public const string GetChallengeFailed = "error.controller.challenge.get_challenge_failed";
+        }
+
+        public static class MistakeBook
+        {
+            public const string MistakeNotFound = "error.controller.mistake.not_found";
         }
     }
 }

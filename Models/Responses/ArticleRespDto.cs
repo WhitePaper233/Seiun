@@ -70,6 +70,7 @@ public class ArticleDetail
     public required Guid CreatorId { get; set; }
     public required string Article { get; set; }
     public List<string>? ArticleImgUrls { get; set; }
+    public string? CoverFileName { get; set; }
     public required DateTimeOffset CreateAt { get; set; }
     public required int Like { get; set; }
     public required bool IsPinned { get; set; }
@@ -89,6 +90,7 @@ public sealed class ArticleDetailResp(int code, string message, ArticleDetail? a
                 CreatorId = articleEntity.CreatorId,
                 Article = articleEntity.Article,
                 ArticleImgUrls = articleImgUrls,
+                CoverFileName = articleEntity.CoverFileName,
                 CreateAt = articleEntity.CreatedAt,
                 Like = articleLikedCount,
                 IsPinned = articleEntity.IsPinned
