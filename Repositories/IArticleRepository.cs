@@ -9,4 +9,6 @@ public interface IArticleRepository : IBaseRepository<ArticleEntity>
     Task<string> UploadArticleImgAsync(Stream articleImgData);
     Task<bool> DeleteArticleImgAsync(List<string> articleImgName);
     Task<MemoryStream> GetArticleImgAsync(string fileNames);
+    Task<List<ArticleEntity>> GetAllArticlesAsync(int index, int size, Guid? keyword);
+    Task<int> GetTotalArticlesAsync(Guid? keyword);
 }

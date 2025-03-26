@@ -20,5 +20,5 @@ public class GetWordssByAdmin
 {
     public required int Index { get; set; }
     public required int Size { get; set; }
-    public Guid? Keyword { get; set; }
+    public Guid? Keyword { get; set; } = null;
 }
