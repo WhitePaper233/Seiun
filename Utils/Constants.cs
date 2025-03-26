@@ -32,7 +32,6 @@ public static class Constants
     {
         public const string Avatar = "avatars";
         public const string ArticleImages = "article-images";
-        public const string ArticleCover = "article-covers";
         public const string WordMnemonicImage = "word-mnemonic-image";
         public const string WordAudio = "word-audio";
     }

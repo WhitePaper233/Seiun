@@ -3,6 +3,7 @@ using Minio;
 using Minio.DataModel.Args;
 using Seiun.Entities;
 using System.Net.Mime;
+using Seiun.Utils;
 
 namespace Seiun.Repositories;
 
@@ -37,11 +38,11 @@ public class ArticleRepository(SeiunDbContext dbContext, IMinioClient minioClien
             .ToListAsync();
     }
 
-    public async Task<string> UploadArticleImgAsync(Stream articleimgData, string bucketName)
+    public async Task<string> UploadArticleImgAsync(Stream articleimgData)
     {
         var articleImgName = $"{Guid.NewGuid()}.webp";
         var putObjectArgs = new PutObjectArgs()
-            .WithBucket(bucketName)
+            .WithBucket(Constants.BucketNames.ArticleImages)
             .WithObject(articleImgName)
             .WithContentType(MediaTypeNames.Image.Webp)
             .WithStreamData(articleimgData)
@@ -51,13 +52,13 @@ public class ArticleRepository(SeiunDbContext dbContext, IMinioClient minioClien
         return articleImgName;
     }
 
-    public async Task<bool> DeleteArticleImgAsync(List<string> articleImgNames, string bucketName)
+    public async Task<bool> DeleteArticleImgAsync(List<string> articleImgNames)
     {
         foreach (var articleImgName in articleImgNames)
             try
             {
                 var removeObjectArgs = new RemoveObjectArgs()
-                    .WithBucket(bucketName)
+                    .WithBucket(Constants.BucketNames.ArticleImages)
                     .WithObject(articleImgName);
 
                 await MinioCl.RemoveObjectAsync(removeObjectArgs).ConfigureAwait(false);
@@ -70,11 +71,11 @@ public class ArticleRepository(SeiunDbContext dbContext, IMinioClient minioClien
         return true;
     }
 
-    public async Task<MemoryStream> GetArticleImgAsync(string fileName, string bucketName)
+    public async Task<MemoryStream> GetArticleImgAsync(string fileName)
     {
         var articleImgStream = new MemoryStream();
         var getObjectArgs = new GetObjectArgs()
-            .WithBucket(bucketName)
+            .WithBucket(Constants.BucketNames.ArticleImages)
             .WithObject(fileName)
             .WithCallbackStream(data => data.CopyTo(articleImgStream));
         await MinioCl.GetObjectAsync(getObjectArgs).ConfigureAwait(false);

@@ -160,8 +160,7 @@ public class ArticleController(
             await image.SaveAsWebpAsync(processedImageStream);
             processedImageStream.Seek(0, SeekOrigin.Begin);
             var articleImgName =
-                await repository.ArticleRepository.UploadArticleImgAsync(processedImageStream,
-                    Constants.BucketNames.ArticleImages);
+                await repository.ArticleRepository.UploadArticleImgAsync(processedImageStream);
             return Ok(ArticleImgNameResp.Success(articleImgName));
         }
         catch (Exception e)
@@ -216,8 +215,7 @@ public class ArticleController(
         if (await repository.ArticleRepository.SaveAsync() && deleteResponse.IsValid)
         {
             if (article.ImageFileNames != null &&
-                await repository.ArticleRepository.DeleteArticleImgAsync(article.ImageFileNames,
-                    Constants.BucketNames.ArticleImages))
+                await repository.ArticleRepository.DeleteArticleImgAsync(article.ImageFileNames))
                 return Ok(ResponseFactory.NewSuccessBaseResponse(SuccessMessages.Controller.Article.DeleteSuccess));
             logger.LogError("User {} Delete article image {} failed", userId, articleId);
         }
@@ -336,10 +334,10 @@ public class ArticleController(
     [ProducesResponseType(typeof(ArticleListResp), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ArticleListResp), StatusCodes.Status404NotFound)]
     [ProducesResponseType(typeof(ArticleListResp), StatusCodes.Status500InternalServerError)]
-    public async Task<IActionResult> GetArticleList([FromQuery] int len, [FromQuery] DateTimeOffset? from,
-        [FromQuery] string? reqType, [FromQuery] Guid? userId = null)
+    public async Task<IActionResult> GetArticleList([FromQuery] int len = 0, [FromQuery] DateTimeOffset? from = null,
+        [FromQuery] ArticleQueryType? reqType = null, [FromQuery] Guid? userId = null)
     {
-        if (reqType is "user" or "liked" && userId is null)
+        if (reqType is ArticleQueryType.User or ArticleQueryType.Liked && userId is null)
             return BadRequest(ArticleListResp.Fail(
                 StatusCodes.Status400BadRequest,
                 ErrorMessages.Controller.Article.UserIdRequired
@@ -350,14 +348,14 @@ public class ArticleController(
             List<Guid>? articleIds;
             switch (reqType)
             {
-                case "":
-                case "all":
+                case null:
+                case ArticleQueryType.All:
                     articleIds = await repository.ArticleRepository.GetArticleListAsync(len, from);
                     break;
-                case "user":
+                case ArticleQueryType.User:
                     articleIds = await repository.ArticleRepository.GetArticleListByUserIdAsync(userId!.Value);
                     break;
-                case "liked":
+                case ArticleQueryType.Liked:
                     articleIds = await repository.ArticleLikeRepository.GetArticleListByLikedRecordAsync(userId!.Value);
                     break;
                 default:

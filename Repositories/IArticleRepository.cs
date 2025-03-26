@@ -6,7 +6,7 @@ public interface IArticleRepository : IBaseRepository<ArticleEntity>
 {
     Task<List<Guid>?> GetArticleListAsync(int queryLength, DateTimeOffset? from);
     Task<List<Guid>?> GetArticleListByUserIdAsync(Guid userId);
-    Task<string> UploadArticleImgAsync(Stream articleImgData, string bucketName);
-    Task<bool> DeleteArticleImgAsync(List<string> articleImgName, string bucketName);
-    Task<MemoryStream> GetArticleImgAsync(string fileNames, string bucketName);
+    Task<string> UploadArticleImgAsync(Stream articleImgData);
+    Task<bool> DeleteArticleImgAsync(List<string> articleImgName);
+    Task<MemoryStream> GetArticleImgAsync(string fileNames);
 }
