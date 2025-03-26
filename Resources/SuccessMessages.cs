@@ -89,7 +89,7 @@ public static class SuccessMessages
         public static class Word
         {
             public const string FinishedWordCreatSuccess = "controller.word.finishedword.create.create_success";
-            public const string ErrorWordRecordCreatSuccess = "controller.word.errorword.record.record_success";
+            public const string WrongWordRecordCreatSuccess = "controller.word.errorword.record.record_success";
             public const string GetWordSuccess = "controller.word.get.word_success";
         }
 
@@ -109,6 +109,12 @@ public static class SuccessMessages
         {
             public const string GetCheckInStatusSuccess = "controller.checkin.get_check_in_status_success";
             public const string GetCheckInDaysSuccess = "controller.checkin.get_check_in_days_success";
+        }
+
+        public static class MistakeBook
+        {
+            public const string GetMistakeListSuccess = "controller.mistake.get_mistake_list_success";
+            public const string GetMistakeDetailSuccess = "controller.mistake.get_mistake_detail_success";
         }
     }
 }

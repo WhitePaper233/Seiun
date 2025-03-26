@@ -57,7 +57,10 @@ public class ArticleController(
 
         var article = new ArticleEntity
         {
+            Title = articleCreate.Title,
             Article = articleCreate.Article,
+            Description = articleCreate.Description,
+            Vocabulary = articleCreate.Vocabulary,
             ImageFileNames = articleCreate.ImageNames,
             CoverFileName = articleCreate.CoverFileName,
             CreatorId = userId.Value,

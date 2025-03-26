@@ -293,7 +293,7 @@ public class WordSessionController(
     /// </summary>
     /// <param name="wordResultDto"></param>
     /// <returns>操作结果</returns>
-    [HttpPost("error", Name = "Error")]
+    [HttpPost("wrong", Name = "Wrong")]
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     [Authorize(Roles =
         $"{nameof(UserRole.User)},{nameof(UserRole.Creator)},{nameof(UserRole.Admin)},{nameof(UserRole.SuperAdmin)}")]
@@ -301,7 +301,7 @@ public class WordSessionController(
     [ProducesResponseType(typeof(BaseResp), StatusCodes.Status403Forbidden)]
     [ProducesResponseType(typeof(BaseResp), StatusCodes.Status404NotFound)]
     [ProducesResponseType(typeof(BaseResp), StatusCodes.Status500InternalServerError)]
-    public async Task<IActionResult> Error([FromBody] WordResultDto wordResultDto)
+    public async Task<IActionResult> Wrong([FromBody] WordResultDto wordResultDto)
     {
         var userId = User.GetUserId();
         if (userId == null)
@@ -316,6 +316,23 @@ public class WordSessionController(
                 ErrorMessages.Controller.WordSession.NotFoundSession
             ));
 
+        var mistake = new MistakeBookEntity
+        {
+            UserId = userId.Value,
+            WordId = wordResultDto.WordId,
+            SelectedWordId = wordResultDto.SelectedWordId,
+            Status = MistakeStatus.UnCorrected
+        };
+        repository.MistakeBookRepository.Create(mistake);
+        if (!await repository.MistakeBookRepository.SaveAsync())
+        {
+            logger.LogError("User {} wrong word {} failed", userId, wordResultDto.WordId);
+            return StatusCode(StatusCodes.Status500InternalServerError, ResponseFactory.NewFailedBaseResponse(
+                StatusCodes.Status500InternalServerError,
+                ErrorMessages.Controller.Word.WrongWordCreatFailed
+            ));
+        }
+
         var errorRecord = new WrongWordRecordEntity
         {
             UserId = userId.Value,
@@ -323,15 +340,17 @@ public class WordSessionController(
             WordId = wordResultDto.WordId
         };
         repository.WrongWordRepository.Create(errorRecord);
+
         currentStudySession.InsertErrorWord(session.Id);
         if (await repository.WrongWordRepository.SaveAsync())
             return Ok(ResponseFactory.NewSuccessBaseResponse(
-                SuccessMessages.Controller.Word.ErrorWordRecordCreatSuccess));
+                SuccessMessages.Controller.Word.WrongWordRecordCreatSuccess));
 
-        logger.LogError("User {} error word {} failed", userId, wordResultDto.WordId);
+        Console.WriteLine("1111111111111111111111");
+        logger.LogError("User {} wrong word {} failed", userId, wordResultDto.WordId);
         return StatusCode(StatusCodes.Status500InternalServerError, ResponseFactory.NewFailedBaseResponse(
             StatusCodes.Status500InternalServerError,
-            ErrorMessages.Controller.Word.ErrorWordCreatFailed
+            ErrorMessages.Controller.Word.WrongWordCreatFailed
         ));
     }
 }

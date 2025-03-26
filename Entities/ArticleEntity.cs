@@ -8,9 +8,24 @@ namespace Seiun.Entities;
 
 public class ArticleEntity : BaseEntity
 {
+    // 标题
+    [MaxLength(Constants.Article.MaxArticleTitleLength,
+        ErrorMessage = ErrorMessages.ValidationError.OverArticleTitleMaxLength)]
+    public required string Title { get; set; }
+
+    // 简介
+    [MaxLength(Constants.Article.MaxArticleDescriptionLength,
+        ErrorMessage = ErrorMessages.ValidationError.OverArticleDescriptionMaxLength)]
+    public string? Description { get; set; }
+
     // 文章
     [MaxLength(Constants.Article.MaxArticleLength, ErrorMessage = ErrorMessages.ValidationError.OverArticleMaxLength)]
     public required string Article { get; set; }
+
+    // key vocabulary
+    [MaxLength(Constants.Article.MaxArticleVocabularyLength,
+        ErrorMessage = ErrorMessages.ValidationError.OverArticleVocabularyMaxLength)]
+    public string? Vocabulary { get; set; }
 
     // 图片
     public List<string>? ImageFileNames { get; set; }

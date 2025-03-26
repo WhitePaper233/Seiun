@@ -73,4 +73,12 @@ public class WordRepository(SeiunDbContext dbContext, IMinioClient minioClient)
         wordAudioStream.Seek(0, SeekOrigin.Begin);
         return wordAudioStream;
     }
+
+    public async Task<WordEntity> GetWordDetailByIdAsync(Guid wordId)
+    {
+        return await DbContext.Words
+            .Where(w => w.Id == wordId)
+            .Include(w => w.WordDistractors)
+            .FirstAsync();
+    }
 }

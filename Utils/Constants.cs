@@ -39,6 +39,9 @@ public static class Constants
 
     public static class Article
     {
+        public const int MaxArticleDescriptionLength = 200;
+        public const int MaxArticleTitleLength = 200;
+        public const int MaxArticleVocabularyLength = 5000;
         public const int MaxArticleImageSize = 8 * 1024 * 1024; // 8MB
         public const int ArticleImageMaxWidth = 3 * 1024;
         public const int ArticleImageMaxHeight = 3 * 1024;

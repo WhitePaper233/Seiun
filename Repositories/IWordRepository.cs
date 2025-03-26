@@ -10,4 +10,5 @@ public interface IWordRepository : IBaseRepository<WordEntity>
     Task<int> GetTotalWordsAsync(Guid? keyword);
     Task<MemoryStream> GetWordMnemonicImage(string fileName);
     Task<MemoryStream> GetWordAudio(string fileName);
+    Task<WordEntity> GetWordDetailByIdAsync(Guid id);
 }

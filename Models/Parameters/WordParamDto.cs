@@ -8,6 +8,9 @@ public class WordResultDto
     [Required(ErrorMessage = ErrorMessages.ValidationError.WordIdRequired)]
     public required Guid WordId { get; set; }
 
+    [Required(ErrorMessage = ErrorMessages.ValidationError.SelectedWordIdRequired)]
+    public required Guid SelectedWordId { get; set; }
+
     [Required(ErrorMessage = ErrorMessages.ValidationError.SessionIdRequired)]
     public required Guid SessionId { get; set; }
 }
