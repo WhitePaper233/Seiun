@@ -207,9 +207,9 @@ public class ResourceController(ILogger<UserController> logger, IRepositoryServi
         if (wordText == null)
             return NotFound();
 
-        var fileName = $"{wordText}.mp3";
+        var fileName = $"{wordText}.wav";
         var wordAudioStream = await repository.WordRepository.GetWordAudio(fileName);
 
-        return File(wordAudioStream, "audio/mpeg");
+        return File(wordAudioStream, "audio/wav");
     }
 }
