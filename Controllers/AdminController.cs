@@ -214,7 +214,7 @@ public class AdminController(ILogger<AdminController> logger, IRepositoryService
     [ProducesResponseType(typeof(BaseResp), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(BaseResp), StatusCodes.Status404NotFound)]
     [ProducesResponseType(typeof(BaseResp), StatusCodes.Status500InternalServerError)]
-    public async Task<IActionResult> GetAllWords([FromQuery] GetWordssByAdmin parameters)
+    public async Task<IActionResult> GetAllWords([FromQuery] GetWordsByAdmin parameters)
     {
         try
         {
@@ -286,6 +286,9 @@ public class AdminController(ILogger<AdminController> logger, IRepositoryService
 
             var articleDetails = await Task.WhenAll(articles.Select(async a => new ArticleDetail
             {
+                Id = a.Id,
+                Title = a.Title,
+                Description = a.Description ?? "",
                 CreatorId = a.CreatorId,
                 Article = a.Article,
                 ArticleImgUrls = a.ImageFileNames,

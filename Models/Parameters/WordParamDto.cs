@@ -16,7 +16,7 @@ public class WordResultDto
 }
 
 // 获取所有单词Dto
-public class GetWordssByAdmin
+public class GetWordsByAdmin
 {
     public required int Index { get; set; }
     public required int Size { get; set; }
