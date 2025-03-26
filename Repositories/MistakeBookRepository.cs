@@ -8,20 +8,12 @@ namespace Seiun.Repositories;
 public class MistakeBookRepository(SeiunDbContext dbContext, IMinioClient minioClient)
     : BaseRepository<MistakeBookEntity>(dbContext, minioClient), IMistakeBookRepository
 {
-    public async Task<List<Guid>?> GetByStatus(MistakeStatus mistakeStatus, Guid userId)
+    public async Task<List<Guid>?> GetByStatus(Guid userId)
     {
-        if (mistakeStatus == MistakeStatus.All)
-            return await DbContext.MistakeBook
-                .Where(m => m.UserId == userId)
-                .OrderByDescending(m => m.CreatedAt)
-                .Select(m => m.Id)
-                .ToListAsync();
-
-
         return await DbContext.MistakeBook
-            .Where(m => m.UserId == userId && m.Status == mistakeStatus)
+            .Where(m => m.UserId == userId)
             .OrderByDescending(m => m.CreatedAt)
-            .Select(m => m.Id)
+            .Select(m => m.WordId)
             .ToListAsync();
     }
 }

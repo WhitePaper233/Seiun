@@ -9,6 +9,7 @@ using Seiun.Entities;
 using Seiun.Filters;
 using Seiun.Services;
 using Seiun.Utils;
+
 // using Nest;
 
 var builder = WebApplication.CreateBuilder(args);

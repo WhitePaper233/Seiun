@@ -258,34 +258,37 @@ public class WordSessionController(
             session.ReviewingWords.Remove(wordResultDto.WordId);
 
         if (session.StudyingWords != null && session.StudyingWords.Contains(wordResultDto.WordId))
+        {
             session.StudyingWords.Remove(wordResultDto.WordId);
+            var finishedRecord = new FinishedWordRecordEntity
+            {
+                UserId = userId.Value,
+                SessionId = wordResultDto.SessionId,
+                WordId = wordResultDto.WordId
+            };
+            repository.FinishedWordRepository.Create(finishedRecord);
+            if (!await repository.FinishedWordRepository.SaveAsync())
+            {
+                logger.LogWarning("User {} failed finish word", userId);
+                return StatusCode(StatusCodes.Status500InternalServerError, ResponseFactory.NewFailedBaseResponse(
+                    StatusCodes.Status500InternalServerError,
+                    ErrorMessages.Controller.Word.FinishedWordCreatFailed
+                ));
+            }
+        }
 
         repository.SessionRepository.Update(session);
-        if (!await repository.UserCheckInRepository.SaveAsync())
+        if (!await repository.SessionRepository.SaveAsync())
         {
-            logger.LogWarning("User {} failed check in", userId);
+            logger.LogWarning("User {} failed finish word", userId);
             return StatusCode(StatusCodes.Status500InternalServerError, ResponseFactory.NewFailedBaseResponse(
                 StatusCodes.Status500InternalServerError,
                 ErrorMessages.Controller.Word.FinishedWordCreatFailed
             ));
         }
-
-        var finishedRecord = new FinishedWordRecordEntity
-        {
-            UserId = userId.Value,
-            SessionId = wordResultDto.SessionId,
-            WordId = wordResultDto.WordId
-        };
+        
         currentStudySession.DeleteCorrectWord(session.Id);
-        repository.FinishedWordRepository.Create(finishedRecord);
-        if (await repository.FinishedWordRepository.SaveAsync())
-            return Ok(ResponseFactory.NewSuccessBaseResponse(SuccessMessages.Controller.Word.FinishedWordCreatSuccess));
-
-        logger.LogWarning("User {} finished word {} failed", userId, wordResultDto.WordId);
-        return StatusCode(StatusCodes.Status500InternalServerError, ResponseFactory.NewFailedBaseResponse(
-            StatusCodes.Status500InternalServerError,
-            ErrorMessages.Controller.Word.FinishedWordCreatFailed
-        ));
+        return Ok(ResponseFactory.NewSuccessBaseResponse(SuccessMessages.Controller.Word.FinishedWordCreatSuccess));
     }
 
     /// <summary>
@@ -319,9 +322,7 @@ public class WordSessionController(
         var mistake = new MistakeBookEntity
         {
             UserId = userId.Value,
-            WordId = wordResultDto.WordId,
-            SelectedWordId = wordResultDto.SelectedWordId,
-            Status = MistakeStatus.UnCorrected
+            WordId = wordResultDto.WordId
         };
         repository.MistakeBookRepository.Create(mistake);
         if (!await repository.MistakeBookRepository.SaveAsync())
@@ -346,7 +347,6 @@ public class WordSessionController(
             return Ok(ResponseFactory.NewSuccessBaseResponse(
                 SuccessMessages.Controller.Word.WrongWordRecordCreatSuccess));
 
-        Console.WriteLine("1111111111111111111111");
         logger.LogError("User {} wrong word {} failed", userId, wordResultDto.WordId);
         return StatusCode(StatusCodes.Status500InternalServerError, ResponseFactory.NewFailedBaseResponse(
             StatusCodes.Status500InternalServerError,

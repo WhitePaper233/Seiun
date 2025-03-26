@@ -83,18 +83,16 @@ public class ArticleRepository(SeiunDbContext dbContext, IMinioClient minioClien
 
         return articleImgStream;
     }
+
     public async Task<List<ArticleEntity>> GetAllArticlesAsync(int index, int size, Guid? keyword)
     {
         var query = DbContext.Articles.AsQueryable();
 
-        if (keyword.HasValue)
-        {
-            query = query.Where(a => a.CreatorId == keyword.Value);
-        }
+        if (keyword.HasValue) query = query.Where(a => a.CreatorId == keyword.Value);
 
         return await query
-            .OrderByDescending(a => a.PinTime) 
-            .Skip((index-1) * size)
+            .OrderByDescending(a => a.PinTime)
+            .Skip((index - 1) * size)
             .Take(size)
             .ToListAsync();
     }
@@ -103,12 +101,8 @@ public class ArticleRepository(SeiunDbContext dbContext, IMinioClient minioClien
     {
         var query = DbContext.Articles.AsQueryable();
 
-        if (keyword.HasValue)
-        {
-            query = query.Where(a => a.CreatorId == keyword.Value);
-        }
+        if (keyword.HasValue) query = query.Where(a => a.CreatorId == keyword.Value);
 
         return await query.CountAsync();
     }
-
 }
