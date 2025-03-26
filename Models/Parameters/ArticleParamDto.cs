@@ -25,3 +25,10 @@ public class ArticleCreate
     // 封面
     public string? CoverFileName { get; set; }
 }
+
+public class GetArticlesByAdmin
+{
+    public required int Index { get; set; }
+    public required int Size { get; set; }
+    public Guid? Keyword { get; set; } = null;
+}

@@ -259,4 +259,57 @@ public class AdminController(ILogger<AdminController> logger, IRepositoryService
             ));
         }
     }
+
+
+    // 获取所有文章
+    [HttpGet("article-list", Name = "GetArticleList")]
+    [Authorize(Roles = $"{nameof(UserRole.SuperAdmin)}")]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    [ProducesResponseType(typeof(BaseResp), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(BaseResp), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(BaseResp), StatusCodes.Status500InternalServerError)]
+    public async Task<IActionResult> GetAllArticles([FromQuery] GetArticlesByAdmin parameters)
+    {
+        try
+        {
+            var articles = await repository.ArticleRepository.GetAllArticlesAsync(parameters.Index, parameters.Size, parameters.Keyword);
+            var totalArticles = await repository.ArticleRepository.GetTotalArticlesAsync(parameters.Keyword);
+
+            if (articles == null || articles.Count == 0)
+            {
+                logger.LogError("Get all articles failed");
+                return StatusCode(StatusCodes.Status404NotFound, ResponseFactory.NewFailedBaseResponse(
+                    StatusCodes.Status404NotFound,
+                    ErrorMessages.Controller.Admin.ArticlesNotFound
+                ));
+            }
+
+            var articleDetails = await Task.WhenAll(articles.Select(async a => new ArticleDetail
+            {
+                CreatorId = a.CreatorId,
+                Article = a.Article,
+                ArticleImgUrls = a.ImageFileNames,
+                CreateAt = a.CreatedAt,
+                Like = await repository.ArticleLikeRepository.GetUserCountByLikedRecordAsync(a.Id),
+                IsPinned = a.IsPinned,
+            }));
+
+            var articleListResponse = new ArticleListDto
+            {
+                Articles = [.. articleDetails], 
+                TotalArticle = totalArticles
+            };
+            return Ok(ArticleListResponse.Success(articleListResponse));
+            
+        }
+        catch (Exception ex)
+        {
+            logger.LogError($"Error while getting all articles: {ex.Message}");
+            return StatusCode(StatusCodes.Status500InternalServerError, ResponseFactory.NewFailedBaseResponse(
+                StatusCodes.Status500InternalServerError,
+                ErrorMessages.Controller.Admin.GetAllArticlesFailed
+            ));
+        }
+    }
+
 }
