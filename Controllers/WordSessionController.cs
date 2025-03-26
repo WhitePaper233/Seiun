@@ -319,9 +319,7 @@ public class WordSessionController(
         var mistake = new MistakeBookEntity
         {
             UserId = userId.Value,
-            WordId = wordResultDto.WordId,
-            SelectedWordId = wordResultDto.SelectedWordId,
-            Status = MistakeStatus.UnCorrected
+            WordId = wordResultDto.WordId
         };
         repository.MistakeBookRepository.Create(mistake);
         if (!await repository.MistakeBookRepository.SaveAsync())
@@ -346,7 +344,6 @@ public class WordSessionController(
             return Ok(ResponseFactory.NewSuccessBaseResponse(
                 SuccessMessages.Controller.Word.WrongWordRecordCreatSuccess));
 
-        Console.WriteLine("1111111111111111111111");
         logger.LogError("User {} wrong word {} failed", userId, wordResultDto.WordId);
         return StatusCode(StatusCodes.Status500InternalServerError, ResponseFactory.NewFailedBaseResponse(
             StatusCodes.Status500InternalServerError,

@@ -114,7 +114,7 @@ public static class SuccessMessages
         public static class MistakeBook
         {
             public const string GetMistakeListSuccess = "controller.mistake.get_mistake_list_success";
-            public const string GetMistakeDetailSuccess = "controller.mistake.get_mistake_detail_success";
+            public const string GetMistakeWordSuccess = "controller.mistake.get_mistake_detail_success";
         }
     }
 }

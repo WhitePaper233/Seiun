@@ -9,6 +9,7 @@ using SixLabors.ImageSharp;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Seiun.Utils;
+
 // using Nest;
 
 namespace Seiun.Controllers;
@@ -63,7 +64,6 @@ public class ArticleController(ILogger<ArticleController> logger, IRepositorySer
 
         repository.ArticleRepository.Create(article);
         if (await repository.ArticleRepository.SaveAsync())
-        {
             // var articleSearchEntity = new ArticleSearchEntity
             // {
             //     Article = article.Article,
@@ -72,12 +72,10 @@ public class ArticleController(ILogger<ArticleController> logger, IRepositorySer
             //     CreatedAt = article.CreatedAt,
             //     ArticleId = article.Id
             // };
-
             // var indexResponse = await elasticClient.IndexAsync(articleSearchEntity, i => i
             //     .Ids(articleSearchEntity.ArticleId.ToString()));
             // if (indexResponse.IsValid)
             return Ok(ResponseFactory.NewSuccessBaseResponse(SuccessMessages.Controller.Article.CreateSuccess));
-        }
 
         logger.LogError("User {} Create article failed", userId);
         return StatusCode(StatusCodes.Status500InternalServerError, ResponseFactory.NewFailedBaseResponse(
@@ -498,8 +496,8 @@ public class ArticleController(ILogger<ArticleController> logger, IRepositorySer
             ErrorMessages.Controller.Article.LikeFailed
         ));
     }
-    
-    
+
+
     // [HttpGet("search", Name = "Search")]
     // [ProducesResponseType(typeof(ArticleListResp), StatusCodes.Status200OK)]
     // [ProducesResponseType(typeof(ArticleListResp), StatusCodes.Status404NotFound)]

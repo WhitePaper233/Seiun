@@ -272,7 +272,9 @@ public class AdminController(ILogger<AdminController> logger, IRepositoryService
     {
         try
         {
-            var articles = await repository.ArticleRepository.GetAllArticlesAsync(parameters.Index, parameters.Size, parameters.Keyword);
+            var articles =
+                await repository.ArticleRepository.GetAllArticlesAsync(parameters.Index, parameters.Size,
+                    parameters.Keyword);
             var totalArticles = await repository.ArticleRepository.GetTotalArticlesAsync(parameters.Keyword);
 
             if (articles == null || articles.Count == 0)
@@ -291,16 +293,15 @@ public class AdminController(ILogger<AdminController> logger, IRepositoryService
                 ArticleImgUrls = a.ImageFileNames,
                 CreateAt = a.CreatedAt,
                 Like = await repository.ArticleLikeRepository.GetUserCountByLikedRecordAsync(a.Id),
-                IsPinned = a.IsPinned,
+                IsPinned = a.IsPinned
             }));
 
             var articleListResponse = new ArticleListDto
             {
-                Articles = [.. articleDetails], 
+                Articles = [.. articleDetails],
                 TotalArticle = totalArticles
             };
             return Ok(ArticleListResponse.Success(articleListResponse));
-            
         }
         catch (Exception ex)
         {
@@ -311,5 +312,4 @@ public class AdminController(ILogger<AdminController> logger, IRepositoryService
             ));
         }
     }
-
 }

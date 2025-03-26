@@ -88,7 +88,7 @@ public static class ErrorMessages
             public const string NotAdmin = "error.controller.admin.not_admin";
             public const string GetAllWordsFailed = "error.controller.admin.word.get_all_words_failed";
             public const string WordsNotFound = "error.controller.admin.word.words_not_found";
-            public const string ArticlesNotFound =  "error.controller.admin.article.articles_not_found";
+            public const string ArticlesNotFound = "error.controller.admin.article.articles_not_found";
             public const string GetAllArticlesFailed = "error.controller.admin.article.get_all_articles_failed";
         }
 
@@ -182,7 +182,7 @@ public static class ErrorMessages
 
         public static class MistakeBook
         {
-            public const string MistakeNotFound = "error.controller.mistake.not_found";
+            public const string MistakeWordNotFound = "error.controller.mistake.not_found";
         }
     }
 }

@@ -36,28 +36,26 @@ public sealed class MistakeListResp(int code, string message, MistakeListDetail?
 
 public class MistakeDetail
 {
-    public required List<OptionDetail> Options { get; set; }
-    public required AnswerDetail Answer { get; set; }
-    public required SelectedDetail SelectedWord { get; set; }
-    public required string AnswerExampleSentence { get; set; }
-    public required string SelectedWordExampleSentence { get; set; }
-    public required MistakeStatus Status { get; set; }
+    public required string WordText { get; set; }
+    public string? Pronunciation { get; set; }
+    public required string Definition { get; set; }
+    public required string ExampleSentence { get; set; }
 }
 
-public class SelectedDetail
+public sealed class MistakeDetailResp(int code, string message, MistakeDetail? mistakeWord)
+    : BaseRespWithData<MistakeDetail>(code, message, mistakeWord)
 {
-    public required Guid WordId { get; set; }
-    public required string Word { get; set; }
-}
-
-public sealed class MistakeDetailResp(int code, string message, MistakeDetail? mistake)
-    : BaseRespWithData<MistakeDetail>(code, message, mistake)
-{
-    public static MistakeDetailResp Success(MistakeDetail mistake)
+    public static MistakeDetailResp Success(WordEntity mistakeWord)
     {
         return new MistakeDetailResp(StatusCodes.Status200OK,
-            SuccessMessages.Controller.MistakeBook.GetMistakeDetailSuccess,
-            mistake);
+            SuccessMessages.Controller.MistakeBook.GetMistakeWordSuccess,
+            new MistakeDetail
+            {
+                WordText = mistakeWord.WordText,
+                Pronunciation = mistakeWord.Pronunciation,
+                Definition = mistakeWord.Definition,
+                ExampleSentence = mistakeWord.ExampleSentence
+            });
     }
 
     public static MistakeDetailResp Fail(int code, string message)

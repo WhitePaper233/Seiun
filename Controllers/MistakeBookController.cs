@@ -23,7 +23,6 @@ public class MistakeBookController(ILogger<MistakeBookController> logger, IRepos
     /// <summary>
     /// 获取错题列表
     /// </summary>
-    /// <param name="mistakeStatus">筛选条件</param>
     /// <returns>列表</returns>
     [HttpGet("mistake-list", Name = "GetMistakeList")]
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
@@ -31,7 +30,7 @@ public class MistakeBookController(ILogger<MistakeBookController> logger, IRepos
         $"{nameof(UserRole.User)},{nameof(UserRole.Creator)},{nameof(UserRole.Admin)},{nameof(UserRole.SuperAdmin)}")]
     [ProducesResponseType(typeof(MistakeListResp), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(MistakeListResp), StatusCodes.Status403Forbidden)]
-    public async Task<IActionResult> GetMistakeList([FromQuery] MistakeStatus mistakeStatus)
+    public async Task<IActionResult> GetMistakeList()
     {
         var userId = User.GetUserId();
         if (userId == null)
@@ -40,14 +39,14 @@ public class MistakeBookController(ILogger<MistakeBookController> logger, IRepos
                 ErrorMessages.Controller.Any.InvalidJwtToken
             ));
 
-        var mistakeList = await repository.MistakeBookRepository.GetByStatus(mistakeStatus, userId.Value);
+        var mistakeList = await repository.MistakeBookRepository.GetByStatus(userId.Value);
         return Ok(MistakeListResp.Success(mistakeList));
     }
 
     /// <summary>
     /// 获取错题
     /// </summary>
-    /// <param name="mistakeId">错题ID</param>
+    /// <param name="mistakeWordId">错题ID</param>
     /// <returns>错题</returns>
     [HttpGet("mistake", Name = "GetMistake")]
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
@@ -56,7 +55,7 @@ public class MistakeBookController(ILogger<MistakeBookController> logger, IRepos
     [ProducesResponseType(typeof(MistakeDetailResp), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(MistakeDetailResp), StatusCodes.Status403Forbidden)]
     [ProducesResponseType(typeof(MistakeDetailResp), StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> GetMistakeDetail([FromQuery] Guid mistakeId)
+    public async Task<IActionResult> GetMistakeDetail([FromQuery] Guid mistakeWordId)
     {
         var userId = User.GetUserId();
         if (userId == null)
@@ -65,50 +64,13 @@ public class MistakeBookController(ILogger<MistakeBookController> logger, IRepos
                 ErrorMessages.Controller.Any.InvalidJwtToken
             ));
 
-        var mistakeEntity = await repository.MistakeBookRepository.GetByIdAsync(mistakeId);
+        var mistakeEntity = await repository.WordRepository.GetByIdAsync(mistakeWordId);
         if (mistakeEntity == null)
             return NotFound(MistakeDetailResp.Fail(
                 StatusCodes.Status404NotFound,
-                ErrorMessages.Controller.MistakeBook.MistakeNotFound
+                ErrorMessages.Controller.MistakeBook.MistakeWordNotFound
             ));
 
-        var wordEntity = await repository.WordRepository.GetWordDetailByIdAsync(mistakeEntity.WordId);
-        var distractorWordIds = wordEntity.WordDistractors.Select(w => w.DistractorId);
-        var distractorWordEntities = (await repository.WordRepository.GetByGuidsAsync(distractorWordIds)).ToList();
-        var selectedWordEntity = distractorWordEntities.First(w => w.Id == mistakeEntity.SelectedWordId);
-
-        var options = distractorWordEntities.Select(d =>
-                new OptionDetail
-                    { WordId = d.Id, Word = d.WordText, Pronunciation = d.Pronunciation, Definition = d.Definition })
-            .ToList();
-        options.Add(new OptionDetail
-        {
-            WordId = wordEntity.Id, Word = wordEntity.WordText, Pronunciation = wordEntity.Pronunciation,
-            Definition = wordEntity.Definition
-        });
-
-        var answer = new AnswerDetail
-        {
-            WordId = wordEntity.Id,
-            Word = wordEntity.WordText
-        };
-
-        var selectedWord = new SelectedDetail
-        {
-            WordId = selectedWordEntity.Id,
-            Word = selectedWordEntity.WordText
-        };
-
-        var mistake = new MistakeDetail
-        {
-            Options = options,
-            Answer = answer,
-            SelectedWord = selectedWord,
-            AnswerExampleSentence = wordEntity.ExampleSentence,
-            SelectedWordExampleSentence = selectedWordEntity.ExampleSentence,
-            Status = mistakeEntity.Status
-        };
-
-        return Ok(MistakeDetailResp.Success(mistake));
+        return Ok(MistakeDetailResp.Success(mistakeEntity));
     }
 }

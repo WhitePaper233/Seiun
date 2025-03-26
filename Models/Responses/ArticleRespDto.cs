@@ -109,7 +109,9 @@ public sealed class ArticleDetailResp(int code, string message, ArticleDetail? a
 /// <summary>
 /// 所有文章响应
 /// </summary>
+
 # region ArticleListResponse
+
 public class ArticleListDto
 {
     public required List<ArticleDetail> Articles { get; set; }
@@ -120,18 +122,19 @@ public class ArticleListDto
 /// 管理员文章列表响应 
 /// </summary>
 public sealed class ArticleListResponse(int code, string message, ArticleListDto? articleListDto)
-	: BaseRespWithData<ArticleListDto>(code, message, articleListDto)
+    : BaseRespWithData<ArticleListDto>(code, message, articleListDto)
 {
-	public static ArticleListResponse Success(ArticleListDto articleListDto)
+    public static ArticleListResponse Success(ArticleListDto articleListDto)
     {
         return new ArticleListResponse(200, SuccessMessages.Controller.Article.GetArticleListSuccess, articleListDto);
     }
 
-	public static ArticleListResponse Fail(int code, string message)
-	{
-		return new ArticleListResponse(code, message, null);
-	}
+    public static ArticleListResponse Fail(int code, string message)
+    {
+        return new ArticleListResponse(code, message, null);
+    }
 }
+
 # endregion
 
 # region GetAIArticle
@@ -170,4 +173,5 @@ public sealed class AiArticleDetailResp(int code, string message, AiArticleList?
         return new AiArticleDetailResp(code, message, null);
     }
 }
+
 # endregion
