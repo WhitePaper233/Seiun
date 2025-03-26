@@ -179,7 +179,7 @@ public class WordSessionController(
 
         // 下一个单词为空，表示会话已经结束
         // 生成AI文章
-        // _ = Task.Run(() => aiRequest.GenerateAiArticleAsync(userId.Value));
+        _ = Task.Run(() => aiRequest.GenerateAiArticleAsync(userId.Value));
 
         // 打卡
         var lastCheckIn = await repository.UserCheckInRepository.LastCheckInAsync(userId.Value);

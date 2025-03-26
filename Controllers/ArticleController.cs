@@ -64,6 +64,9 @@ public class ArticleController(ILogger<ArticleController> logger, IRepositorySer
 
         repository.ArticleRepository.Create(article);
         if (await repository.ArticleRepository.SaveAsync())
+        {
+            return Ok(ResponseFactory.NewSuccessBaseResponse(SuccessMessages.Controller.Article.CreateSuccess));
+            
             // var articleSearchEntity = new ArticleSearchEntity
             // {
             //     Article = article.Article,
@@ -72,10 +75,15 @@ public class ArticleController(ILogger<ArticleController> logger, IRepositorySer
             //     CreatedAt = article.CreatedAt,
             //     ArticleId = article.Id
             // };
+            //
             // var indexResponse = await elasticClient.IndexAsync(articleSearchEntity, i => i
-            //     .Ids(articleSearchEntity.ArticleId.ToString()));
+            //     .Id(articleSearchEntity.ArticleId.ToString()));
             // if (indexResponse.IsValid)
-            return Ok(ResponseFactory.NewSuccessBaseResponse(SuccessMessages.Controller.Article.CreateSuccess));
+            
+    
+            //     return Ok(ResponseFactory.NewSuccessBaseResponse(SuccessMessages.Controller.Article.CreateSuccess));
+            // logger.LogError("Index article {} failed", article.Id);
+        }
 
         logger.LogError("User {} Create article failed", userId);
         return StatusCode(StatusCodes.Status500InternalServerError, ResponseFactory.NewFailedBaseResponse(

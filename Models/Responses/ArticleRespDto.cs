@@ -67,6 +67,9 @@ public sealed class ArticleListResp(int code, string message, ArticleList? artic
 /// </summary>
 public class ArticleDetail
 {
+    public required Guid Id { get; set; }
+    public required string Title { get; set; }
+    public required string Description { get; set; }
     public required Guid CreatorId { get; set; }
     public required string Article { get; set; }
     public List<string>? ArticleImgUrls { get; set; }
@@ -87,6 +90,9 @@ public sealed class ArticleDetailResp(int code, string message, ArticleDetail? a
             SuccessMessages.Controller.Article.GetArticleDetailSuccess,
             new ArticleDetail
             {
+                Id = articleEntity.Id,
+                Title = articleEntity.Title,
+                Description = articleEntity.Description ?? "",
                 CreatorId = articleEntity.CreatorId,
                 Article = articleEntity.Article,
                 ArticleImgUrls = articleImgUrls,
