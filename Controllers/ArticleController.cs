@@ -70,20 +70,21 @@ public class ArticleController(
         repository.ArticleRepository.Create(article);
         if (await repository.ArticleRepository.SaveAsync())
         {
-            var articleSearchEntity = new ArticleSearchEntity
-            {
-                Article = article.Article,
-                CreatorUserName = user.UserName,
-                CreatorNickName = user.NickName,
-                CreatedAt = article.CreatedAt,
-                ArticleId = article.Id
-            };
-
-            var indexResponse = await elasticClient.IndexAsync(articleSearchEntity, i => i
-                .Id(articleSearchEntity.ArticleId.ToString()));
-            if (indexResponse.IsValid)
-                return Ok(ResponseFactory.NewSuccessBaseResponse(SuccessMessages.Controller.Article.CreateSuccess));
-            logger.LogError("Index article {} failed", article.Id);
+            return Ok(ResponseFactory.NewSuccessBaseResponse(SuccessMessages.Controller.Article.CreateSuccess));
+            // var articleSearchEntity = new ArticleSearchEntity
+            // {
+            //     Article = article.Article,
+            //     CreatorUserName = user.UserName,
+            //     CreatorNickName = user.NickName,
+            //     CreatedAt = article.CreatedAt,
+            //     ArticleId = article.Id
+            // };
+            //
+            // var indexResponse = await elasticClient.IndexAsync(articleSearchEntity, i => i
+            //     .Id(articleSearchEntity.ArticleId.ToString()));
+            // if (indexResponse.IsValid)
+            //     return Ok(ResponseFactory.NewSuccessBaseResponse(SuccessMessages.Controller.Article.CreateSuccess));
+            // logger.LogError("Index article {} failed", article.Id);
         }
 
         logger.LogError("User {} Create article failed", userId);
