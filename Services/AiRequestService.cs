@@ -146,8 +146,7 @@ public class AiRequestService(IServiceScopeFactory serviceScopeFactory, ILogger<
             await image.SaveAsWebpAsync(processedImageStream);
             processedImageStream.Seek(0, SeekOrigin.Begin);
             articleImgName =
-                await repository.ArticleRepository.UploadArticleImgAsync(processedImageStream,
-                    Constants.BucketNames.ArticleCover);
+                await repository.ArticleRepository.UploadArticleImgAsync(processedImageStream);
         }
         catch
         {

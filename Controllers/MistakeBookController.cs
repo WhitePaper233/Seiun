@@ -25,7 +25,7 @@ public class MistakeBookController(ILogger<MistakeBookController> logger, IRepos
     /// </summary>
     /// <param name="mistakeStatus">筛选条件</param>
     /// <returns>列表</returns>
-    [HttpGet("mistake", Name = "GetMistakeBook")]
+    [HttpGet("mistake-list", Name = "GetMistakeList")]
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     [Authorize(Roles =
         $"{nameof(UserRole.User)},{nameof(UserRole.Creator)},{nameof(UserRole.Admin)},{nameof(UserRole.SuperAdmin)}")]
@@ -49,7 +49,7 @@ public class MistakeBookController(ILogger<MistakeBookController> logger, IRepos
     /// </summary>
     /// <param name="mistakeId">错题ID</param>
     /// <returns>错题</returns>
-    [HttpGet("mistakes", Name = "GetMistakes")]
+    [HttpGet("mistake", Name = "GetMistake")]
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     [Authorize(Roles =
         $"{nameof(UserRole.User)},{nameof(UserRole.Creator)},{nameof(UserRole.Admin)},{nameof(UserRole.SuperAdmin)}")]

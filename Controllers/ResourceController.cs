@@ -72,13 +72,14 @@ public class ResourceController(ILogger<UserController> logger, IRepositoryServi
     /// 文章图片接口
     /// </summary>
     /// <param name="fileName">文件名</param>
+    /// <param name="width">文件名</param>
     /// <returns>文章图片文件</returns>
     [HttpGet("article-image/{fileName}")]
     [ProducesResponseType(typeof(FileResult), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<IActionResult> GetArticleImages(string fileName)
+    public async Task<IActionResult> GetArticleImages(string fileName, int width = 0)
     {
         if (string.IsNullOrWhiteSpace(fileName)) return BadRequest();
 
@@ -86,7 +87,7 @@ public class ResourceController(ILogger<UserController> logger, IRepositoryServi
         try
         {
             articleImgStream =
-                await repository.ArticleRepository.GetArticleImgAsync(fileName, Constants.BucketNames.ArticleImages);
+                await repository.ArticleRepository.GetArticleImgAsync(fileName);
         }
         catch (MinioException e)
         {
@@ -96,44 +97,12 @@ public class ResourceController(ILogger<UserController> logger, IRepositoryServi
             return StatusCode(StatusCodes.Status500InternalServerError);
         }
 
-        return File(articleImgStream, MediaTypeNames.Image.Webp);
-    }
-
-    /// <summary>
-    /// 文章封面接口
-    /// </summary>
-    /// <param name="fileName">文件URL</param>
-    /// <param name="width">图片宽度</param>>
-    /// <returns></returns>
-    [HttpGet("article-cover/{fileName}")]
-    [ProducesResponseType(typeof(FileResult), StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
-    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<IActionResult> GetArticleCover(string fileName, [FromQuery] int width = 0)
-    {
-        if (string.IsNullOrWhiteSpace(fileName)) return BadRequest();
-
-        MemoryStream articleCoverStream;
-        try
-        {
-            articleCoverStream =
-                await repository.ArticleRepository.GetArticleImgAsync(fileName, Constants.BucketNames.ArticleCover);
-        }
-        catch (MinioException e)
-        {
-            if (e is ObjectNotFoundException) return NotFound();
-
-            logger.LogError(e, "Failed to get article images: {}", fileName);
-            return StatusCode(StatusCodes.Status500InternalServerError);
-        }
-
-        if (width <= 0) return File(articleCoverStream, MediaTypeNames.Image.Webp);
+        if (width <= 0) return File(articleImgStream, MediaTypeNames.Image.Webp);
 
         try
         {
             // 调整图像大小
-            using var image = await Image.LoadAsync(articleCoverStream);
+            using var image = await Image.LoadAsync(articleImgStream);
             image.Mutate(ipc => ipc.Resize(width, 0));
 
             // 保存为 webp 格式
@@ -146,7 +115,7 @@ public class ResourceController(ILogger<UserController> logger, IRepositoryServi
         }
         catch (Exception e)
         {
-            logger.LogError(e, "Failed to resize article cover: {}", fileName);
+            logger.LogError(e, "Failed to resize article img: {}", fileName);
             return StatusCode(StatusCodes.Status500InternalServerError);
         }
     }
