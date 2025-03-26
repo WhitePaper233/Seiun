@@ -9,16 +9,16 @@ using Seiun.Entities;
 using Seiun.Filters;
 using Seiun.Services;
 using Seiun.Utils;
-using Nest;
+// using Nest;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddSingleton<IElasticClient>(_ =>
-{
-    var settings = new ConnectionSettings(new Uri("http://localhost:9200"))
-        .DefaultIndex("articles");
-    return new ElasticClient(settings);
-});
+// builder.Services.AddSingleton<IElasticClient>(_ =>
+// {
+//     var settings = new ConnectionSettings(new Uri("http://localhost:9200"))
+//         .DefaultIndex("articles");
+//     return new ElasticClient(settings);
+// });
 
 // Use custom filter for parameter validation
 builder.Services.Configure<ApiBehaviorOptions>(options => { options.SuppressModelStateInvalidFilter = true; });
@@ -58,7 +58,7 @@ builder.Services.AddSingleton<IAiRequestService, AiRequestService>();
 // Inject repository service
 builder.Services.AddScoped<IRepositoryService, RepositoryService>();
 // Inject search service
-builder.Services.AddScoped<IArticleSearchService, ArticleSearchService>();
+// builder.Services.AddScoped<IArticleSearchService, ArticleSearchService>();
 // Inject current study session service
 // 单例
 builder.Services.AddSingleton<ICurrentStudySessionService, CurrentStudySessionService>();
@@ -105,36 +105,36 @@ if (app.Environment.IsDevelopment())
     dbContext.Database.Migrate();
 
     // 配置 ElasticSearch 分词方式 
-    var elasticClient = scope.ServiceProvider.GetRequiredService<IElasticClient>();
+    // var elasticClient = scope.ServiceProvider.GetRequiredService<IElasticClient>();
     // 先检查索引是否存在
-    var indexExistsResponse = await elasticClient.Indices.ExistsAsync("articles");
-    if (!indexExistsResponse.Exists)
-    {
-        var createIndexResponse = await elasticClient.Indices.CreateAsync("articles", c => c
-            .Map<ArticleSearchEntity>(m => m
-                .Properties(props => props
-                    .Text(t => t
-                            .Name(n => n.Article) // 文章内容进行分词
-                            .Analyzer("standard") // 使用标准分析器
-                    )
-                    .Keyword(k => k
-                        .Name(n => n.CreatorUserName)
-                    )
-                    .Text(k => k
-                        .Name(n => n.CreatorNickName)
-                        .Analyzer("standard")
-                    )
-                    .Keyword(l => l
-                        .Name(n => n.ArticleId))
-                )
-            )
-        );
-        var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
-        if (createIndexResponse.IsValid)
-            logger.LogInformation("Elasticsearch 索引创建成功！");
-        else
-            logger.LogError("Elasticsearch 索引创建失败: {Reason}", createIndexResponse.OriginalException?.Message);
-    }
+    // var indexExistsResponse = await elasticClient.Indices.ExistsAsync("articles");
+    // if (!indexExistsResponse.Exists)
+    // {
+    //     var createIndexResponse = await elasticClient.Indices.CreateAsync("articles", c => c
+    //         .Map<ArticleSearchEntity>(m => m
+    //             .Properties(props => props
+    //                 .Text(t => t
+    //                         .Name(n => n.Article) // 文章内容进行分词
+    //                         .Analyzer("standard") // 使用标准分析器
+    //                 )
+    //                 .Keyword(k => k
+    //                     .Name(n => n.CreatorUserName)
+    //                 )
+    //                 .Text(k => k
+    //                     .Name(n => n.CreatorNickName)
+    //                     .Analyzer("standard")
+    //                 )
+    //                 .Keyword(l => l
+    //                     .Name(n => n.ArticleId))
+    //             )
+    //         )
+    //     );
+    //     var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+    //     if (createIndexResponse.IsValid)
+    //         logger.LogInformation("Elasticsearch 索引创建成功！");
+    //     else
+    //         logger.LogError("Elasticsearch 索引创建失败: {Reason}", createIndexResponse.OriginalException?.Message);
+    // }
 }
 
 app.UseCors("AllowFrontend"); // 在 UseAuthorization 之前调用
