@@ -9,7 +9,7 @@ using SixLabors.ImageSharp;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Seiun.Utils;
-using Nest;
+// using Nest;
 
 namespace Seiun.Controllers;
 
@@ -18,15 +18,9 @@ namespace Seiun.Controllers;
 /// </summary>
 /// <param name="logger">日志</param>
 /// <param name="repository">日志</param>
-/// <param name="elasticClient">Elasticsearch 搜索客户端</param>
-/// <param name="articleSearch">文章搜索服务</param>
 [ApiController]
 [Route("/api/article")]
-public class ArticleController(
-    ILogger<ArticleController> logger,
-    IRepositoryService repository,
-    IElasticClient elasticClient,
-    IArticleSearchService articleSearch) : ControllerBase
+public class ArticleController(ILogger<ArticleController> logger, IRepositoryService repository) : ControllerBase
 {
     /// <summary>
     /// 上传文章
@@ -211,9 +205,9 @@ public class ArticleController(
                     ErrorMessages.Controller.Article.PermissonDeniedError
                 ));
 
-        var deleteResponse = await elasticClient.DeleteAsync<ArticleSearchEntity>(articleId.ToString());
+        // var deleteResponse = await elasticClient.DeleteAsync<ArticleSearchEntity>(articleId.ToString());
         repository.ArticleRepository.Delete(article);
-        if (await repository.ArticleRepository.SaveAsync() && deleteResponse.IsValid)
+        if (await repository.ArticleRepository.SaveAsync())
         {
             if (article.ImageFileNames != null &&
                 await repository.ArticleRepository.DeleteArticleImgAsync(article.ImageFileNames))
@@ -280,7 +274,7 @@ public class ArticleController(
     /// </summary>
     /// <param name="articleId">文章ID</param>
     /// <returns>取消置顶结果</returns>
-    [HttpPatch("cancel-pin/{articleId:Guid}", Name = "CanaelPinArticle")]
+    [HttpPatch("cancel-pin/{articleId:Guid}", Name = "CancelPinArticle")]
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     [Authorize(Roles = $"{nameof(UserRole.Creator)},{nameof(UserRole.Admin)},{nameof(UserRole.SuperAdmin)}")]
     [ProducesResponseType(typeof(BaseResp), StatusCodes.Status200OK)]
@@ -506,28 +500,22 @@ public class ArticleController(
             ErrorMessages.Controller.Article.LikeFailed
         ));
     }
-
-    /// <summary>
-    /// 搜索文章
-    /// </summary>
-    /// <param name="keyword">搜索关键字</param>
-    /// <param name="page">起始页</param>
-    /// <param name="pageSize">每页文章列表数目</param>
-    /// <returns>查询结果</returns>
-    [HttpGet("search", Name = "Search")]
-    [ProducesResponseType(typeof(ArticleListResp), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(ArticleListResp), StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> SearchArticle([FromQuery] string keyword, [FromQuery] int page = 1,
-        [FromQuery] int pageSize = 10)
-    {
-        var articleIdList = await articleSearch.ArticleSearchAsync(keyword, page, pageSize);
-        if (articleIdList == null)
-            return NotFound(ArticleListResp.Fail(
-                StatusCodes.Status404NotFound,
-                ErrorMessages.Controller.Article.ArticleNotFound
-            ));
-        return Ok(ArticleListResp.Success(articleIdList));
-    }
+    
+    
+    // [HttpGet("search", Name = "Search")]
+    // [ProducesResponseType(typeof(ArticleListResp), StatusCodes.Status200OK)]
+    // [ProducesResponseType(typeof(ArticleListResp), StatusCodes.Status404NotFound)]
+    // public async Task<IActionResult> SearchArticle([FromQuery] string keyword, [FromQuery] int page = 1,
+    //     [FromQuery] int pageSize = 10)
+    // {
+    //     var articleIdList = await articleSearch.ArticleSearchAsync(keyword, page, pageSize);
+    //     if (articleIdList == null)
+    //         return NotFound(ArticleListResp.Fail(
+    //             StatusCodes.Status404NotFound,
+    //             ErrorMessages.Controller.Article.ArticleNotFound
+    //         ));
+    //     return Ok(ArticleListResp.Success(articleIdList));
+    // }
 
     /// <summary>
     /// 获取AI文章
