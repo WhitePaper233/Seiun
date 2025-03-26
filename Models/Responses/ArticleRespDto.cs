@@ -67,6 +67,9 @@ public sealed class ArticleListResp(int code, string message, ArticleList? artic
 /// </summary>
 public class ArticleDetail
 {
+    public required Guid Id { get; set; }
+    public required string Title { get; set; }
+    public required string Description { get; set; }
     public required Guid CreatorId { get; set; }
     public required string Article { get; set; }
     public List<string>? ArticleImgUrls { get; set; }
@@ -87,6 +90,9 @@ public sealed class ArticleDetailResp(int code, string message, ArticleDetail? a
             SuccessMessages.Controller.Article.GetArticleDetailSuccess,
             new ArticleDetail
             {
+                Id = articleEntity.Id,
+                Title = articleEntity.Title,
+                Description = articleEntity.Description ?? "",
                 CreatorId = articleEntity.CreatorId,
                 Article = articleEntity.Article,
                 ArticleImgUrls = articleImgUrls,
@@ -109,7 +115,9 @@ public sealed class ArticleDetailResp(int code, string message, ArticleDetail? a
 /// <summary>
 /// 所有文章响应
 /// </summary>
+
 # region ArticleListResponse
+
 public class ArticleListDto
 {
     public required List<ArticleDetail> Articles { get; set; }
@@ -120,18 +128,19 @@ public class ArticleListDto
 /// 管理员文章列表响应 
 /// </summary>
 public sealed class ArticleListResponse(int code, string message, ArticleListDto? articleListDto)
-	: BaseRespWithData<ArticleListDto>(code, message, articleListDto)
+    : BaseRespWithData<ArticleListDto>(code, message, articleListDto)
 {
-	public static ArticleListResponse Success(ArticleListDto articleListDto)
+    public static ArticleListResponse Success(ArticleListDto articleListDto)
     {
         return new ArticleListResponse(200, SuccessMessages.Controller.Article.GetArticleListSuccess, articleListDto);
     }
 
-	public static ArticleListResponse Fail(int code, string message)
-	{
-		return new ArticleListResponse(code, message, null);
-	}
+    public static ArticleListResponse Fail(int code, string message)
+    {
+        return new ArticleListResponse(code, message, null);
+    }
 }
+
 # endregion
 
 # region GetAIArticle
@@ -170,4 +179,5 @@ public sealed class AiArticleDetailResp(int code, string message, AiArticleList?
         return new AiArticleDetailResp(code, message, null);
     }
 }
+
 #endregion
