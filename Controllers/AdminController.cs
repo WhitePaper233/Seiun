@@ -277,7 +277,7 @@ public class AdminController(ILogger<AdminController> logger, IRepositoryService
                     parameters.Keyword);
             var totalArticles = await repository.ArticleRepository.GetTotalArticlesAsync(parameters.Keyword);
 
-            if (articles == null || articles.Count == 0)
+            if (articles.Count == 0)
             {
                 logger.LogError("Get all articles failed");
                 return StatusCode(StatusCodes.Status404NotFound, ResponseFactory.NewFailedBaseResponse(
@@ -294,7 +294,7 @@ public class AdminController(ILogger<AdminController> logger, IRepositoryService
                 CreatorId = a.CreatorId,
                 Article = a.Article,
                 ArticleImgUrls = a.ImageFileNames,
-                CreateAt = a.CreatedAt,
+                CreateAt = a.CreatedAt.ToUnixTimeSeconds(),
                 Like = await repository.ArticleLikeRepository.GetUserCountByLikedRecordAsync(a.Id),
                 IsPinned = a.IsPinned
             }));
