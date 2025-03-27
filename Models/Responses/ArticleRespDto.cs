@@ -72,7 +72,7 @@ public class ArticleDetail
     public required string Title { get; set; }
     public required string Description { get; set; }
     public required Guid CreatorId { get; set; }
-    public required string Article { get; set; }
+    public required string Content { get; set; }
     public List<string>? ArticleImgUrls { get; set; }
     public string? CoverFileName { get; set; }
     public required long CreateAt { get; set; }
@@ -95,7 +95,7 @@ public sealed class ArticleDetailResp(int code, string message, ArticleDetail? a
                 Title = articleEntity.Title,
                 Description = articleEntity.Description ?? "",
                 CreatorId = articleEntity.CreatorId,
-                Article = articleEntity.Content,
+                Content = articleEntity.Content,
                 ArticleImgUrls = articleImgUrls,
                 CoverFileName = articleEntity.CoverFileName,
                 CreateAt = articleEntity.CreatedAt.ToUnixTimeSeconds(),
