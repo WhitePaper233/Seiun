@@ -92,6 +92,9 @@ public class WordSessionController(
             ));
         }
 
+        var random = new Random();
+        studyWords = studyWords?.OrderBy(_ => random.Next()).ToList();
+
         var studyingWordCount = studyWords?.Count ?? 0;
         if (studyWords != null)
             foreach (var word in studyWords)
@@ -204,25 +207,8 @@ public class WordSessionController(
         // 删除会话
         currentStudySession.RemoveSession(session.Id);
 
-        // 更新用户计划
-        var userPlanEntity = await repository.UserPlansRepository.GetUserPlanAsync(userId.Value);
-        if (userPlanEntity == null)
-            return NotFound(GetNextWordResp.Fail(
-                StatusCodes.Status404NotFound,
-                ErrorMessages.Controller.UserPlan.CurrentUserPlanNotFound
-            ));
-
-        userPlanEntity.LearnedCount += userPlanEntity.DailyPlan;
-        repository.UserPlansRepository.Update(userPlanEntity);
-        if (await repository.UserPlansRepository.SaveAsync())
-            // 返回会话结束信息
-            return Ok(ResponseFactory.NewSuccessBaseResponse(SuccessMessages.Controller.WordSession.WordSessionOver));
-
-        logger.LogWarning("User {} failed over session", userId);
-        return StatusCode(StatusCodes.Status500InternalServerError, GetNextWordResp.Fail(
-            StatusCodes.Status500InternalServerError,
-            ErrorMessages.Controller.WordSession.WordSessionFailOver
-        ));
+        // 返回会话结束信息
+        return Ok(ResponseFactory.NewSuccessBaseResponse(SuccessMessages.Controller.WordSession.WordSessionOver));
     }
 
     /// <summary>
@@ -286,7 +272,7 @@ public class WordSessionController(
                 ErrorMessages.Controller.Word.FinishedWordCreatFailed
             ));
         }
-        
+
         currentStudySession.DeleteCorrectWord(session.Id);
         return Ok(ResponseFactory.NewSuccessBaseResponse(SuccessMessages.Controller.Word.FinishedWordCreatSuccess));
     }

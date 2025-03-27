@@ -292,7 +292,7 @@ public class AdminController(ILogger<AdminController> logger, IRepositoryService
                 Title = a.Title,
                 Description = a.Description ?? "",
                 CreatorId = a.CreatorId,
-                Article = a.Article,
+                Article = a.Content,
                 ArticleImgUrls = a.ImageFileNames,
                 CreateAt = a.CreatedAt.ToUnixTimeSeconds(),
                 Like = await repository.ArticleLikeRepository.GetUserCountByLikedRecordAsync(a.Id),

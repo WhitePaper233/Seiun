@@ -5,9 +5,7 @@ using Seiun.Services;
 using Seiun.Utils;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Processing;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Authorization;
-using Seiun.Utils.Enums;
+
 
 namespace Seiun.Controllers;
 
