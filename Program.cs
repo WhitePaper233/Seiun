@@ -78,14 +78,14 @@ builder.Services.AddControllers().AddJsonOptions(options =>
     options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
 });
 
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy("AllowFrontend", policy =>
-        policy.WithOrigins("http://localhost:5173") // 你的前端地址
-            .AllowAnyHeader() // 允许所有请求头，包括 Authorization 头
-            .AllowAnyMethod() // 允许 GET、POST、PUT、DELETE 等
-            .AllowCredentials()); // 允许前端携带 Cookie 或 Authorization 头
-});
+// builder.Services.AddCors(options =>
+// {
+//     options.AddPolicy("AllowFrontend", policy =>
+//         policy.WithOrigins("http://localhost:5173") // 你的前端地址
+//             .AllowAnyHeader() // 允许所有请求头，包括 Authorization 头
+//             .AllowAnyMethod() // 允许 GET、POST、PUT、DELETE 等
+//             .AllowCredentials()); // 允许前端携带 Cookie 或 Authorization 头
+// });
 
 // Configure PgSQL database
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");

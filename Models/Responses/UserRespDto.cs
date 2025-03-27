@@ -137,3 +137,31 @@ public sealed class UserListResp(int code, string message, UserListData? userLis
 }
 
 #endregion
+
+#region RoleListDto
+
+public class RoleListDto
+{
+    public required Guid UserId { get; set; }
+    public required UserRole RoleName { get; set; }
+}
+
+public class RoleListResp
+{
+    public required List<RoleListDto> List { get; set; }
+    public required int Total { get; set; }
+}
+
+public sealed class RoleListResponse(int code, string message, RoleListResp? roleList)
+    : BaseRespWithData<RoleListResp>(code, message, roleList)
+{
+    public static RoleListResponse Success(RoleListResp roleList)
+    {
+        return new RoleListResponse(200, SuccessMessages.Controller.Admin.GetRoleListSuccess, roleList);
+    }
+    public static RoleListResponse Fail(int code, string message)
+    {
+        return new RoleListResponse(code, message, null);
+    }
+}
+#endregion

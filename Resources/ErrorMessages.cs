@@ -89,6 +89,9 @@ public static class ErrorMessages
             public const string WordsNotFound = "error.controller.admin.word.words_not_found";
             public const string ArticlesNotFound =  "error.controller.admin.article.articles_not_found";
             public const string GetAllArticlesFailed = "error.controller.admin.article.get_all_articles_failed";
+            public const string ChangeRoleFailed = "error.controller.admin.role.change_role_failed";
+            public const string GetAllRolesFailed = "error.controller.admin.role.get_all_roles_failed";
+            public const string RolesNotFound = "error.controller.admin.role.roles_not_found";
         }
 
         public static class Article

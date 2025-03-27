@@ -19,6 +19,8 @@ public static class SuccessMessages
             public const string DeleteSuccess = "controller.admin.delete.delete_success";
             public const string UpdateSuccess = "controller.admin.update.update_success";
             public const string GetUserListSuccess = "controller.admin.get.get_userlist_success";
+            public const string GetRoleListSuccess = "controller.admin.get.get_rolelist_success";
+            public const string ChangeRoleSuccess = "controller.admin.change.change_role_success";
         }
 
         public static class Article

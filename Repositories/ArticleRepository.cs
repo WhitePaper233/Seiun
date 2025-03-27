@@ -95,6 +95,7 @@ public class ArticleRepository(SeiunDbContext dbContext, IMinioClient minioClien
             .OrderByDescending(a => a.PinTime) 
             .Skip((index-1) * size)
             .Take(size)
+            .Include(a => a.Likes)
             .ToListAsync();
     }
 

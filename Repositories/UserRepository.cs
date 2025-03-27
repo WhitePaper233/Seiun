@@ -4,6 +4,7 @@ using Minio;
 using Minio.DataModel.Args;
 using Seiun.Entities;
 using Seiun.Utils;
+using Seiun.Utils.Enums;
 
 namespace Seiun.Repositories;
 
@@ -73,5 +74,55 @@ public class UserRepository(SeiunDbContext dbContext, IMinioClient minioClient)
         return await DbContext.Users
             .Where(u => string.IsNullOrEmpty(keyword) || u.UserName.Contains(keyword))
             .ToListAsync();
+    }
+
+    public async Task<List<UserEntity>> GetAllRolesAsync(int index, int size, Guid? keyword)
+    {
+        var query = DbContext.Users
+            .Where(u => u.Role == UserRole.SuperAdmin 
+                    || u.Role == UserRole.Admin 
+                    || u.Role == UserRole.Creator)
+            .AsQueryable();
+
+        if (keyword.HasValue)
+        {
+            query = query.Where(a => a.Id == keyword.Value);
+        }
+
+        return await query
+            .Skip((index - 1) * size)
+            .Take(size)
+            .ToListAsync();
+    }
+
+
+    public async Task<int> GetTotalRolesAsync(Guid? keyword)
+    {
+        var query = DbContext.Users
+            .Where(u => u.Role == UserRole.SuperAdmin 
+                    || u.Role == UserRole.Admin 
+                    || u.Role == UserRole.Creator)
+            .AsQueryable();
+
+        if (keyword.HasValue)
+        {
+            query = query.Where(a => a.Id == keyword.Value);
+        }
+
+        return await query.CountAsync();
+    }
+
+    public async Task RemoveRoleAsync(Guid userId)
+    {
+        var user = await DbContext.Users.FindAsync(userId) ?? throw new Exception($"User with ID {userId} not found");
+        user.Role = UserRole.User;  
+        DbContext.Users.Update(user);
+    }
+
+    public async Task ChangeRoleAsync(Guid userId)
+    {
+        var user = await DbContext.Users.FindAsync(userId) ?? throw new Exception($"User with ID {userId} not found");
+        user.Role = UserRole.SuperAdmin;  
+        DbContext.Users.Update(user);
     }
 }
