@@ -122,27 +122,24 @@ public class ResourceController(ILogger<UserController> logger, IRepositoryServi
     /// 单词助记图片接口
     /// </summary>
     /// <param name="wordId">单词Id</param>
+    /// <param name="fileFormat">文件类型</param>
     /// <param name="height">设置图片高度</param>
     /// <param name="width">设置图片宽度</param>
     /// <returns>图片文件</returns>
-    [HttpGet("word-image/{wordId:guid}")]
+    [HttpGet("word-image/{wordId:guid}.{fileFormat}")]
     [ProducesResponseType(typeof(FileResult), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<IActionResult> GetWordMnemonicImage(Guid wordId, [FromQuery] int height = 0,
+    public async Task<IActionResult> GetWordMnemonicImage(Guid wordId, string fileFormat = "webp",
+        [FromQuery] int height = 0,
         [FromQuery] int width = 0)
     {
-        var userId = User.GetUserId();
-        if (userId == null)
-            return StatusCode(StatusCodes.Status403Forbidden);
-
-
         var wordText = (await repository.WordRepository.GetByIdAsync(wordId))?.WordText;
         if (wordText == null)
             return NotFound();
 
-        var fileName = $"{wordText}.webp";
+        var fileName = $"{wordText}.{fileFormat}";
         MemoryStream wordImgStream;
         try
         {
@@ -183,25 +180,21 @@ public class ResourceController(ILogger<UserController> logger, IRepositoryServi
     /// 获取单词音频接口
     /// </summary>
     /// <param name="wordId">单词Id</param>
+    /// <param name="fileFormat">文件格式</param>
     /// <returns>音频文件</returns>
-    [HttpGet("word-audio/{wordId:guid}")]
+    [HttpGet("word-audio/{wordId:guid}.{fileFormat}")]
     [ProducesResponseType(typeof(FileResult), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> GetWordAudio(Guid wordId)
+    public async Task<IActionResult> GetWordAudio(Guid wordId, string fileFormat)
     {
-        var userId = User.GetUserId();
-        if (userId == null)
-            return StatusCode(StatusCodes.Status403Forbidden);
-
-
         var wordText = (await repository.WordRepository.GetByIdAsync(wordId))?.WordText;
         if (wordText == null)
             return NotFound();
 
-        var fileName = $"{wordText}.wav";
+        var fileName = $"{wordText}.{fileFormat}";
         var wordAudioStream = await repository.WordRepository.GetWordAudio(fileName);
 
-        return File(wordAudioStream, "audio/wav");
+        return File(wordAudioStream, $"audio/{fileFormat}");
     }
 }
