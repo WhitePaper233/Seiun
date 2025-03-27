@@ -515,6 +515,10 @@ public class ArticleController(ILogger<ArticleController> logger, IRepositorySer
     //     return Ok(ArticleListResp.Success(articleIdList));
     // }
 
+    /// <summary>
+    /// 获取ai文章列表
+    /// </summary>
+    /// <returns></returns>
     [HttpGet("ai-article-list", Name = "GetAiArticleList")]
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     [Authorize(Roles =
