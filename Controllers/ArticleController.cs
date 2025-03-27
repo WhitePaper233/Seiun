@@ -523,9 +523,9 @@ public class ArticleController(ILogger<ArticleController> logger, IRepositorySer
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     [Authorize(Roles =
         $"{nameof(UserRole.User)},{nameof(UserRole.Creator)},{nameof(UserRole.Admin)},{nameof(UserRole.SuperAdmin)}")]
-    [ProducesResponseType(typeof(AiArticleDetailResp), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(AiArticleDetailResp), StatusCodes.Status403Forbidden)]
-    [ProducesResponseType(typeof(AiArticleDetailResp), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(AiArticleListResp), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(AiArticleListResp), StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(AiArticleListResp), StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetAiArticleList()
     {
         var userId = User.GetUserId();

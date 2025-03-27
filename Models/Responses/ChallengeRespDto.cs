@@ -67,6 +67,7 @@ public class ClozeTestDetail
     [JsonPropertyName("content")] public required string Content { get; set; }
     [JsonPropertyName("selections")] public required Dictionary<string, List<string>> Selections { get; set; }
     [JsonPropertyName("answers")] public required Dictionary<string, string> Answers { get; set; }
+    [JsonPropertyName("analysis")] public required Dictionary<string, string> Analysis { get; set; } 
 }
 
 public sealed class ClozeTestResp(int code, string message, ClozeTestDetail? clozeTest)

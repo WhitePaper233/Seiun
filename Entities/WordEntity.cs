@@ -12,11 +12,15 @@ public class WordEntity : BaseEntity
 
     [MaxLength(Constants.Word.MaxWordPronunciationLength,
         ErrorMessage = ErrorMessages.ValidationError.OverPronunciationLength)]
-    public string? Pronunciation { get; set; }
+    public required string Pronunciation { get; set; }
 
     [MaxLength(Constants.Word.MaxWordDefinitionLength,
         ErrorMessage = ErrorMessages.ValidationError.OverWordDefinitionLength)]
     public required string Definition { get; set; }
+    
+    [MaxLength(Constants.Word.MaxWordPrimaryDefinitionLength, 
+        ErrorMessage = ErrorMessages.ValidationError.OverWordPrimaryDefinitionLength)]
+    public required string PrimaryDefinition  { get; set; }
 
     [MaxLength(Constants.Word.MaxWordExampleSentenceLength,
         ErrorMessage = ErrorMessages.ValidationError.OverWordExampleSentenceLength)]
