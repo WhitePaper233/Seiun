@@ -73,6 +73,7 @@ public class ArticleDetail
     public required string Description { get; set; }
     public required Guid CreatorId { get; set; }
     public required string Content { get; set; }
+    public required string Vocabulary { get; set; }
     public List<string>? ArticleImgUrls { get; set; }
     public string? CoverFileName { get; set; }
     public required long CreateAt { get; set; }
@@ -96,6 +97,7 @@ public sealed class ArticleDetailResp(int code, string message, ArticleDetail? a
                 Description = articleEntity.Description ?? "",
                 CreatorId = articleEntity.CreatorId,
                 Content = articleEntity.Content,
+                Vocabulary = articleEntity.Vocabulary,
                 ArticleImgUrls = articleImgUrls,
                 CoverFileName = articleEntity.CoverFileName,
                 CreateAt = articleEntity.CreatedAt.ToUnixTimeSeconds(),
@@ -176,6 +178,7 @@ public class AiArticleDetail
     public required string Title { get; set; }
     public required string Description { get; set; }
     public required string Content { get; set; }
+    public required string Vocabulary { get; set; }
     public required string CoverFileName { get; set; }
 }
 
@@ -192,6 +195,7 @@ public sealed class AiArticleDetailResp(int code, string message, AiArticleDetai
                 Title = aiArticleEntity.Title,
                 Description = aiArticleEntity.Description ?? "",
                 Content = aiArticleEntity.Content,
+                Vocabulary = aiArticleEntity.Vocabulary,
                 CoverFileName = aiArticleEntity.CoverFileName
             }
         );
@@ -212,6 +216,7 @@ public class MatchAiArticle
     [JsonPropertyName("title")] public required string Title { get; set; }
     [JsonPropertyName("description")] public required string Description { get; set; }
     [JsonPropertyName("content")] public required string Content { get; set; }
+    [JsonPropertyName("vocabulary")] public required string Vocabulary { get; set; }
 }
 
 # endregion

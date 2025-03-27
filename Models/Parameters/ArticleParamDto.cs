@@ -18,7 +18,8 @@ public class ArticleCreate
     public required string Content { get; set; }
 
     // Vocabulary
-    public required string? Vocabulary { get; set; }
+    [Required(ErrorMessage = ErrorMessages.ValidationError.ArticleVocabularyRequired)]
+    public required string Vocabulary { get; set; }
 
     // 图片
     public List<string>? ImageNames { get; set; }
