@@ -10,11 +10,12 @@ public class ArticleCreate
     public required string Title { get; set; }
 
     // 简介
-    public string? Description { get; set; }
+    [Required(ErrorMessage = ErrorMessages.ValidationError.ArticleDescriptionRequired)]
+    public required string Description { get; set; }
 
     // 文章内容
-    [Required(ErrorMessage = ErrorMessages.ValidationError.ArticleRequired)]
-    public required string Article { get; set; }
+    [Required(ErrorMessage = ErrorMessages.ValidationError.ArticleContentRequired)]
+    public required string Content { get; set; }
 
     // Vocabulary
     public required string? Vocabulary { get; set; }

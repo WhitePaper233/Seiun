@@ -16,11 +16,12 @@ public class ArticleEntity : BaseEntity
     // 简介
     [MaxLength(Constants.Article.MaxArticleDescriptionLength,
         ErrorMessage = ErrorMessages.ValidationError.OverArticleDescriptionMaxLength)]
-    public string? Description { get; set; }
+    public required string Description { get; set; }
 
     // 文章
-    [MaxLength(Constants.Article.MaxArticleLength, ErrorMessage = ErrorMessages.ValidationError.OverArticleMaxLength)]
-    public required string Article { get; set; }
+    [MaxLength(Constants.Article.MaxArticleLength,
+        ErrorMessage = ErrorMessages.ValidationError.OverArticleContentMaxLength)]
+    public required string Content { get; set; }
 
     // key vocabulary
     [MaxLength(Constants.Article.MaxArticleVocabularyLength,
@@ -31,7 +32,8 @@ public class ArticleEntity : BaseEntity
     public List<string>? ImageFileNames { get; set; }
 
     // 封面
-    [MaxLength(Constants.Article.MaxImgUrlLength, ErrorMessage = ErrorMessages.ValidationError.OverImgUrlLength)]
+    [MaxLength(Constants.Article.MaxImgFileNameLength,
+        ErrorMessage = ErrorMessages.ValidationError.OverImgFileNameLength)]
     public string? CoverFileName { get; set; }
 
     // 发布者ID

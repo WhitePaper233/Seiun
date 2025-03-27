@@ -5,9 +5,7 @@ using Seiun.Services;
 using Seiun.Utils;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Processing;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Authorization;
-using Seiun.Utils.Enums;
+
 
 namespace Seiun.Controllers;
 
@@ -128,9 +126,6 @@ public class ResourceController(ILogger<UserController> logger, IRepositoryServi
     /// <param name="width">设置图片宽度</param>
     /// <returns>图片文件</returns>
     [HttpGet("word-image/{wordId:guid}")]
-    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-    [Authorize(Roles =
-        $"{nameof(UserRole.User)},{nameof(UserRole.Creator)},{nameof(UserRole.Admin)},{nameof(UserRole.SuperAdmin)}")]
     [ProducesResponseType(typeof(FileResult), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -190,9 +185,6 @@ public class ResourceController(ILogger<UserController> logger, IRepositoryServi
     /// <param name="wordId">单词Id</param>
     /// <returns>音频文件</returns>
     [HttpGet("word-audio/{wordId:guid}")]
-    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-    [Authorize(Roles =
-        $"{nameof(UserRole.User)},{nameof(UserRole.Creator)},{nameof(UserRole.Admin)},{nameof(UserRole.SuperAdmin)}")]
     [ProducesResponseType(typeof(FileResult), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]

@@ -10,7 +10,5 @@ public class UserPlanEntity : BaseEntity
 
     public required int DailyPlan { get; set; }
 
-    public required int LearnedCount { get; set; }
-
     [ForeignKey(nameof(this.UserId))] public virtual UserEntity User { get; set; } = null!;
 }

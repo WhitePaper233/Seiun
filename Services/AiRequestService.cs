@@ -5,13 +5,13 @@ using RestSharp;
 using System.Text.Json;
 using Seiun.Controllers;
 using Seiun.Entities;
-using Seiun.Utils;
+using Seiun.Models.Responses;
 using SixLabors.ImageSharp;
 using Seiun.Utils.Enums;
 
 namespace Seiun.Services;
 
-public class AiRequestService(IServiceScopeFactory serviceScopeFactory, ILogger<WordSessionController> logger)
+public class AiRequestService(IServiceScopeFactory serviceScopeFactory, ILogger<AiRequestService> logger)
     : IAiRequestService
 {
     private readonly IConfigurationRoot _config = new ConfigurationBuilder()
@@ -44,30 +44,33 @@ public class AiRequestService(IServiceScopeFactory serviceScopeFactory, ILogger<
         var words = latestFinishedWords.Select(x => x.WordText).ToList();
 
         // 生成文章
-        var prompt = string.Join(",", words);
+        var prompt = string.Join("|", words);
         var clientOptions = new OpenAIClientOptions
         {
             Endpoint = new Uri("https://api.deepseek.com")
         };
         var clientCredentials = new ApiKeyCredential($"{dApiKey}");
-        var client = new OpenAIClient(clientCredentials, clientOptions).GetChatClient("deepseek-reasoner");
+        var client = new OpenAIClient(clientCredentials, clientOptions).GetChatClient("deepseek-chat");
         const string systemPrompt = """
-                                    请根据以下英文单词，使用逗号分隔，不区分大小写，生成一篇英文文章，帮助学习这些单词。
-                                    文章必须使用 Markdown 语法，以markdown文本返回。
+                                    请根据我提供的使用 | 分隔的英文单词，不区分大小写，生成一篇英文文章，帮助学习这些单词。
+                                    title,description,content 都必须使用 Markdown 语法，以markdown文本返回。
                                     文章中也可以使用一些学习的单词的一些词性变换和语法词组，学习的单词和相关语法,词性变换，词组加粗。
 
                                     EXAMPLE INPUT:
-                                    hello,world
+                                    adventure|challenge|journey|explore|courage
 
-                                    EXAMPLE OUTPUT:
-                                    # The Beauty of the **World**\n\nIn this vast **world**, a simple **hello** can create new friendships, \n
-                                    brighten someone's day, and bring warmth to a lonely heart. 								
+                                    EXAMPLE JSON OUTPUT:
+                                    {
+                                        "title": "The Thrilling Adventure of a Lifetime", 
+                                        "description": "An engaging story about a traveler's adventurous journey, using key vocabulary in a natural context.",
+                                        "content": "Once upon a time, a young traveler decided to **explore** the mysterious lands beyond his village. He knew that the **journey** ahead would be full of **challenges**, but his **courage** pushed him forward...\n"
+                                    }
                                     """;
         var userPrompt = $"{prompt}";
         var completionOptions = new ChatCompletionOptions
         {
             Temperature = 1.5f,
-            ResponseFormat = ChatResponseFormat.CreateTextFormat()
+            ResponseFormat = ChatResponseFormat.CreateJsonObjectFormat()
         };
         var messages = new ChatMessage[]
         {
@@ -75,7 +78,8 @@ public class AiRequestService(IServiceScopeFactory serviceScopeFactory, ILogger<
             new UserChatMessage(userPrompt)
         };
         ChatCompletion completion = await client.CompleteChatAsync(messages, completionOptions);
-        var aiArticle = completion.Content[0].Text;
+        var aiArticleJson = completion.Content[0].Text;
+        var aiArticle = JsonSerializer.Deserialize<MatchAiArticle>(aiArticleJson);
         if (aiArticle == null)
         {
             logger.LogWarning("User {} failed generate ai article", userId);
@@ -83,7 +87,7 @@ public class AiRequestService(IServiceScopeFactory serviceScopeFactory, ILogger<
         }
 
         // 生成封面
-        aiArticle = aiArticle.Length > 900 ? aiArticle[..900] : aiArticle;
+        var aiArticleToRequest = aiArticle.Content.Length > 900 ? aiArticle.Content[..900] : aiArticle.Content;
 
         var coverClient = new RestClient("https://api.chatanywhere.tech/v1/images/generations");
         var coverRequest = new RestRequest
@@ -95,40 +99,31 @@ public class AiRequestService(IServiceScopeFactory serviceScopeFactory, ILogger<
 
         var coverBody = new
         {
-            prompt = $"根据以下英文文章生成图片，要求阳光，二次元风格。文章：{aiArticle}",
+            prompt = $"Generate an image based on the following English article: {aiArticleToRequest}",
             n = 1,
-            model = "dall-e-2",
-            size = "512x512"
+            model = "dall-e-3",
+            size = "1024x1024"
         };
 
         coverRequest.AddJsonBody(coverBody);
 
-        var coverResponse = await coverClient.ExecuteAsync(coverRequest);
-        if (coverResponse.Content == null)
+        var coverResponse = await coverClient.ExecuteAsync<MatchAiArticleCover>(coverRequest);
+        if (!coverResponse.IsSuccessful || coverResponse.Data == null)
         {
             logger.LogWarning("User {} failed generate ai cover", userId);
             return;
         }
 
-        using var doc = JsonDocument.Parse(coverResponse.Content);
-        var root = doc.RootElement;
-        var dataArray = root.GetProperty("data");
-        var firstElement = dataArray[0];
-        var aiCoverUrl = firstElement.GetProperty("url").GetString() ?? string.Empty;
-        if (aiCoverUrl != string.Empty)
-        {
-            logger.LogWarning("User {} failed generate ai cover", userId);
-            return;
-        }
+        var arCoverUrl = coverResponse.Data.Data[0].Url;
 
         // 下载图片
-        var imageClient = new RestClient(aiCoverUrl);
+        var imageClient = new RestClient(arCoverUrl);
         var imageRequest = new RestRequest
         {
             Method = Method.Get
         };
         var imageResponse = await imageClient.ExecuteAsync(imageRequest);
-        if (imageResponse.RawBytes == null)
+        if (!imageResponse.IsSuccessful || imageResponse.RawBytes == null)
         {
             logger.LogWarning("User {} failed upload cover image", userId);
             return;
@@ -150,7 +145,7 @@ public class AiRequestService(IServiceScopeFactory serviceScopeFactory, ILogger<
         }
         catch
         {
-            logger.LogWarning("User {} failed upload cover image", userId);
+            logger.LogWarning("User {} failed handle cover image", userId);
             return;
         }
 
@@ -158,9 +153,11 @@ public class AiRequestService(IServiceScopeFactory serviceScopeFactory, ILogger<
         var aIArticleEntity = new AiArticleEntity
         {
             UserId = userId,
+            Title = aiArticle.Title,
+            Description = aiArticle.Description,
+            Content = aiArticle.Content,
             SessionId = latestFinishedWordGroup.Key,
-            Article = aiArticle,
-            CoverUrl = articleImgName
+            CoverFileName = articleImgName
         };
         repository.AiArticleRepository.Create(aIArticleEntity);
         if (!await repository.AiArticleRepository.SaveAsync())

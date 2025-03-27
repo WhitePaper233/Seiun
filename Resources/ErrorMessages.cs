@@ -8,8 +8,18 @@ public static class ErrorMessages
         public const string PasswordRequired = "error.validation.password_required";
         public const string PublicAnnouncementTitleRequired = "error.validation.public_announcement_title_required";
         public const string PublicAnnouncementContentRequired = "error.validation.public_announcement_content_required";
-        public const string ArticleRequired = "error.validation.article_required";
+        public const string ArticleContentRequired = "error.validation.article_content_required";
         public const string ArticleTitleRequired = "error.validation.article_title_required";
+        public const string ArticleDescriptionRequired = "error.validation.article_description_required";
+        public const string AtLeastOnePropertyRequired = "error.validation.at_least_one_property_is_required";
+        public const string UserIdRequired = "error.validation.user_id_required";
+        public const string WordBookIdRequired = "error.validation.word_book_id_required";
+        public const string DailyPlanRequired = "error.validation.user_plan_set_daily_plan_required";
+        public const string CommentIdRequired = "error.validation.comment_id_required";
+        public const string ContentRequired = "error.validation.Content_required";
+        public const string ArticleIdRequired = "erroe.validation.post_id_required";
+        public const string WordIdRequired = "error.validation.word_id_required";
+        public const string SessionIdRequired = "error.validation.session_id_required";
 
         public const string InvalidPhone = "error.validation.invalid_phone_number";
         public const string InvalidEmail = "error.validation.invalid_email";
@@ -17,7 +27,6 @@ public static class ErrorMessages
         public const string InvalidUserName = "error.validation.invalid_username";
         public const string InvalidLikeCount = "error.validation.invalid_like_count";
         public const string InvalidDisLikeCount = "error.validation.invalid_dislike_count";
-        public const string SelectedWordIdRequired = "error.validation.selected_word_id_required";
 
         public const string OverPhoneNumberLength = "error.validation.over_phone_number_length";
         public const string OverNickNameLength = "error.validation.over_nickname_length";
@@ -28,26 +37,9 @@ public static class ErrorMessages
         public const string OverWordDefinitionLength = "error.validation.over_word_definition_length";
         public const string OverWordTextLength = "error.validation.over_word_text_length";
         public const string OverPronunciationLength = "error.validation.over_pronunciation_length";
-        public const string OverImgUrlLength = "error.validation.over_img_url_length";
         public const string OverWordExampleSentenceLength = "error.validation.over_word_example_sentence_length";
-
-        public const string AtLeastOnePropertyRequired = "error.validation.at_least_one_property_is_required";
-        public const string UserIdRequired = "error.validation.user_id_required";
-
-        public const string WordBookIdRequired = "error.validation.word_book_id_required";
-        public const string DailyPlanRequired = "error.validation.user_plan_set_daily_plan_required";
-
-        public const string CommentIdRequired = "error.validation.comment_id_required";
-
-        public const string ContentRequired = "error.validation.Content_required";
-
-        public const string ArticleIdRequired = "erroe.validation.post_id_required";
-
-        public const string WordIdRequired = "error.validation.word_id_required";
-
-        public const string SessionIdRequired = "error.validation.session_id_required";
-        public const string OverArticleMaxLength = "error.validation.over_article_length";
-        public const string OverCoverUrlLength = "error.validation.over_cover_url_length";
+        public const string OverArticleContentMaxLength = "error.validation.over_article_content_max_length";
+        public const string OverImgFileNameLength = "error.validation.over_img_file_name_length";
         public const string OverPublicAnnouncementLength = "error.validation.over_public_announcement_length";
         public const string OverWordBookNameLength = "error.validation.over_word_book_name_length";
         public const string OverArticleTitleMaxLength = "error.validation.over_article_title_max_length";
