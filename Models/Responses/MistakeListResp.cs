@@ -65,3 +65,30 @@ public sealed class MistakeDetailResp(int code, string message, MistakeDetail? m
 }
 
 # endregion
+
+# region Mistakes
+
+public sealed class MistakesResp(int code, string message, List<MistakeDetail>? mistakeWordDetails)
+    : BaseRespWithData<List<MistakeDetail>>(code, message, mistakeWordDetails)
+{
+    public static MistakesResp Success(List<WordEntity> mistakeWordDetails)
+    {
+        return new MistakesResp(StatusCodes.Status200OK,
+            SuccessMessages.Controller.MistakeBook.GetMistakeWordSuccess,
+            mistakeWordDetails.Select(a =>
+                new MistakeDetail
+                {
+                    WordText = a.WordText,
+                    Pronunciation = a.Pronunciation,
+                    Definition = a.Definition,
+                    ExampleSentence = a.ExampleSentence
+                }).ToList());
+    }
+
+    public static MistakesResp Fail(int code, string message)
+    {
+        return new MistakesResp(code, message, null);
+    }
+}
+
+# endregion
