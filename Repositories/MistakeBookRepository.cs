@@ -1,7 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Minio;
 using Seiun.Entities;
-using Seiun.Utils.Enums;
 
 namespace Seiun.Repositories;
 
@@ -15,5 +14,13 @@ public class MistakeBookRepository(SeiunDbContext dbContext, IMinioClient minioC
             .OrderByDescending(m => m.CreatedAt)
             .Select(m => m.WordId)
             .ToListAsync();
+    }
+
+    public async Task<List<WordEntity>> GetMistakeWordDetailsByUserId(Guid userId)
+    {
+        return await (from m in DbContext.MistakeBook
+            join w in DbContext.Words on m.WordId equals w.Id
+            where m.UserId == userId
+            select w).ToListAsync();
     }
 }

@@ -8,8 +8,9 @@ namespace Seiun.Models.Responses;
 public class WordDetail
 {
     public required string WordText { get; set; }
-    public string? Pronunciation { get; set; }
+    public required string Pronunciation { get; set; }
     public required string Definition { get; set; }
+    public required string ExampleSentence { get; set; }
 }
 
 public class WordSessionDetail
@@ -38,7 +39,8 @@ public sealed class StartStudyResp(int code, string message, WordSessionDetail? 
                     {
                         WordText = a.WordText,
                         Pronunciation = a.Pronunciation,
-                        Definition = a.Definition
+                        Definition = a.Definition,
+                        ExampleSentence = a.ExampleSentence
                     }).ToList()
             });
     }
@@ -79,7 +81,8 @@ public sealed class ContinueStudyResp(int code, string message, ContinueStudyDet
                     {
                         WordText = w.WordText,
                         Pronunciation = w.Pronunciation,
-                        Definition = w.Definition
+                        Definition = w.Definition,
+                        ExampleSentence = w.ExampleSentence
                     }).ToList()
             });
     }
@@ -104,7 +107,7 @@ public class OptionDetail
     public required string Word { get; set; }
     public required string Pronunciation { get; set; }
     public required string Definition { get; set; }
-    public required string PrimaryDefinition  { get; set; }
+    public required string PrimaryDefinition { get; set; }
 }
 
 public class AnswerDetail
@@ -121,7 +124,10 @@ public sealed class GetNextWordResp(int code, string message, NextWordDetail? ne
     {
         var options = distractorWords.Select(d =>
                 new OptionDetail
-                    { WordId = d.Id, Word = d.WordText, Pronunciation = d.Pronunciation, Definition = d.Definition, PrimaryDefinition = d.PrimaryDefinition})
+                {
+                    WordId = d.Id, Word = d.WordText, Pronunciation = d.Pronunciation, Definition = d.Definition,
+                    PrimaryDefinition = d.PrimaryDefinition
+                })
             .ToList();
         options.Add(new OptionDetail
         {
