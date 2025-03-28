@@ -17,7 +17,8 @@ public class WordSessionController(
     ILogger<WordSessionController> logger,
     IRepositoryService repository,
     ICurrentStudySessionService currentStudySession,
-    IAiRequestService aiRequest)
+    IAiRequestService aiRequest,
+    ICurrentGenerateTaskService currentGenerateTaskService)
     : ControllerBase
 {
     /// <summary>
@@ -124,10 +125,14 @@ public class WordSessionController(
             return Ok(StartStudyResp.Success(session.Id, reviewingWordCount, studyingWordCount, wordQueue));
 
         // 额外线程开始生成题目
+        if (!currentGenerateTaskService.InsertUserId(userId.Value, TaskType.Challenge))
+        {
+            return Ok(StartStudyResp.Success(session.Id, reviewingWordCount, studyingWordCount, wordQueue));
+        }
+        
         var words = studyWords.Select(x => x.WordText).ToList();
         // _ = Task.Run(() => aiRequest.GenerateAiFillInBlankAsync(words, userId.Value));
         _ = Task.Run(() => aiRequest.GenerateAiClozeTest(words, userId.Value, session.Id));
-
         return Ok(StartStudyResp.Success(session.Id, reviewingWordCount, studyingWordCount, wordQueue));
     }
 
@@ -181,8 +186,12 @@ public class WordSessionController(
         }
 
         // 下一个单词为空，表示会话已经结束
+        
         // 生成AI文章
-        _ = Task.Run(() => aiRequest.GenerateAiArticleAsync(userId.Value));
+        if (currentGenerateTaskService.InsertUserId(userId.Value, TaskType.AiArticle))
+        {
+            _ = Task.Run(() => aiRequest.GenerateAiArticleAsync(userId.Value));
+        }
 
         // 打卡
         var lastCheckIn = await repository.UserCheckInRepository.LastCheckInAsync(userId.Value);
