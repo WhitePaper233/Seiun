@@ -20,6 +20,7 @@ public static class ErrorMessages
         public const string ArticleIdRequired = "erroe.validation.post_id_required";
         public const string WordIdRequired = "error.validation.word_id_required";
         public const string SessionIdRequired = "error.validation.session_id_required";
+        public const string ArticleVocabularyRequired = "error.validation.article_vocabulary_required";
 
         public const string InvalidPhone = "error.validation.invalid_phone_number";
         public const string InvalidEmail = "error.validation.invalid_email";
@@ -46,6 +47,7 @@ public static class ErrorMessages
         public const string OverArticleDescriptionMaxLength = "error.validation.over_article_description_max_length";
         public const string OverArticleVocabularyMaxLength = "error.validation.over_article_vocabulary_max_length";
         public const string OverArticleTagMaxLength = "error.validation.over_article_tag_max_length";
+        public const string OverWordPrimaryDefinitionLength = "error.validation.over_word_primary_definition_length";
     }
 
     public static class Controller

@@ -17,9 +17,13 @@ public class AiArticleEntity : BaseEntity
         ErrorMessage = ErrorMessages.ValidationError.OverArticleDescriptionMaxLength)]
     public required string Description { get; set; }
 
-    [MaxLength(Constants.Article.MaxArticleLength,
+    [MaxLength(Constants.Article.MaxArticleContentLength,
         ErrorMessage = ErrorMessages.ValidationError.OverArticleContentMaxLength)]
     public required string Content { get; set; }
+    
+    [MaxLength(Constants.Article.MaxArticleVocabularyLength,
+        ErrorMessage = ErrorMessages.ValidationError.OverArticleVocabularyMaxLength)]
+    public required string Vocabulary { get; set; }
 
     [MaxLength(Constants.Article.MaxArticleTagLength,
         ErrorMessage = ErrorMessages.ValidationError.OverArticleTagMaxLength)]

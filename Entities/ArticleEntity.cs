@@ -19,14 +19,14 @@ public class ArticleEntity : BaseEntity
     public required string Description { get; set; }
 
     // 文章
-    [MaxLength(Constants.Article.MaxArticleLength,
+    [MaxLength(Constants.Article.MaxArticleContentLength,
         ErrorMessage = ErrorMessages.ValidationError.OverArticleContentMaxLength)]
     public required string Content { get; set; }
 
     // key vocabulary
     [MaxLength(Constants.Article.MaxArticleVocabularyLength,
         ErrorMessage = ErrorMessages.ValidationError.OverArticleVocabularyMaxLength)]
-    public string? Vocabulary { get; set; }
+    public required string Vocabulary { get; set; }
 
     // 图片
     public List<string>? ImageFileNames { get; set; }
