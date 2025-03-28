@@ -61,10 +61,12 @@ builder.Services.AddScoped<IRepositoryService, RepositoryService>();
 // Inject search service
 // builder.Services.AddScoped<IArticleSearchService, ArticleSearchService>();
 // Inject current study session service
-// 单例
+// 单例 会话
 builder.Services.AddSingleton<ICurrentStudySessionService, CurrentStudySessionService>();
 // 定时清理Session
 builder.Services.AddHostedService<ClearSessionTimedService>(); // 注册后台任务
+// 单例 ai生成任务中用户
+builder.Services.AddSingleton<ICurrentGenerateTaskService, CurrentGenerateTaskService>();
 
 // Use snake_case for JSON serialization
 builder.Services.AddControllers().AddJsonOptions(options =>

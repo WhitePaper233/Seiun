@@ -10,7 +10,10 @@ using Seiun.Utils.Enums;
 
 namespace Seiun.Services;
 
-public class AiRequestService(IServiceScopeFactory serviceScopeFactory, ILogger<AiRequestService> logger)
+public class AiRequestService(
+    IServiceScopeFactory serviceScopeFactory, 
+    ILogger<AiRequestService> logger, 
+    ICurrentGenerateTaskService currentGenerateTaskService)
     : IAiRequestService
 {
     private readonly IConfigurationRoot _config = new ConfigurationBuilder()
@@ -167,6 +170,8 @@ public class AiRequestService(IServiceScopeFactory serviceScopeFactory, ILogger<
         repository.AiArticleRepository.Create(aIArticleEntity);
         if (!await repository.AiArticleRepository.SaveAsync())
             logger.LogWarning("User {} failed generate ai article", userId);
+        
+        currentGenerateTaskService.DeleteUserId(userId, TaskType.AiArticle);
     }
     
 # endregion
@@ -311,6 +316,8 @@ public class AiRequestService(IServiceScopeFactory serviceScopeFactory, ILogger<
         repository.ChallengeRepository.Create(clozeTest);
         if (!await repository.ChallengeRepository.SaveAsync())
             logger.LogWarning("User {} failed generate ai cloze test", userId);
+        
+        currentGenerateTaskService.DeleteUserId(userId, TaskType.Challenge);
     }
     
 # endregion
