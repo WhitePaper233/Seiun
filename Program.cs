@@ -81,11 +81,10 @@ builder.Services.AddControllers().AddJsonOptions(options =>
 
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowFrontend", policy =>
-        policy.WithOrigins("http://localhost:5173") // 你的前端地址
-            .AllowAnyHeader() // 允许所有请求头，包括 Authorization 头
-            .AllowAnyMethod() // 允许 GET、POST、PUT、DELETE 等
-            .AllowCredentials()); // 允许前端携带 Cookie 或 Authorization 头
+    options.AddPolicy("AllowAll",
+        policy => policy.AllowAnyOrigin() // 允许任何来源
+            .AllowAnyMethod() // 允许任何请求方法
+            .AllowAnyHeader()); // 允许任何请求头
 });
 
 // Configure PgSQL database
@@ -138,9 +137,9 @@ if (app.Environment.IsDevelopment())
     // }
 }
 
-app.UseCors("AllowFrontend"); // 在 UseAuthorization 之前调用
-
 app.UseHttpsRedirection();
+
+app.UseCors("AllowAll");
 
 app.UseAuthentication();
 app.UseAuthorization();

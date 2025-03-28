@@ -55,7 +55,7 @@ public class AiRequestService(IServiceScopeFactory serviceScopeFactory, ILogger<
         var client = new OpenAIClient(clientCredentials, clientOptions).GetChatClient("deepseek-chat");
         const string systemPrompt = """
                                     请根据我提供的使用 | 分隔的英文单词，不区分大小写，生成一篇英文文章，帮助学习这些单词。
-                                    title,description,content 都必须使用 Markdown 语法，以markdown文本返回。
+                                    title,description,content,tag,vocabulary; content 必须使用 Markdown 语法文本, vocabulary 必须使用形如例子的 Markdown 语法文本, 其他部分以纯文本返回，tag为单个不超过50个字母的单词。
                                     文章中也可以使用一些学习的单词的一些词性变换和语法词组，学习的单词和相关语法,词性变换，词组加粗。
 
                                     EXAMPLE INPUT:
@@ -65,7 +65,8 @@ public class AiRequestService(IServiceScopeFactory serviceScopeFactory, ILogger<
                                     {
                                         "title": "The Thrilling Adventure of a Lifetime", 
                                         "description": "An engaging story about a traveler's adventurous journey, using key vocabulary in a natural context.",
-                                        "content": "Once upon a time, a young traveler decided to **explore** the mysterious lands beyond his village. He had always dreamed of embarking on an **adventure**, filled with discovery and excitement. As he packed his belongings and set out at dawn, he couldn't help but feel a sense of anticipation for the **journey** that lay ahead.\n\nThe path was not an easy one, and he faced many **challenges** along the way. From treacherous mountains to dense forests, every step seemed to test his resolve. But through it all, his **courage** never faltered. He pressed on, knowing that each challenge he overcame brought him closer to his ultimate goal: the discovery of a hidden treasure.\n\nThroughout his journey, the traveler met others who had embarked on similar quests, each with their own tales of daring adventures. He shared stories and learned new lessons, growing wiser with every encounter. In the end, he found the treasure, but he realized that the true reward was not the riches he had discovered, but the unforgettable experiences and the courage he had gained along the way.",
+                                        "content": "Once upon a time, a young traveler decided to **explore** the mysterious lands beyond his village. He knew that the **journey** ahead would be full of **challenges**, but his **courage** pushed him forward...\n",
+                                        "tag": "Adventure",
                                         "vocabulary": "**adventure**: An exciting or unusual experience, often involving risk and exploration. It can refer to a daring journey or an exciting event.\n\n**challenge**: A difficult task or problem that requires effort and determination to overcome. It can also mean calling someone to a competition or dispute.\n\n"
                                     }
                                     """;
@@ -162,7 +163,8 @@ public class AiRequestService(IServiceScopeFactory serviceScopeFactory, ILogger<
             Content = aiArticle.Content,
             Vocabulary = aiArticle.Vocabulary,
             SessionId = latestFinishedWordGroup.Key,
-            CoverFileName = articleImgName
+            CoverFileName = articleImgName,
+            Tag = aiArticle.Tag
         };
         repository.AiArticleRepository.Create(aIArticleEntity);
         if (!await repository.AiArticleRepository.SaveAsync())

@@ -46,6 +46,7 @@ public static class ErrorMessages
         public const string OverArticleTitleMaxLength = "error.validation.over_article_title_max_length";
         public const string OverArticleDescriptionMaxLength = "error.validation.over_article_description_max_length";
         public const string OverArticleVocabularyMaxLength = "error.validation.over_article_vocabulary_max_length";
+        public const string OverArticleTagMaxLength = "error.validation.over_article_tag_max_length";
         public const string OverWordPrimaryDefinitionLength = "error.validation.over_word_primary_definition_length";
     }
 

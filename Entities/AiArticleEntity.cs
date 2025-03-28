@@ -25,6 +25,10 @@ public class AiArticleEntity : BaseEntity
         ErrorMessage = ErrorMessages.ValidationError.OverArticleVocabularyMaxLength)]
     public required string Vocabulary { get; set; }
 
+    [MaxLength(Constants.Article.MaxArticleTagLength,
+        ErrorMessage = ErrorMessages.ValidationError.OverArticleTagMaxLength)]
+    public required string Tag { get; set; }
+
     [MaxLength(Constants.Article.MaxImgFileNameLength,
         ErrorMessage = ErrorMessages.ValidationError.OverImgFileNameLength)]
     public required string CoverFileName { get; set; }

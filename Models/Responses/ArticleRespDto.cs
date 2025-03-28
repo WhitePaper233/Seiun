@@ -180,6 +180,7 @@ public class AiArticleDetail
     public required string Content { get; set; }
     public required string Vocabulary { get; set; }
     public required string CoverFileName { get; set; }
+    public required string Tag { get; set; }
 }
 
 public sealed class AiArticleDetailResp(int code, string message, AiArticleDetail? aiArticleDetails)
@@ -195,8 +196,9 @@ public sealed class AiArticleDetailResp(int code, string message, AiArticleDetai
                 Title = aiArticleEntity.Title,
                 Description = aiArticleEntity.Description ?? "",
                 Content = aiArticleEntity.Content,
+                CoverFileName = aiArticleEntity.CoverFileName,
                 Vocabulary = aiArticleEntity.Vocabulary,
-                CoverFileName = aiArticleEntity.CoverFileName
+                Tag = aiArticleEntity.Tag
             }
         );
     }
@@ -216,6 +218,7 @@ public class MatchAiArticle
     [JsonPropertyName("title")] public required string Title { get; set; }
     [JsonPropertyName("description")] public required string Description { get; set; }
     [JsonPropertyName("content")] public required string Content { get; set; }
+    [JsonPropertyName("tag")] public required string Tag { get; set; }
     [JsonPropertyName("vocabulary")] public required string Vocabulary { get; set; }
 }
 
