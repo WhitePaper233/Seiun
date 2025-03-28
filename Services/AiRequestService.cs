@@ -53,7 +53,7 @@ public class AiRequestService(IServiceScopeFactory serviceScopeFactory, ILogger<
         var client = new OpenAIClient(clientCredentials, clientOptions).GetChatClient("deepseek-chat");
         const string systemPrompt = """
                                     请根据我提供的使用 | 分隔的英文单词，不区分大小写，生成一篇英文文章，帮助学习这些单词。
-                                    title,description,content 都必须使用 Markdown 语法，以markdown文本返回。
+                                    title,description,content,tag; content 必须使用 Markdown 语法文本, 其他部分以纯文本返回，tag为单个不超过50个字母的单词。
                                     文章中也可以使用一些学习的单词的一些词性变换和语法词组，学习的单词和相关语法,词性变换，词组加粗。
 
                                     EXAMPLE INPUT:
@@ -63,7 +63,8 @@ public class AiRequestService(IServiceScopeFactory serviceScopeFactory, ILogger<
                                     {
                                         "title": "The Thrilling Adventure of a Lifetime", 
                                         "description": "An engaging story about a traveler's adventurous journey, using key vocabulary in a natural context.",
-                                        "content": "Once upon a time, a young traveler decided to **explore** the mysterious lands beyond his village. He knew that the **journey** ahead would be full of **challenges**, but his **courage** pushed him forward...\n"
+                                        "content": "Once upon a time, a young traveler decided to **explore** the mysterious lands beyond his village. He knew that the **journey** ahead would be full of **challenges**, but his **courage** pushed him forward...\n",
+                                        "tag": "Adventure"
                                     }
                                     """;
         var userPrompt = $"{prompt}";
@@ -157,7 +158,8 @@ public class AiRequestService(IServiceScopeFactory serviceScopeFactory, ILogger<
             Description = aiArticle.Description,
             Content = aiArticle.Content,
             SessionId = latestFinishedWordGroup.Key,
-            CoverFileName = articleImgName
+            CoverFileName = articleImgName,
+            Tag = aiArticle.Tag
         };
         repository.AiArticleRepository.Create(aIArticleEntity);
         if (!await repository.AiArticleRepository.SaveAsync())

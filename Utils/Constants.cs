@@ -47,6 +47,7 @@ public static class Constants
         public static readonly string[] AllowedArticleImageExtensions = [".jpg", ".jpeg", ".png", ".webp"];
         public const int MaxArticleLength = 5000;
         public const int MaxImgFileNameLength = 1000;
+        public const int MaxArticleTagLength = 50;
     }
 
     public static class PublicAnnotation

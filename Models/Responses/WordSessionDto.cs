@@ -14,7 +14,7 @@ public class WordDetail
 
 public class WordSessionDetail
 {
-    public required Guid WordSessionId { get; set; }
+    public required Guid SessionId { get; set; }
     public required int ReviewingWordCount { get; set; }
     public required int StudyingWordCount { get; set; }
     public required List<WordDetail> Words { get; set; }
@@ -30,7 +30,7 @@ public sealed class StartStudyResp(int code, string message, WordSessionDetail? 
             SuccessMessages.Controller.StudySession.GetSessionDetailSuccess,
             new WordSessionDetail
             {
-                WordSessionId = sessionId,
+                SessionId = sessionId,
                 ReviewingWordCount = reviewingWordCount,
                 StudyingWordCount = studyingWordCount,
                 Words = wordQueue.Select(a =>
