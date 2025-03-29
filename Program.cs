@@ -81,6 +81,7 @@ builder.Services.AddControllers().AddJsonOptions(options =>
     options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
 });
 
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll",
@@ -88,6 +89,7 @@ builder.Services.AddCors(options =>
             .AllowAnyMethod() // 允许任何请求方法
             .AllowAnyHeader()); // 允许任何请求头
 });
+
 
 // Configure PgSQL database
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
