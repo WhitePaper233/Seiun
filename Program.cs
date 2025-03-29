@@ -9,16 +9,17 @@ using Seiun.Entities;
 using Seiun.Filters;
 using Seiun.Services;
 using Seiun.Utils;
-using Nest;
+
+// using Nest;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddSingleton<IElasticClient>(_ =>
-{
-    var settings = new ConnectionSettings(new Uri("http://localhost:9200"))
-        .DefaultIndex("articles");
-    return new ElasticClient(settings);
-});
+// builder.Services.AddSingleton<IElasticClient>(_ =>
+// {
+//     var settings = new ConnectionSettings(new Uri("http://localhost:9200"))
+//         .DefaultIndex("articles");
+//     return new ElasticClient(settings);
+// });
 
 // Use custom filter for parameter validation
 builder.Services.Configure<ApiBehaviorOptions>(options => { options.SuppressModelStateInvalidFilter = true; });
@@ -58,12 +59,14 @@ builder.Services.AddSingleton<IAiRequestService, AiRequestService>();
 // Inject repository service
 builder.Services.AddScoped<IRepositoryService, RepositoryService>();
 // Inject search service
-builder.Services.AddScoped<IArticleSearchService, ArticleSearchService>();
+// builder.Services.AddScoped<IArticleSearchService, ArticleSearchService>();
 // Inject current study session service
-// 单例
+// 单例 会话
 builder.Services.AddSingleton<ICurrentStudySessionService, CurrentStudySessionService>();
 // 定时清理Session
 builder.Services.AddHostedService<ClearSessionTimedService>(); // 注册后台任务
+// 单例 ai生成任务中用户
+builder.Services.AddSingleton<ICurrentGenerateTaskService, CurrentGenerateTaskService>();
 
 // Use snake_case for JSON serialization
 builder.Services.AddControllers().AddJsonOptions(options =>
@@ -78,14 +81,15 @@ builder.Services.AddControllers().AddJsonOptions(options =>
     options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
 });
 
-// builder.Services.AddCors(options =>
-// {
-//     options.AddPolicy("AllowFrontend", policy =>
-//         policy.WithOrigins("http://localhost:5173") // 你的前端地址
-//             .AllowAnyHeader() // 允许所有请求头，包括 Authorization 头
-//             .AllowAnyMethod() // 允许 GET、POST、PUT、DELETE 等
-//             .AllowCredentials()); // 允许前端携带 Cookie 或 Authorization 头
-// });
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAll",
+        policy => policy.AllowAnyOrigin() // 允许任何来源
+            .AllowAnyMethod() // 允许任何请求方法
+            .AllowAnyHeader()); // 允许任何请求头
+});
+
 
 // Configure PgSQL database
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
@@ -105,41 +109,41 @@ if (app.Environment.IsDevelopment())
     dbContext.Database.Migrate();
 
     // 配置 ElasticSearch 分词方式 
-    var elasticClient = scope.ServiceProvider.GetRequiredService<IElasticClient>();
+    // var elasticClient = scope.ServiceProvider.GetRequiredService<IElasticClient>();
     // 先检查索引是否存在
-    var indexExistsResponse = await elasticClient.Indices.ExistsAsync("articles");
-    if (!indexExistsResponse.Exists)
-    {
-        var createIndexResponse = await elasticClient.Indices.CreateAsync("articles", c => c
-            .Map<ArticleSearchEntity>(m => m
-                .Properties(props => props
-                    .Text(t => t
-                            .Name(n => n.Article) // 文章内容进行分词
-                            .Analyzer("standard") // 使用标准分析器
-                    )
-                    .Keyword(k => k
-                        .Name(n => n.CreatorUserName)
-                    )
-                    .Text(k => k
-                        .Name(n => n.CreatorNickName)
-                        .Analyzer("standard")
-                    )
-                    .Keyword(l => l
-                        .Name(n => n.ArticleId))
-                )
-            )
-        );
-        var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
-        if (createIndexResponse.IsValid)
-            logger.LogInformation("Elasticsearch 索引创建成功！");
-        else
-            logger.LogError("Elasticsearch 索引创建失败: {Reason}", createIndexResponse.OriginalException?.Message);
-    }
+    // var indexExistsResponse = await elasticClient.Indices.ExistsAsync("articles");
+    // if (!indexExistsResponse.Exists)
+    // {
+    //     var createIndexResponse = await elasticClient.Indices.CreateAsync("articles", c => c
+    //         .Map<ArticleSearchEntity>(m => m
+    //             .Properties(props => props
+    //                 .Text(t => t
+    //                         .Name(n => n.Article) // 文章内容进行分词
+    //                         .Analyzer("standard") // 使用标准分析器
+    //                 )
+    //                 .Keyword(k => k
+    //                     .Name(n => n.CreatorUserName)
+    //                 )
+    //                 .Text(k => k
+    //                     .Name(n => n.CreatorNickName)
+    //                     .Analyzer("standard")
+    //                 )
+    //                 .Keyword(l => l
+    //                     .Name(n => n.ArticleId))
+    //             )
+    //         )
+    //     );
+    //     var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+    //     if (createIndexResponse.IsValid)
+    //         logger.LogInformation("Elasticsearch 索引创建成功！");
+    //     else
+    //         logger.LogError("Elasticsearch 索引创建失败: {Reason}", createIndexResponse.OriginalException?.Message);
+    // }
 }
 
-app.UseCors("AllowFrontend"); // 在 UseAuthorization 之前调用
-
 app.UseHttpsRedirection();
+
+app.UseCors("AllowAll");
 
 app.UseAuthentication();
 app.UseAuthorization();

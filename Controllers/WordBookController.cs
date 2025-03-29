@@ -121,8 +121,7 @@ public class WordBookController(ILogger<UserController> logger, IRepositoryServi
             {
                 UserId = userId.Value,
                 WordBookId = selectedWordBook.WordBookId,
-                DailyPlan = selectedWordBook.DailyPlan,
-                LearnedCount = 0
+                DailyPlan = selectedWordBook.DailyPlan
             };
             repository.UserPlansRepository.Create(userPlanEntity);
             if (await repository.UserPlansRepository.SaveAsync())

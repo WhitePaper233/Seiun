@@ -3,6 +3,7 @@ using Minio;
 using Minio.DataModel.Args;
 using Seiun.Entities;
 using System.Net.Mime;
+using Seiun.Utils;
 
 namespace Seiun.Repositories;
 
@@ -37,11 +38,11 @@ public class ArticleRepository(SeiunDbContext dbContext, IMinioClient minioClien
             .ToListAsync();
     }
 
-    public async Task<string> UploadArticleImgAsync(Stream articleimgData, string bucketName)
+    public async Task<string> UploadArticleImgAsync(Stream articleimgData)
     {
         var articleImgName = $"{Guid.NewGuid()}.webp";
         var putObjectArgs = new PutObjectArgs()
-            .WithBucket(bucketName)
+            .WithBucket(Constants.BucketNames.ArticleImages)
             .WithObject(articleImgName)
             .WithContentType(MediaTypeNames.Image.Webp)
             .WithStreamData(articleimgData)
@@ -51,13 +52,13 @@ public class ArticleRepository(SeiunDbContext dbContext, IMinioClient minioClien
         return articleImgName;
     }
 
-    public async Task<bool> DeleteArticleImgAsync(List<string> articleImgNames, string bucketName)
+    public async Task<bool> DeleteArticleImgAsync(List<string> articleImgNames)
     {
         foreach (var articleImgName in articleImgNames)
             try
             {
                 var removeObjectArgs = new RemoveObjectArgs()
-                    .WithBucket(bucketName)
+                    .WithBucket(Constants.BucketNames.ArticleImages)
                     .WithObject(articleImgName);
 
                 await MinioCl.RemoveObjectAsync(removeObjectArgs).ConfigureAwait(false);
@@ -70,11 +71,11 @@ public class ArticleRepository(SeiunDbContext dbContext, IMinioClient minioClien
         return true;
     }
 
-    public async Task<MemoryStream> GetArticleImgAsync(string fileName, string bucketName)
+    public async Task<MemoryStream> GetArticleImgAsync(string fileName)
     {
         var articleImgStream = new MemoryStream();
         var getObjectArgs = new GetObjectArgs()
-            .WithBucket(bucketName)
+            .WithBucket(Constants.BucketNames.ArticleImages)
             .WithObject(fileName)
             .WithCallbackStream(data => data.CopyTo(articleImgStream));
         await MinioCl.GetObjectAsync(getObjectArgs).ConfigureAwait(false);
@@ -82,18 +83,16 @@ public class ArticleRepository(SeiunDbContext dbContext, IMinioClient minioClien
 
         return articleImgStream;
     }
+
     public async Task<List<ArticleEntity>> GetAllArticlesAsync(int index, int size, Guid? keyword)
     {
         var query = DbContext.Articles.AsQueryable();
 
-        if (keyword.HasValue)
-        {
-            query = query.Where(a => a.CreatorId == keyword.Value);
-        }
+        if (keyword.HasValue) query = query.Where(a => a.CreatorId == keyword.Value);
 
         return await query
-            .OrderByDescending(a => a.PinTime) 
-            .Skip((index-1) * size)
+            .OrderByDescending(a => a.PinTime)
+            .Skip((index - 1) * size)
             .Take(size)
             .Include(a => a.Likes)
             .ToListAsync();
@@ -103,12 +102,8 @@ public class ArticleRepository(SeiunDbContext dbContext, IMinioClient minioClien
     {
         var query = DbContext.Articles.AsQueryable();
 
-        if (keyword.HasValue)
-        {
-            query = query.Where(a => a.CreatorId == keyword.Value);
-        }
+        if (keyword.HasValue) query = query.Where(a => a.CreatorId == keyword.Value);
 
         return await query.CountAsync();
     }
-
 }

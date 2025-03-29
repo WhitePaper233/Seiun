@@ -17,7 +17,8 @@ public class WordSessionController(
     ILogger<WordSessionController> logger,
     IRepositoryService repository,
     ICurrentStudySessionService currentStudySession,
-    IAiRequestService aiRequest)
+    IAiRequestService aiRequest,
+    ICurrentGenerateTaskService currentGenerateTaskService)
     : ControllerBase
 {
     /// <summary>
@@ -92,6 +93,9 @@ public class WordSessionController(
             ));
         }
 
+        var random = new Random();
+        studyWords = studyWords?.OrderBy(_ => random.Next()).ToList();
+
         var studyingWordCount = studyWords?.Count ?? 0;
         if (studyWords != null)
             foreach (var word in studyWords)
@@ -117,14 +121,18 @@ public class WordSessionController(
             ));
         }
 
-        // 额外线程开始生成题目
         if (studyWords == null)
             return Ok(StartStudyResp.Success(session.Id, reviewingWordCount, studyingWordCount, wordQueue));
 
+        // 额外线程开始生成题目
+        if (!currentGenerateTaskService.InsertUserId(userId.Value, TaskType.Challenge))
+        {
+            return Ok(StartStudyResp.Success(session.Id, reviewingWordCount, studyingWordCount, wordQueue));
+        }
+        
         var words = studyWords.Select(x => x.WordText).ToList();
         // _ = Task.Run(() => aiRequest.GenerateAiFillInBlankAsync(words, userId.Value));
         _ = Task.Run(() => aiRequest.GenerateAiClozeTest(words, userId.Value, session.Id));
-
         return Ok(StartStudyResp.Success(session.Id, reviewingWordCount, studyingWordCount, wordQueue));
     }
 
@@ -178,8 +186,12 @@ public class WordSessionController(
         }
 
         // 下一个单词为空，表示会话已经结束
+        
         // 生成AI文章
-        // _ = Task.Run(() => aiRequest.GenerateAiArticleAsync(userId.Value));
+        if (currentGenerateTaskService.InsertUserId(userId.Value, TaskType.AiArticle))
+        {
+            _ = Task.Run(() => aiRequest.GenerateAiArticleAsync(userId.Value));
+        }
 
         // 打卡
         var lastCheckIn = await repository.UserCheckInRepository.LastCheckInAsync(userId.Value);
@@ -204,25 +216,8 @@ public class WordSessionController(
         // 删除会话
         currentStudySession.RemoveSession(session.Id);
 
-        // 更新用户计划
-        var userPlanEntity = await repository.UserPlansRepository.GetUserPlanAsync(userId.Value);
-        if (userPlanEntity == null)
-            return NotFound(GetNextWordResp.Fail(
-                StatusCodes.Status404NotFound,
-                ErrorMessages.Controller.UserPlan.CurrentUserPlanNotFound
-            ));
-
-        userPlanEntity.LearnedCount += userPlanEntity.DailyPlan;
-        repository.UserPlansRepository.Update(userPlanEntity);
-        if (await repository.UserPlansRepository.SaveAsync())
-            // 返回会话结束信息
-            return Ok(ResponseFactory.NewSuccessBaseResponse(SuccessMessages.Controller.WordSession.WordSessionOver));
-
-        logger.LogWarning("User {} failed over session", userId);
-        return StatusCode(StatusCodes.Status500InternalServerError, GetNextWordResp.Fail(
-            StatusCodes.Status500InternalServerError,
-            ErrorMessages.Controller.WordSession.WordSessionFailOver
-        ));
+        // 返回会话结束信息
+        return Ok(ResponseFactory.NewSuccessBaseResponse(SuccessMessages.Controller.WordSession.WordSessionOver));
     }
 
     /// <summary>
@@ -258,34 +253,37 @@ public class WordSessionController(
             session.ReviewingWords.Remove(wordResultDto.WordId);
 
         if (session.StudyingWords != null && session.StudyingWords.Contains(wordResultDto.WordId))
+        {
             session.StudyingWords.Remove(wordResultDto.WordId);
+            var finishedRecord = new FinishedWordRecordEntity
+            {
+                UserId = userId.Value,
+                SessionId = wordResultDto.SessionId,
+                WordId = wordResultDto.WordId
+            };
+            repository.FinishedWordRepository.Create(finishedRecord);
+            if (!await repository.FinishedWordRepository.SaveAsync())
+            {
+                logger.LogWarning("User {} failed finish word", userId);
+                return StatusCode(StatusCodes.Status500InternalServerError, ResponseFactory.NewFailedBaseResponse(
+                    StatusCodes.Status500InternalServerError,
+                    ErrorMessages.Controller.Word.FinishedWordCreatFailed
+                ));
+            }
+        }
 
         repository.SessionRepository.Update(session);
-        if (!await repository.UserCheckInRepository.SaveAsync())
+        if (!await repository.SessionRepository.SaveAsync())
         {
-            logger.LogWarning("User {} failed check in", userId);
+            logger.LogWarning("User {} failed finish word", userId);
             return StatusCode(StatusCodes.Status500InternalServerError, ResponseFactory.NewFailedBaseResponse(
                 StatusCodes.Status500InternalServerError,
                 ErrorMessages.Controller.Word.FinishedWordCreatFailed
             ));
         }
 
-        var finishedRecord = new FinishedWordRecordEntity
-        {
-            UserId = userId.Value,
-            SessionId = wordResultDto.SessionId,
-            WordId = wordResultDto.WordId
-        };
         currentStudySession.DeleteCorrectWord(session.Id);
-        repository.FinishedWordRepository.Create(finishedRecord);
-        if (await repository.FinishedWordRepository.SaveAsync())
-            return Ok(ResponseFactory.NewSuccessBaseResponse(SuccessMessages.Controller.Word.FinishedWordCreatSuccess));
-
-        logger.LogWarning("User {} finished word {} failed", userId, wordResultDto.WordId);
-        return StatusCode(StatusCodes.Status500InternalServerError, ResponseFactory.NewFailedBaseResponse(
-            StatusCodes.Status500InternalServerError,
-            ErrorMessages.Controller.Word.FinishedWordCreatFailed
-        ));
+        return Ok(ResponseFactory.NewSuccessBaseResponse(SuccessMessages.Controller.Word.FinishedWordCreatSuccess));
     }
 
     /// <summary>
@@ -293,7 +291,7 @@ public class WordSessionController(
     /// </summary>
     /// <param name="wordResultDto"></param>
     /// <returns>操作结果</returns>
-    [HttpPost("error", Name = "Error")]
+    [HttpPost("wrong", Name = "Wrong")]
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     [Authorize(Roles =
         $"{nameof(UserRole.User)},{nameof(UserRole.Creator)},{nameof(UserRole.Admin)},{nameof(UserRole.SuperAdmin)}")]
@@ -301,7 +299,7 @@ public class WordSessionController(
     [ProducesResponseType(typeof(BaseResp), StatusCodes.Status403Forbidden)]
     [ProducesResponseType(typeof(BaseResp), StatusCodes.Status404NotFound)]
     [ProducesResponseType(typeof(BaseResp), StatusCodes.Status500InternalServerError)]
-    public async Task<IActionResult> Error([FromBody] WordResultDto wordResultDto)
+    public async Task<IActionResult> Wrong([FromBody] WordResultDto wordResultDto)
     {
         var userId = User.GetUserId();
         if (userId == null)
@@ -316,6 +314,21 @@ public class WordSessionController(
                 ErrorMessages.Controller.WordSession.NotFoundSession
             ));
 
+        var mistake = new MistakeBookEntity
+        {
+            UserId = userId.Value,
+            WordId = wordResultDto.WordId
+        };
+        repository.MistakeBookRepository.Create(mistake);
+        if (!await repository.MistakeBookRepository.SaveAsync())
+        {
+            logger.LogError("User {} wrong word {} failed", userId, wordResultDto.WordId);
+            return StatusCode(StatusCodes.Status500InternalServerError, ResponseFactory.NewFailedBaseResponse(
+                StatusCodes.Status500InternalServerError,
+                ErrorMessages.Controller.Word.WrongWordCreatFailed
+            ));
+        }
+
         var errorRecord = new WrongWordRecordEntity
         {
             UserId = userId.Value,
@@ -323,15 +336,16 @@ public class WordSessionController(
             WordId = wordResultDto.WordId
         };
         repository.WrongWordRepository.Create(errorRecord);
+
         currentStudySession.InsertErrorWord(session.Id);
         if (await repository.WrongWordRepository.SaveAsync())
             return Ok(ResponseFactory.NewSuccessBaseResponse(
-                SuccessMessages.Controller.Word.ErrorWordRecordCreatSuccess));
+                SuccessMessages.Controller.Word.WrongWordRecordCreatSuccess));
 
-        logger.LogError("User {} error word {} failed", userId, wordResultDto.WordId);
+        logger.LogError("User {} wrong word {} failed", userId, wordResultDto.WordId);
         return StatusCode(StatusCodes.Status500InternalServerError, ResponseFactory.NewFailedBaseResponse(
             StatusCodes.Status500InternalServerError,
-            ErrorMessages.Controller.Word.ErrorWordCreatFailed
+            ErrorMessages.Controller.Word.WrongWordCreatFailed
         ));
     }
 }

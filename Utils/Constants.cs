@@ -32,17 +32,22 @@ public static class Constants
     {
         public const string Avatar = "avatars";
         public const string ArticleImages = "article-images";
-        public const string ArticleCover = "article-covers";
+        public const string WordMnemonicImage = "word-mnemonic-image";
+        public const string WordAudio = "word-audio";
     }
 
     public static class Article
     {
+        public const int MaxArticleDescriptionLength = 200;
+        public const int MaxArticleTitleLength = 200;
+        public const int MaxArticleVocabularyLength = 5000;
         public const int MaxArticleImageSize = 8 * 1024 * 1024; // 8MB
         public const int ArticleImageMaxWidth = 3 * 1024;
         public const int ArticleImageMaxHeight = 3 * 1024;
-        public static readonly string[] AllowedArticleImageExtensions = [".jpg", ".jpeg", ".png", "webp"];
-        public const int MaxArticleLength = 5000;
-        public const int MaxImgUrlLength = 1000;
+        public static readonly string[] AllowedArticleImageExtensions = [".jpg", ".jpeg", ".png", ".webp"];
+        public const int MaxArticleContentLength = 5000;
+        public const int MaxImgFileNameLength = 1000;
+        public const int MaxArticleTagLength = 50;
     }
 
     public static class PublicAnnotation
@@ -55,19 +60,12 @@ public static class Constants
         public const int MaxWordTextLength = 100;
         public const int MaxWordPronunciationLength = 100;
         public const int MaxWordDefinitionLength = 500;
+        public const int MaxWordExampleSentenceLength = 250;
+        public const int MaxWordPrimaryDefinitionLength = 250;
     }
 
     public static class WordBookName
     {
         public const int MaxWordBookNameLength = 50;
-    }
-
-    public static class Question
-    {
-        public const int MaxQuestionAnswerLength = 5000;
-        public const int MaxQuestionAnalysisLength = 5000;
-        public const int MaxQuestionContentLength = 5000;
-        public const int MaxQuestionWordLength = 5000;
-        public const int MaxQuestionTransitionLength = 5000;
     }
 }

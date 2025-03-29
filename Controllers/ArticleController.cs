@@ -9,7 +9,8 @@ using SixLabors.ImageSharp;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Seiun.Utils;
-using Nest;
+
+// using Nest;
 
 namespace Seiun.Controllers;
 
@@ -18,15 +19,9 @@ namespace Seiun.Controllers;
 /// </summary>
 /// <param name="logger">日志</param>
 /// <param name="repository">日志</param>
-/// <param name="elasticClient">Elasticsearch 搜索客户端</param>
-/// <param name="articleSearch">文章搜索服务</param>
 [ApiController]
 [Route("/api/article")]
-public class ArticleController(
-    ILogger<ArticleController> logger,
-    IRepositoryService repository,
-    IElasticClient elasticClient,
-    IArticleSearchService articleSearch) : ControllerBase
+public class ArticleController(ILogger<ArticleController> logger, IRepositoryService repository) : ControllerBase
 {
     /// <summary>
     /// 上传文章
@@ -57,7 +52,10 @@ public class ArticleController(
 
         var article = new ArticleEntity
         {
-            Article = articleCreate.Article,
+            Title = articleCreate.Title,
+            Content = articleCreate.Content,
+            Description = articleCreate.Description,
+            Vocabulary = articleCreate.Vocabulary,
             ImageFileNames = articleCreate.ImageNames,
             CoverFileName = articleCreate.CoverFileName,
             CreatorId = userId.Value,
@@ -66,23 +64,21 @@ public class ArticleController(
 
         repository.ArticleRepository.Create(article);
         if (await repository.ArticleRepository.SaveAsync())
-        {
-            var articleSearchEntity = new ArticleSearchEntity
-            {
-                Article = article.Article,
-                CreatorUserName = user.UserName,
-                CreatorNickName = user.NickName,
-                CreatedAt = article.CreatedAt,
-                ArticleId = article.Id
-            };
-
-            var indexResponse = await elasticClient.IndexAsync(articleSearchEntity, i => i
-                .Id(articleSearchEntity.ArticleId.ToString()));
-            if (indexResponse.IsValid)
-                return Ok(ResponseFactory.NewSuccessBaseResponse(SuccessMessages.Controller.Article.CreateSuccess));
-            logger.LogError("Index article {} failed", article.Id);
-        }
-
+            return Ok(ResponseFactory.NewSuccessBaseResponse(SuccessMessages.Controller.Article.CreateSuccess));
+        // var articleSearchEntity = new ArticleSearchEntity
+        // {
+        //     Article = article.Article,
+        //     CreatorUserName = user.UserName,
+        //     CreatorNickName = user.NickName,
+        //     CreatedAt = article.CreatedAt,
+        //     ArticleId = article.Id
+        // };
+        //
+        // var indexResponse = await elasticClient.IndexAsync(articleSearchEntity, i => i
+        //     .Id(articleSearchEntity.ArticleId.ToString()));
+        // if (indexResponse.IsValid)
+        //     return Ok(ResponseFactory.NewSuccessBaseResponse(SuccessMessages.Controller.Article.CreateSuccess));
+        // logger.LogError("Index article {} failed", article.Id);
         logger.LogError("User {} Create article failed", userId);
         return StatusCode(StatusCodes.Status500InternalServerError, ResponseFactory.NewFailedBaseResponse(
             StatusCodes.Status500InternalServerError,
@@ -157,8 +153,7 @@ public class ArticleController(
             await image.SaveAsWebpAsync(processedImageStream);
             processedImageStream.Seek(0, SeekOrigin.Begin);
             var articleImgName =
-                await repository.ArticleRepository.UploadArticleImgAsync(processedImageStream,
-                    Constants.BucketNames.ArticleImages);
+                await repository.ArticleRepository.UploadArticleImgAsync(processedImageStream);
             return Ok(ArticleImgNameResp.Success(articleImgName));
         }
         catch (Exception e)
@@ -208,13 +203,12 @@ public class ArticleController(
                     ErrorMessages.Controller.Article.PermissonDeniedError
                 ));
 
-        var deleteResponse = await elasticClient.DeleteAsync<ArticleSearchEntity>(articleId.ToString());
+        // var deleteResponse = await elasticClient.DeleteAsync<ArticleSearchEntity>(articleId.ToString());
         repository.ArticleRepository.Delete(article);
-        if (await repository.ArticleRepository.SaveAsync() && deleteResponse.IsValid)
+        if (await repository.ArticleRepository.SaveAsync())
         {
             if (article.ImageFileNames != null &&
-                await repository.ArticleRepository.DeleteArticleImgAsync(article.ImageFileNames,
-                    Constants.BucketNames.ArticleImages))
+                await repository.ArticleRepository.DeleteArticleImgAsync(article.ImageFileNames))
                 return Ok(ResponseFactory.NewSuccessBaseResponse(SuccessMessages.Controller.Article.DeleteSuccess));
             logger.LogError("User {} Delete article image {} failed", userId, articleId);
         }
@@ -278,7 +272,7 @@ public class ArticleController(
     /// </summary>
     /// <param name="articleId">文章ID</param>
     /// <returns>取消置顶结果</returns>
-    [HttpPatch("cancel-pin/{articleId:Guid}", Name = "CanaelPinArticle")]
+    [HttpPatch("cancel-pin/{articleId:Guid}", Name = "CancelPinArticle")]
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     [Authorize(Roles = $"{nameof(UserRole.Creator)},{nameof(UserRole.Admin)},{nameof(UserRole.SuperAdmin)}")]
     [ProducesResponseType(typeof(BaseResp), StatusCodes.Status200OK)]
@@ -333,10 +327,10 @@ public class ArticleController(
     [ProducesResponseType(typeof(ArticleListResp), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ArticleListResp), StatusCodes.Status404NotFound)]
     [ProducesResponseType(typeof(ArticleListResp), StatusCodes.Status500InternalServerError)]
-    public async Task<IActionResult> GetArticleList([FromQuery] int len, [FromQuery] DateTimeOffset? from,
-        [FromQuery] string? reqType, [FromQuery] Guid? userId = null)
+    public async Task<IActionResult> GetArticleList([FromQuery] int len = 0, [FromQuery] DateTimeOffset? from = null,
+        [FromQuery] ArticleQueryType? reqType = null, [FromQuery] Guid? userId = null)
     {
-        if (reqType is "user" or "liked" && userId is null)
+        if (reqType is ArticleQueryType.User or ArticleQueryType.Liked && userId is null)
             return BadRequest(ArticleListResp.Fail(
                 StatusCodes.Status400BadRequest,
                 ErrorMessages.Controller.Article.UserIdRequired
@@ -347,14 +341,14 @@ public class ArticleController(
             List<Guid>? articleIds;
             switch (reqType)
             {
-                case "":
-                case "all":
+                case null:
+                case ArticleQueryType.All:
                     articleIds = await repository.ArticleRepository.GetArticleListAsync(len, from);
                     break;
-                case "user":
+                case ArticleQueryType.User:
                     articleIds = await repository.ArticleRepository.GetArticleListByUserIdAsync(userId!.Value);
                     break;
-                case "liked":
+                case ArticleQueryType.Liked:
                     articleIds = await repository.ArticleLikeRepository.GetArticleListByLikedRecordAsync(userId!.Value);
                     break;
                 default:
@@ -505,40 +499,34 @@ public class ArticleController(
         ));
     }
 
-    /// <summary>
-    /// 搜索文章
-    /// </summary>
-    /// <param name="keyword">搜索关键字</param>
-    /// <param name="page">起始页</param>
-    /// <param name="pageSize">每页文章列表数目</param>
-    /// <returns>查询结果</returns>
-    [HttpGet("search", Name = "Search")]
-    [ProducesResponseType(typeof(ArticleListResp), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(ArticleListResp), StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> SearchArticle([FromQuery] string keyword, [FromQuery] int page = 1,
-        [FromQuery] int pageSize = 10)
-    {
-        var articleIdList = await articleSearch.ArticleSearchAsync(keyword, page, pageSize);
-        if (articleIdList == null)
-            return NotFound(ArticleListResp.Fail(
-                StatusCodes.Status404NotFound,
-                ErrorMessages.Controller.Article.ArticleNotFound
-            ));
-        return Ok(ArticleListResp.Success(articleIdList));
-    }
+
+    // [HttpGet("search", Name = "Search")]
+    // [ProducesResponseType(typeof(ArticleListResp), StatusCodes.Status200OK)]
+    // [ProducesResponseType(typeof(ArticleListResp), StatusCodes.Status404NotFound)]
+    // public async Task<IActionResult> SearchArticle([FromQuery] string keyword, [FromQuery] int page = 1,
+    //     [FromQuery] int pageSize = 10)
+    // {
+    //     var articleIdList = await articleSearch.ArticleSearchAsync(keyword, page, pageSize);
+    //     if (articleIdList == null)
+    //         return NotFound(ArticleListResp.Fail(
+    //             StatusCodes.Status404NotFound,
+    //             ErrorMessages.Controller.Article.ArticleNotFound
+    //         ));
+    //     return Ok(ArticleListResp.Success(articleIdList));
+    // }
 
     /// <summary>
-    /// 获取AI文章
+    /// 获取ai文章列表
     /// </summary>
-    /// <returns>AI文章</returns>
-    [HttpGet("get-ai-article", Name = "GetAIArticle")]
+    /// <returns></returns>
+    [HttpGet("ai-article-list", Name = "GetAiArticleList")]
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     [Authorize(Roles =
         $"{nameof(UserRole.User)},{nameof(UserRole.Creator)},{nameof(UserRole.Admin)},{nameof(UserRole.SuperAdmin)}")]
-    [ProducesResponseType(typeof(AiArticleDetailResp), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(AiArticleDetailResp), StatusCodes.Status403Forbidden)]
-    [ProducesResponseType(typeof(AiArticleDetailResp), StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> GetAiArticle()
+    [ProducesResponseType(typeof(AiArticleListResp), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(AiArticleListResp), StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(AiArticleListResp), StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetAiArticleList()
     {
         var userId = User.GetUserId();
         if (userId == null)
@@ -547,12 +535,43 @@ public class ArticleController(
                 ErrorMessages.Controller.Any.InvalidJwtToken
             ));
 
-        var aiArticleEntities = await repository.AiArticleRepository.GetByUserIdAsync(userId.Value);
+        var aiArticleList = await repository.AiArticleRepository.GetListByUserIdAsync(userId.Value);
+        if (aiArticleList == null || aiArticleList.Count == 0)
+            return NotFound(AiArticleListResp.Fail(
+                StatusCodes.Status404NotFound,
+                ErrorMessages.Controller.Article.AiArticleNotFound
+            ));
+
+        return Ok(AiArticleListResp.Success(aiArticleList));
+    }
+
+    /// <summary>
+    /// 获取AI文章
+    /// </summary>
+    /// <returns>AI文章</returns>
+    [HttpGet("ai-article", Name = "GetAiArticle")]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    [Authorize(Roles =
+        $"{nameof(UserRole.User)},{nameof(UserRole.Creator)},{nameof(UserRole.Admin)},{nameof(UserRole.SuperAdmin)}")]
+    [ProducesResponseType(typeof(AiArticleDetailResp), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(AiArticleDetailResp), StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(AiArticleDetailResp), StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetAiArticle([FromQuery] Guid aiArticleId)
+    {
+        var userId = User.GetUserId();
+        if (userId == null)
+            return StatusCode(StatusCodes.Status403Forbidden, ResponseFactory.NewFailedBaseResponse(
+                StatusCodes.Status403Forbidden,
+                ErrorMessages.Controller.Any.InvalidJwtToken
+            ));
+
+        var aiArticleEntities = await repository.AiArticleRepository.GetByIdAsync(aiArticleId);
         if (aiArticleEntities == null)
             return NotFound(AiArticleDetailResp.Fail(
                 StatusCodes.Status404NotFound,
                 ErrorMessages.Controller.Article.AiArticleNotFound
             ));
+
         return Ok(AiArticleDetailResp.Success(aiArticleEntities));
     }
 }

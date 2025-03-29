@@ -8,15 +8,32 @@ namespace Seiun.Entities;
 
 public class ArticleEntity : BaseEntity
 {
+    // 标题
+    [MaxLength(Constants.Article.MaxArticleTitleLength,
+        ErrorMessage = ErrorMessages.ValidationError.OverArticleTitleMaxLength)]
+    public required string Title { get; set; }
+
+    // 简介
+    [MaxLength(Constants.Article.MaxArticleDescriptionLength,
+        ErrorMessage = ErrorMessages.ValidationError.OverArticleDescriptionMaxLength)]
+    public required string Description { get; set; }
+
     // 文章
-    [MaxLength(Constants.Article.MaxArticleLength, ErrorMessage = ErrorMessages.ValidationError.OverArticleMaxLength)]
-    public required string Article { get; set; }
+    [MaxLength(Constants.Article.MaxArticleContentLength,
+        ErrorMessage = ErrorMessages.ValidationError.OverArticleContentMaxLength)]
+    public required string Content { get; set; }
+
+    // key vocabulary
+    [MaxLength(Constants.Article.MaxArticleVocabularyLength,
+        ErrorMessage = ErrorMessages.ValidationError.OverArticleVocabularyMaxLength)]
+    public required string Vocabulary { get; set; }
 
     // 图片
     public List<string>? ImageFileNames { get; set; }
 
     // 封面
-    [MaxLength(Constants.Article.MaxImgUrlLength, ErrorMessage = ErrorMessages.ValidationError.OverImgUrlLength)]
+    [MaxLength(Constants.Article.MaxImgFileNameLength,
+        ErrorMessage = ErrorMessages.ValidationError.OverImgFileNameLength)]
     public string? CoverFileName { get; set; }
 
     // 发布者ID

@@ -3,15 +3,17 @@ using System.ClientModel;
 using OpenAI.Chat;
 using RestSharp;
 using System.Text.Json;
-using Seiun.Controllers;
 using Seiun.Entities;
-using Seiun.Utils;
+using Seiun.Models.Responses;
 using SixLabors.ImageSharp;
 using Seiun.Utils.Enums;
 
 namespace Seiun.Services;
 
-public class AiRequestService(IServiceScopeFactory serviceScopeFactory, ILogger<WordSessionController> logger)
+public class AiRequestService(
+    IServiceScopeFactory serviceScopeFactory, 
+    ILogger<AiRequestService> logger, 
+    ICurrentGenerateTaskService currentGenerateTaskService)
     : IAiRequestService
 {
     private readonly IConfigurationRoot _config = new ConfigurationBuilder()
@@ -19,6 +21,7 @@ public class AiRequestService(IServiceScopeFactory serviceScopeFactory, ILogger<
         .AddJsonFile("secret.json", false, true)
         .Build();
 
+# region Generate Ai Article
 
     // 生成文章和封面
     public async Task GenerateAiArticleAsync(Guid userId)
@@ -42,32 +45,39 @@ public class AiRequestService(IServiceScopeFactory serviceScopeFactory, ILogger<
             (await repository.WordRepository.GetByGuidsAsync([.. latestFinishedWordEntities.Select(x => x.WordId)]))
             .ToList();
         var words = latestFinishedWords.Select(x => x.WordText).ToList();
-
+        var random = new Random();
+        words = words.OrderBy(_ => random.Next()).ToList();
+        
         // 生成文章
-        var prompt = string.Join(",", words);
+        var prompt = string.Join("|", words);
         var clientOptions = new OpenAIClientOptions
         {
             Endpoint = new Uri("https://api.deepseek.com")
         };
         var clientCredentials = new ApiKeyCredential($"{dApiKey}");
-        var client = new OpenAIClient(clientCredentials, clientOptions).GetChatClient("deepseek-reasoner");
+        var client = new OpenAIClient(clientCredentials, clientOptions).GetChatClient("deepseek-chat");
         const string systemPrompt = """
-                                    请根据以下英文单词，使用逗号分隔，不区分大小写，生成一篇英文文章，帮助学习这些单词。
-                                    文章必须使用 Markdown 语法，以markdown文本返回。
+                                    请根据我提供的使用 | 分隔的英文单词，不区分大小写，生成一篇英文文章，帮助学习这些单词。
+                                    title,description,content,tag,vocabulary; content 必须使用 Markdown 语法文本, vocabulary 必须使用形如例子的 Markdown 语法文本, 其他部分以纯文本返回，tag为单个不超过50个字母的单词。
                                     文章中也可以使用一些学习的单词的一些词性变换和语法词组，学习的单词和相关语法,词性变换，词组加粗。
 
                                     EXAMPLE INPUT:
-                                    hello,world
+                                    adventure|challenge|journey|explore|courage
 
-                                    EXAMPLE OUTPUT:
-                                    # The Beauty of the **World**\n\nIn this vast **world**, a simple **hello** can create new friendships, \n
-                                    brighten someone's day, and bring warmth to a lonely heart. 								
+                                    EXAMPLE JSON OUTPUT:
+                                    {
+                                        "title": "The Thrilling Adventure of a Lifetime", 
+                                        "description": "An engaging story about a traveler's adventurous journey, using key vocabulary in a natural context.",
+                                        "content": "Once upon a time, a young traveler decided to **explore** the mysterious lands beyond his village. He knew that the **journey** ahead would be full of **challenges**, but his **courage** pushed him forward...\n",
+                                        "tag": "Adventure",
+                                        "vocabulary": "**adventure**: An exciting or unusual experience, often involving risk and exploration. It can refer to a daring journey or an exciting event.\n\n**challenge**: A difficult task or problem that requires effort and determination to overcome. It can also mean calling someone to a competition or dispute.\n\n"
+                                    }
                                     """;
         var userPrompt = $"{prompt}";
         var completionOptions = new ChatCompletionOptions
         {
             Temperature = 1.5f,
-            ResponseFormat = ChatResponseFormat.CreateTextFormat()
+            ResponseFormat = ChatResponseFormat.CreateJsonObjectFormat()
         };
         var messages = new ChatMessage[]
         {
@@ -75,15 +85,17 @@ public class AiRequestService(IServiceScopeFactory serviceScopeFactory, ILogger<
             new UserChatMessage(userPrompt)
         };
         ChatCompletion completion = await client.CompleteChatAsync(messages, completionOptions);
-        var aiArticle = completion.Content[0].Text;
+        var aiArticleJson = completion.Content[0].Text;
+        var aiArticle = JsonSerializer.Deserialize<MatchAiArticle>(aiArticleJson);
         if (aiArticle == null)
         {
             logger.LogWarning("User {} failed generate ai article", userId);
             return;
         }
+        Console.WriteLine(aiArticle.Content);
 
         // 生成封面
-        aiArticle = aiArticle.Length > 900 ? aiArticle[..900] : aiArticle;
+        var aiArticleToRequest = aiArticle.Content.Length > 900 ? aiArticle.Content[..900] : aiArticle.Content;
 
         var coverClient = new RestClient("https://api.chatanywhere.tech/v1/images/generations");
         var coverRequest = new RestRequest
@@ -95,40 +107,31 @@ public class AiRequestService(IServiceScopeFactory serviceScopeFactory, ILogger<
 
         var coverBody = new
         {
-            prompt = $"根据以下英文文章生成图片，要求阳光，二次元风格。文章：{aiArticle}",
+            prompt = $"Generate an image based on the following English article: {aiArticleToRequest}",
             n = 1,
-            model = "dall-e-2",
-            size = "512x512"
+            model = "dall-e-3",
+            size = "1024x1024"
         };
 
         coverRequest.AddJsonBody(coverBody);
 
-        var coverResponse = await coverClient.ExecuteAsync(coverRequest);
-        if (coverResponse.Content == null)
+        var coverResponse = await coverClient.ExecuteAsync<MatchAiArticleCover>(coverRequest);
+        if (!coverResponse.IsSuccessful || coverResponse.Data == null)
         {
             logger.LogWarning("User {} failed generate ai cover", userId);
             return;
         }
 
-        using var doc = JsonDocument.Parse(coverResponse.Content);
-        var root = doc.RootElement;
-        var dataArray = root.GetProperty("data");
-        var firstElement = dataArray[0];
-        var aiCoverUrl = firstElement.GetProperty("url").GetString() ?? string.Empty;
-        if (aiCoverUrl != string.Empty)
-        {
-            logger.LogWarning("User {} failed generate ai cover", userId);
-            return;
-        }
+        var arCoverUrl = coverResponse.Data.Data[0].Url;
 
         // 下载图片
-        var imageClient = new RestClient(aiCoverUrl);
+        var imageClient = new RestClient(arCoverUrl);
         var imageRequest = new RestRequest
         {
             Method = Method.Get
         };
         var imageResponse = await imageClient.ExecuteAsync(imageRequest);
-        if (imageResponse.RawBytes == null)
+        if (!imageResponse.IsSuccessful || imageResponse.RawBytes == null)
         {
             logger.LogWarning("User {} failed upload cover image", userId);
             return;
@@ -146,12 +149,11 @@ public class AiRequestService(IServiceScopeFactory serviceScopeFactory, ILogger<
             await image.SaveAsWebpAsync(processedImageStream);
             processedImageStream.Seek(0, SeekOrigin.Begin);
             articleImgName =
-                await repository.ArticleRepository.UploadArticleImgAsync(processedImageStream,
-                    Constants.BucketNames.ArticleCover);
+                await repository.ArticleRepository.UploadArticleImgAsync(processedImageStream);
         }
         catch
         {
-            logger.LogWarning("User {} failed upload cover image", userId);
+            logger.LogWarning("User {} failed handle cover image", userId);
             return;
         }
 
@@ -159,14 +161,24 @@ public class AiRequestService(IServiceScopeFactory serviceScopeFactory, ILogger<
         var aIArticleEntity = new AiArticleEntity
         {
             UserId = userId,
+            Title = aiArticle.Title,
+            Description = aiArticle.Description,
+            Content = aiArticle.Content,
+            Vocabulary = aiArticle.Vocabulary,
             SessionId = latestFinishedWordGroup.Key,
-            Article = aiArticle,
-            CoverUrl = articleImgName
+            CoverFileName = articleImgName,
+            Tag = aiArticle.Tag
         };
         repository.AiArticleRepository.Create(aIArticleEntity);
         if (!await repository.AiArticleRepository.SaveAsync())
             logger.LogWarning("User {} failed generate ai article", userId);
+        
+        currentGenerateTaskService.DeleteUserId(userId, TaskType.AiArticle);
     }
+    
+# endregion
+
+# region Generate Ai Fill In Blank
 
     // 生成选词填空
     public async Task GenerateAiFillInBlankAsync(List<string> words, Guid userId, Guid sessionId)
@@ -227,6 +239,9 @@ public class AiRequestService(IServiceScopeFactory serviceScopeFactory, ILogger<
             logger.LogWarning("User {} failed generate fill in blank test", userId);
     }
 
+# endregion
+
+# region Generate Ai Cloze Test
     // 生成完形填空
     public async Task GenerateAiClozeTest(List<string> words, Guid userId, Guid sessionId)
     {
@@ -234,6 +249,9 @@ public class AiRequestService(IServiceScopeFactory serviceScopeFactory, ILogger<
         var repository = scope.ServiceProvider.GetRequiredService<IRepositoryService>();
 
         var apiKey = _config["CA:ApiKey"];
+        
+        var random = new Random();
+        words = words.OrderBy(_ => random.Next()).ToList();
         var wordText = string.Join('|', words.Take(15));
 
         var clientOptions = new OpenAIClientOptions
@@ -243,22 +261,39 @@ public class AiRequestService(IServiceScopeFactory serviceScopeFactory, ILogger<
         var clientCredentials = new ApiKeyCredential($"{apiKey}");
         var client = new OpenAIClient(clientCredentials, clientOptions).GetChatClient("o3-mini");
         const string systemPrompt = """
-                                    我将提供给你几个英语单词，使用｜分隔，请你将这些单词作为考察内容出一篇完型填空题，帮助用户巩固单词记忆。不要出现连续的填空，使用JSON格式回复。
+                                    我将提供给你几个英语单词，使用｜分隔，请你将这些单词作为考察内容出一篇完型填空题，帮助用户巩固单词记忆。不要出现连续的填空，analysis使用中文。使用JSON格式回复。
                                     EXAMPLE INPUT: 
-                                    hello|world
+                                    go|park|cup|quiet|window|enjoyed
                                     EXAMPLE JSON OUTPUT:
                                     {
                                         "type": 1,
-                                        "content": "The program outputs say {$1} to the {$2}!",
+                                        "content": "John was very {$1} to visit the {$2} in the {$3} because he had heard so much about it. When he finally arrived, he {$4} to see how beautiful it was. He quickly {$5} his camera and began taking pictures. By the end of the day, he felt {$6} to have experienced such an amazing place.",
                                         "selections": {
-                                            "1":  ["ground", "player", "do", "hello"],
-                                            "2": ["back", "judge", "world", "tick"]
+                                            "1": ["excited", "bored", "surprised", "nervous"],
+                                            "2": ["museum", "library", "restaurant", "park"],
+                                            "3": ["morning", "afternoon", "evening", "night"],
+                                            "4": ["laughed", "cried", "jumped", "gasped"],
+                                            "5": ["opened", "closed", "dropped", "grabbed"],
+                                            "6": ["proud", "tired", "excited", "relaxed"]
                                         },
                                         "answers": {
-                                            "1": "hello",
-                                            "2": "world",
+                                            "1": "excited",
+                                            "2": "museum",
+                                            "3": "morning",
+                                            "4": "gasped",
+                                            "5": "opened",
+                                            "6": "proud"
+                                        },
+                                        "analysis": {
+                                            "1": "**'excited'**（兴奋的）表达了 John 对即将访问博物馆的积极期待。这个词反映了他对即将到来的旅行充满热情和兴趣。其他选项 **'bored'**（无聊的）、**'surprised'**（惊讶的）和 **'nervous'**（紧张的）都不适合，因为它们分别描述的是负面的或过度的情绪，无法体现 John 的兴奋情感。",
+                                            "2": "**'museum'**（博物馆）是一个典型的文化学习场所，John 前往该地有很强的文化和探索动机。其他选项如 **'library'**（图书馆）、**'restaurant'**（餐馆）和 **'park'**（公园）虽然也可以是有趣的地方，但都与 John 的目的不符，缺乏文化氛围。",
+                                            "3": "**'morning'**（早晨）通常是一天中充满新鲜感的时间，许多人会选择在清晨参观博物馆，以避免人流高峰。其他选项 **'afternoon'**（下午）、**'evening'**（傍晚）和 **'night'**（夜晚）都不如早晨适合进行此类活动，尤其是博物馆通常在早晨开放。",
+                                            "4": "**'gasped'**（倒吸一口气）是对美丽事物的一种自然反应，表示 John 对博物馆的美感震撼。其他选项 **'laughed'**（笑）、**'cried'**（哭泣）和 **'jumped'**（跳）虽然可以表达情感，但都不符合这种静态的震惊反应。",
+                                            "5": "**'opened'**（打开）最符合上下文，John 迅速取出他的相机并开始拍照。其他选项 **'closed'**（关闭）、**'dropped'**（掉落）和 **'grabbed'**（抓住）都不符合这个动作，因为它们描述的是不合适的动作。",
+                                            "6": "**'proud'**（骄傲的）意味着 John 参观了博物馆并从中学到了很多，他为自己能够亲自体验这一过程而感到骄傲。其他选项 **'tired'**（累的）、**'excited'**（激动的）和 **'relaxed'**（放松的）虽然也有一定的情感关联，但 **'proud'** 更符合这个积极的情感状态。"
                                         }
                                     }
+                                    
                                     """;
         var userPrompt = $"{wordText}";
         var completionOptions = new ChatCompletionOptions
@@ -283,5 +318,9 @@ public class AiRequestService(IServiceScopeFactory serviceScopeFactory, ILogger<
         repository.ChallengeRepository.Create(clozeTest);
         if (!await repository.ChallengeRepository.SaveAsync())
             logger.LogWarning("User {} failed generate ai cloze test", userId);
+        
+        currentGenerateTaskService.DeleteUserId(userId, TaskType.Challenge);
     }
+    
+# endregion
 }

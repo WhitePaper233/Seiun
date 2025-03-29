@@ -4,5 +4,5 @@ namespace Seiun.Repositories;
 
 public interface IAiArticleRepository : IBaseRepository<AiArticleEntity>
 {
-    Task<List<AiArticleEntity>?> GetByUserIdAsync(Guid userId);
+    Task<List<Guid>?> GetListByUserIdAsync(Guid userId);
 }

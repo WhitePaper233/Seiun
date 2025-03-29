@@ -1,5 +1,6 @@
 using Seiun.Entities;
 using Seiun.Resources;
+using System.Text.Json.Serialization;
 
 namespace Seiun.Models.Responses;
 
@@ -67,10 +68,15 @@ public sealed class ArticleListResp(int code, string message, ArticleList? artic
 /// </summary>
 public class ArticleDetail
 {
+    public required Guid Id { get; set; }
+    public required string Title { get; set; }
+    public required string Description { get; set; }
     public required Guid CreatorId { get; set; }
-    public required string Article { get; set; }
+    public required string Content { get; set; }
+    public required string Vocabulary { get; set; }
     public List<string>? ArticleImgUrls { get; set; }
-    public required DateTimeOffset CreateAt { get; set; }
+    public string? CoverFileName { get; set; }
+    public required long CreateAt { get; set; }
     public required int Like { get; set; }
     public required bool IsPinned { get; set; }
 }
@@ -86,10 +92,15 @@ public sealed class ArticleDetailResp(int code, string message, ArticleDetail? a
             SuccessMessages.Controller.Article.GetArticleDetailSuccess,
             new ArticleDetail
             {
+                Id = articleEntity.Id,
+                Title = articleEntity.Title,
+                Description = articleEntity.Description ?? "",
                 CreatorId = articleEntity.CreatorId,
-                Article = articleEntity.Article,
+                Content = articleEntity.Content,
+                Vocabulary = articleEntity.Vocabulary,
                 ArticleImgUrls = articleImgUrls,
-                CreateAt = articleEntity.CreatedAt,
+                CoverFileName = articleEntity.CoverFileName,
+                CreateAt = articleEntity.CreatedAt.ToUnixTimeSeconds(),
                 Like = articleLikedCount,
                 IsPinned = articleEntity.IsPinned
             }
@@ -104,10 +115,8 @@ public sealed class ArticleDetailResp(int code, string message, ArticleDetail? a
 
 # endregion
 
-/// <summary>
-/// 所有文章响应
-/// </summary>
 # region ArticleListResponse
+
 public class ArticleListDto
 {
     public required List<ArticleDetail> Articles { get; set; }
@@ -118,47 +127,78 @@ public class ArticleListDto
 /// 管理员文章列表响应 
 /// </summary>
 public sealed class ArticleListResponse(int code, string message, ArticleListDto? articleListDto)
-	: BaseRespWithData<ArticleListDto>(code, message, articleListDto)
+    : BaseRespWithData<ArticleListDto>(code, message, articleListDto)
 {
-	public static ArticleListResponse Success(ArticleListDto articleListDto)
+    public static ArticleListResponse Success(ArticleListDto articleListDto)
     {
         return new ArticleListResponse(200, SuccessMessages.Controller.Article.GetArticleListSuccess, articleListDto);
     }
 
-	public static ArticleListResponse Fail(int code, string message)
-	{
-		return new ArticleListResponse(code, message, null);
-	}
+    public static ArticleListResponse Fail(int code, string message)
+    {
+        return new ArticleListResponse(code, message, null);
+    }
 }
+
+# endregion
+
+# region AiArticleListResponse
+
+public class AiArticleList
+{
+    public required List<Guid> AiArticleIds { get; set; }
+}
+
+public sealed class AiArticleListResp(int code, string message, AiArticleList? articleList)
+    : BaseRespWithData<AiArticleList>(code, message, articleList)
+{
+    public static AiArticleListResp Success(List<Guid> articleIds)
+    {
+        return new AiArticleListResp(StatusCodes.Status200OK,
+            SuccessMessages.Controller.Article.GetAiArticleListSuccess,
+            new AiArticleList
+            {
+                AiArticleIds = articleIds
+            });
+    }
+
+    public static AiArticleListResp Fail(int code, string message)
+    {
+        return new AiArticleListResp(code, message, null);
+    }
+}
+
 # endregion
 
 # region GetAIArticle
 
-public class AiArticleList
-{
-    public required List<AiArticleDetail> AiArticles { get; set; }
-}
-
 public class AiArticleDetail
 {
-    public required string AiArticle { get; set; }
-    public required string AiCoverUrl { get; set; }
+    public required Guid AiArticleId { get; set; }
+    public required string Title { get; set; }
+    public required string Description { get; set; }
+    public required string Content { get; set; }
+    public required string Vocabulary { get; set; }
+    public required string CoverFileName { get; set; }
+    public required string Tag { get; set; }
 }
 
-public sealed class AiArticleDetailResp(int code, string message, AiArticleList? aiArticleDetails)
-    : BaseRespWithData<AiArticleList>(code, message, aiArticleDetails)
+public sealed class AiArticleDetailResp(int code, string message, AiArticleDetail? aiArticleDetails)
+    : BaseRespWithData<AiArticleDetail>(code, message, aiArticleDetails)
 {
-    public static AiArticleDetailResp Success(List<AiArticleEntity> aiArticleEntities)
+    public static AiArticleDetailResp Success(AiArticleEntity aiArticleEntity)
     {
         return new AiArticleDetailResp(StatusCodes.Status200OK,
             SuccessMessages.Controller.Article.GetArticleDetailSuccess,
-            new AiArticleList
+            new AiArticleDetail
             {
-                AiArticles = aiArticleEntities.Select(aiArticleEntity =>
-                    new AiArticleDetail
-                    {
-                        AiArticle = aiArticleEntity.Article, AiCoverUrl = aiArticleEntity.CoverUrl
-                    }).ToList()
+                AiArticleId = aiArticleEntity.Id,
+                Title = aiArticleEntity.Title,
+                Description = aiArticleEntity.Description ?? "",
+                Content = aiArticleEntity.Content,
+                CoverFileName = aiArticleEntity.CoverFileName,
+                Vocabulary = aiArticleEntity.Vocabulary,
+                Tag = aiArticleEntity.Tag
             }
         );
     }
@@ -168,4 +208,33 @@ public sealed class AiArticleDetailResp(int code, string message, AiArticleList?
         return new AiArticleDetailResp(code, message, null);
     }
 }
-#endregion
+
+# endregion
+
+# region Match Ai Article
+
+public class MatchAiArticle
+{
+    [JsonPropertyName("title")] public required string Title { get; set; }
+    [JsonPropertyName("description")] public required string Description { get; set; }
+    [JsonPropertyName("content")] public required string Content { get; set; }
+    [JsonPropertyName("tag")] public required string Tag { get; set; }
+    [JsonPropertyName("vocabulary")] public required string Vocabulary { get; set; }
+}
+
+# endregion
+
+# region Match Ai Cover
+
+public class CoverUrl
+{
+    [JsonPropertyName("url")] public required string Url { get; set; }
+}
+
+public class MatchAiArticleCover
+{
+    [JsonPropertyName("created")] public required int Created { get; set; }
+    [JsonPropertyName("data")] public required List<CoverUrl> Data { get; set; }
+}
+
+# endregion

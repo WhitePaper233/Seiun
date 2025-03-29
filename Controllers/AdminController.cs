@@ -214,7 +214,7 @@ public class AdminController(ILogger<AdminController> logger, IRepositoryService
     [ProducesResponseType(typeof(BaseResp), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(BaseResp), StatusCodes.Status404NotFound)]
     [ProducesResponseType(typeof(BaseResp), StatusCodes.Status500InternalServerError)]
-    public async Task<IActionResult> GetAllWords([FromQuery] GetWordssByAdmin parameters)
+    public async Task<IActionResult> GetAllWords([FromQuery] GetWordsByAdmin parameters)
     {
         try
         {
@@ -240,6 +240,7 @@ public class AdminController(ILogger<AdminController> logger, IRepositoryService
                         WordText = w.WordText,
                         Pronunciation = w.Pronunciation,
                         Definition = w.Definition,
+                        ExampleSentence = w.ExampleSentence,
                         DistractorIds = w.WordDistractors.Select(d => d.DistractorId).ToList(),
                         WordBookName = w.Books.Select(b => b.Book.WordBookName).Distinct().ToList()
                     })
@@ -271,10 +272,12 @@ public class AdminController(ILogger<AdminController> logger, IRepositoryService
     {
         try
         {
-            var articles = await repository.ArticleRepository.GetAllArticlesAsync(parameters.Index, parameters.Size, parameters.Keyword);
+            var articles =
+                await repository.ArticleRepository.GetAllArticlesAsync(parameters.Index, parameters.Size,
+                    parameters.Keyword);
             var totalArticles = await repository.ArticleRepository.GetTotalArticlesAsync(parameters.Keyword);
 
-            if (articles == null || articles.Count == 0)
+            if (articles.Count == 0)
             {
                 logger.LogError("Get all articles failed");
                 return StatusCode(StatusCodes.Status404NotFound, ResponseFactory.NewFailedBaseResponse(
@@ -295,14 +298,12 @@ public class AdminController(ILogger<AdminController> logger, IRepositoryService
                 }))
             );
 
-
             var articleListResponse = new ArticleListDto
             {
-                Articles = [.. articleDetails], 
+                Articles = [.. articleDetails],
                 TotalArticle = totalArticles
             };
             return Ok(ArticleListResponse.Success(articleListResponse));
-            
         }
         catch (Exception ex)
         {
@@ -313,6 +314,7 @@ public class AdminController(ILogger<AdminController> logger, IRepositoryService
             ));
         }
     }
+
 
     // 获取所有权限组
     [HttpGet("role-list", Name = "GetRoleList")]
@@ -438,5 +440,7 @@ public class AdminController(ILogger<AdminController> logger, IRepositoryService
             ));
         }
     }
+}
+
 }
 

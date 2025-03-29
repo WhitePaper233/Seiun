@@ -8,13 +8,14 @@ namespace Seiun.Models.Responses;
 public class WordDetail
 {
     public required string WordText { get; set; }
-    public string? Pronunciation { get; set; }
+    public required string Pronunciation { get; set; }
     public required string Definition { get; set; }
+    public required string ExampleSentence { get; set; }
 }
 
 public class WordSessionDetail
 {
-    public required Guid WordSessionId { get; set; }
+    public required Guid SessionId { get; set; }
     public required int ReviewingWordCount { get; set; }
     public required int StudyingWordCount { get; set; }
     public required List<WordDetail> Words { get; set; }
@@ -30,7 +31,7 @@ public sealed class StartStudyResp(int code, string message, WordSessionDetail? 
             SuccessMessages.Controller.StudySession.GetSessionDetailSuccess,
             new WordSessionDetail
             {
-                WordSessionId = sessionId,
+                SessionId = sessionId,
                 ReviewingWordCount = reviewingWordCount,
                 StudyingWordCount = studyingWordCount,
                 Words = wordQueue.Select(a =>
@@ -38,7 +39,8 @@ public sealed class StartStudyResp(int code, string message, WordSessionDetail? 
                     {
                         WordText = a.WordText,
                         Pronunciation = a.Pronunciation,
-                        Definition = a.Definition
+                        Definition = a.Definition,
+                        ExampleSentence = a.ExampleSentence
                     }).ToList()
             });
     }
@@ -79,7 +81,8 @@ public sealed class ContinueStudyResp(int code, string message, ContinueStudyDet
                     {
                         WordText = w.WordText,
                         Pronunciation = w.Pronunciation,
-                        Definition = w.Definition
+                        Definition = w.Definition,
+                        ExampleSentence = w.ExampleSentence
                     }).ToList()
             });
     }
@@ -93,18 +96,18 @@ public class NextWordDetail
 {
     public required List<OptionDetail> Options { get; set; }
     public required AnswerDetail Answer { get; set; }
-
     public required int ReviewingWordCount { get; set; }
-
     public required int StudyingWordCount { get; set; }
+    public required string ExampleSentence { get; set; }
 }
 
 public class OptionDetail
 {
     public required Guid WordId { get; set; }
     public required string Word { get; set; }
-    public string? Pronunciation { get; set; }
+    public required string Pronunciation { get; set; }
     public required string Definition { get; set; }
+    public required string PrimaryDefinition { get; set; }
 }
 
 public class AnswerDetail
@@ -121,12 +124,15 @@ public sealed class GetNextWordResp(int code, string message, NextWordDetail? ne
     {
         var options = distractorWords.Select(d =>
                 new OptionDetail
-                    { WordId = d.Id, Word = d.WordText, Pronunciation = d.Pronunciation, Definition = d.Definition })
+                {
+                    WordId = d.Id, Word = d.WordText, Pronunciation = d.Pronunciation, Definition = d.Definition,
+                    PrimaryDefinition = d.PrimaryDefinition
+                })
             .ToList();
         options.Add(new OptionDetail
         {
             WordId = nextWord.Id, Word = nextWord.WordText, Pronunciation = nextWord.Pronunciation,
-            Definition = nextWord.Definition
+            Definition = nextWord.Definition, PrimaryDefinition = nextWord.PrimaryDefinition
         });
         var answer = new AnswerDetail { WordId = nextWord.Id, Word = nextWord.WordText };
 
@@ -136,7 +142,8 @@ public sealed class GetNextWordResp(int code, string message, NextWordDetail? ne
                 Options = options,
                 Answer = answer,
                 ReviewingWordCount = reviewingWordCount,
-                StudyingWordCount = studyingWordCount
+                StudyingWordCount = studyingWordCount,
+                ExampleSentence = nextWord.ExampleSentence
             });
     }
 

@@ -9,6 +9,7 @@ public class WordDto
     public required string WordText { get; set; }
     public string? Pronunciation { get; set; }
     public required string Definition { get; set; }
+    public required string ExampleSentence { get; set; }
     public required List<Guid> DistractorIds { get; set; }
     public required List<string> WordBookName { get; set; }
 }
