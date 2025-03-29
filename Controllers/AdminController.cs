@@ -287,10 +287,11 @@ public class AdminController(ILogger<AdminController> logger, IRepositoryService
             }
 
             var articleDetails = await Task.WhenAll(
-                articles.Select(a => Task.Run(() => new ArticleDetail
+                articles.Select(a => Task.Run(() => new ArticleDetailDto
                 {
+                    ArtcileId = a.Id,
                     CreatorId = a.CreatorId,
-                    Article = a.Article,
+                    Content = a.Content,
                     ArticleImgUrls = a.ImageFileNames,
                     CreateAt = a.CreatedAt,
                     Like = a.Likes.Count,
@@ -442,5 +443,4 @@ public class AdminController(ILogger<AdminController> logger, IRepositoryService
     }
 }
 
-}
 

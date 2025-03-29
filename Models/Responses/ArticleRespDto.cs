@@ -81,6 +81,10 @@ public class ArticleDetail
     public required bool IsPinned { get; set; }
 }
 
+
+
+
+
 public sealed class ArticleDetailResp(int code, string message, ArticleDetail? articleDetail)
     : BaseRespWithData<ArticleDetail>(code, message, articleDetail)
 {
@@ -117,9 +121,27 @@ public sealed class ArticleDetailResp(int code, string message, ArticleDetail? a
 
 # region ArticleListResponse
 
+
+/// <summary>
+/// 文章详情
+/// </summary>
+public class ArticleDetailDto
+{
+    public required Guid ArtcileId { get; set; }
+    public required Guid CreatorId { get; set; }
+    public required string Content { get; set; }
+    public List<string>? ArticleImgUrls { get; set; }
+    public required DateTimeOffset CreateAt { get; set; }
+    public required int Like { get; set; }
+    public required bool IsPinned { get; set; }
+}
+
+
+
+
 public class ArticleListDto
 {
-    public required List<ArticleDetail> Articles { get; set; }
+    public required List<ArticleDetailDto> Articles { get; set; }
     public required int TotalArticle { get; set; }
 }
 
