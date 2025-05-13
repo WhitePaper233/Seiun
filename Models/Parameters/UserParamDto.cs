@@ -77,3 +77,12 @@ public class GetUsersByAdmin
     public required int Size { get; set; }
     public string? Keyword { get; set; }
 }
+
+public class GetRolesByAdmin
+{
+    public required int Index { get; set; }
+    public required int Size { get; set; }
+    public Guid? Keyword { get; set; }
+}
+
+

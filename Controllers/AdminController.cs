@@ -286,19 +286,18 @@ public class AdminController(ILogger<AdminController> logger, IRepositoryService
                 ));
             }
 
-            var articleDetails = await Task.WhenAll(articles.Select(async a => new ArticleDetail
-            {
-                Id = a.Id,
-                Title = a.Title,
-                Description = a.Description ?? "",
-                CreatorId = a.CreatorId,
-                Content = a.Content,
-                Vocabulary = a.Vocabulary,
-                ArticleImgUrls = a.ImageFileNames,
-                CreateAt = a.CreatedAt.ToUnixTimeSeconds(),
-                Like = await repository.ArticleLikeRepository.GetUserCountByLikedRecordAsync(a.Id),
-                IsPinned = a.IsPinned
-            }));
+            var articleDetails = await Task.WhenAll(
+                articles.Select(a => Task.Run(() => new ArticleDetailDto
+                {
+                    ArtcileId = a.Id,
+                    CreatorId = a.CreatorId,
+                    Content = a.Content,
+                    ArticleImgUrls = a.ImageFileNames,
+                    CreateAt = a.CreatedAt,
+                    Like = a.Likes.Count,
+                    IsPinned = a.IsPinned,
+                }))
+            );
 
             var articleListResponse = new ArticleListDto
             {
@@ -316,4 +315,132 @@ public class AdminController(ILogger<AdminController> logger, IRepositoryService
             ));
         }
     }
+
+
+    // 获取所有权限组
+    [HttpGet("role-list", Name = "GetRoleList")]
+    [Authorize(Roles = $"{nameof(UserRole.SuperAdmin)}")]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    [ProducesResponseType(typeof(BaseResp), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(BaseResp), StatusCodes.Status404NotFound)]
+
+    public async Task<IActionResult> GetAllRoles([FromQuery] GetRolesByAdmin parameters)
+    {
+        try
+        {
+            var roles = await repository.UserRepository.GetAllRolesAsync(parameters.Index, parameters.Size, parameters.Keyword);
+            var total = await repository.UserRepository.GetTotalRolesAsync(parameters.Keyword);
+
+            if (roles == null || roles.Count == 0)
+            {
+                logger.LogError("Get all roles failed");
+                return StatusCode(StatusCodes.Status404NotFound, ResponseFactory.NewFailedBaseResponse(
+                    StatusCodes.Status404NotFound,
+                    ErrorMessages.Controller.Admin.RolesNotFound
+                ));
+            }
+
+            var roleListResponse = new RoleListResp
+                {
+                    List = [.. roles.Select(u => new RoleListDto
+                    {
+                        UserId = u.Id,
+                        RoleName = u.Role,
+                    })],
+                    Total = total
+                };
+
+            return Ok(RoleListResponse.Success(roleListResponse));
+        } catch (Exception ex)
+        {
+            logger.LogError($"Error while getting all roles: {ex.Message}");
+            return StatusCode(StatusCodes.Status500InternalServerError, ResponseFactory.NewFailedBaseResponse(
+                StatusCodes.Status500InternalServerError,
+                ErrorMessages.Controller.Admin.GetAllRolesFailed
+            ));
+        }
+    }
+
+    // 取消用户权限
+    [HttpDelete("role/{userId}", Name = "RemoveRole")]
+    [Authorize(Roles = $"{nameof(UserRole.SuperAdmin)}")]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    [ProducesResponseType(typeof(BaseResp), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(BaseResp), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(BaseResp), StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> RemoveRole([FromRoute] Guid userId)
+    {
+        try
+        {
+            var user = await repository.UserRepository.GetByIdAsync(userId);
+            if (user == null)
+            {
+                return StatusCode(StatusCodes.Status404NotFound, ResponseFactory.NewFailedBaseResponse(
+                    StatusCodes.Status404NotFound,
+                    ErrorMessages.Controller.User.UserNotFound
+                ));
+            }
+            await repository.UserRepository.RemoveRoleAsync(userId);
+            if(await repository.UserRepository.SaveAsync())
+            {
+                return Ok(ResponseFactory.NewSuccessBaseResponse(SuccessMessages.Controller.Admin.ChangeRoleSuccess));
+            }
+            logger.LogError("Remove role failed {}",userId);
+            return StatusCode(StatusCodes.Status400BadRequest, ResponseFactory.NewFailedBaseResponse(
+                StatusCodes.Status400BadRequest,
+                ErrorMessages.Controller.Admin.ChangeRoleFailed
+            ));
+        }
+        catch (Exception ex)
+        {
+            logger.LogError($"Error while removing role: {ex.Message}");
+            return StatusCode(StatusCodes.Status500InternalServerError, ResponseFactory.NewFailedBaseResponse(
+                StatusCodes.Status500InternalServerError,
+                ErrorMessages.Controller.Admin.GetAllRolesFailed
+            ));
+        }
+        
+    }
+    
+    // 修改用户权限
+    [HttpPut("create-role/{userId}", Name = "ChangeRole")]
+    [Authorize(Roles = $"{nameof(UserRole.SuperAdmin)}")]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    [ProducesResponseType(typeof(BaseResp), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(BaseResp), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(BaseResp), StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> ChangeRole([FromRoute] Guid userId)
+    {
+
+        try
+        {
+            var user = await repository.UserRepository.GetByIdAsync(userId);
+            if (user == null)
+            {
+                return StatusCode(StatusCodes.Status404NotFound, ResponseFactory.NewFailedBaseResponse(
+                    StatusCodes.Status404NotFound,
+                    ErrorMessages.Controller.User.UserNotFound
+                ));
+            }
+            await repository.UserRepository.ChangeRoleAsync(userId);
+            if(await repository.UserRepository.SaveAsync())
+            {
+                return Ok(ResponseFactory.NewSuccessBaseResponse(SuccessMessages.Controller.Admin.ChangeRoleSuccess));
+            }
+            logger.LogError("Change role failed {}",userId);
+            return StatusCode(StatusCodes.Status400BadRequest, ResponseFactory.NewFailedBaseResponse(
+                StatusCodes.Status400BadRequest,
+                ErrorMessages.Controller.Admin.ChangeRoleFailed
+            ));
+        }   catch (Exception ex)
+        {
+            logger.LogError($"Error while changing role: {ex.Message}");
+            return StatusCode(StatusCodes.Status500InternalServerError, ResponseFactory.NewFailedBaseResponse(
+                StatusCodes.Status500InternalServerError,
+                ErrorMessages.Controller.Admin.GetAllRolesFailed
+            ));
+        }
+    }
 }
+
+
