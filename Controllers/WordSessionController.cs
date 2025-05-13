@@ -124,11 +124,11 @@ public class WordSessionController(
         if (studyWords == null)
             return Ok(StartStudyResp.Success(session.Id, reviewingWordCount, studyingWordCount, wordQueue));
 
-        // 额外线程开始生成题目
-        if (!currentGenerateTaskService.InsertUserId(userId.Value, TaskType.Challenge))
-        {
-            return Ok(StartStudyResp.Success(session.Id, reviewingWordCount, studyingWordCount, wordQueue));
-        }
+        // // 额外线程开始生成题目
+        // if (!currentGenerateTaskService.InsertUserId(userId.Value, TaskType.Challenge))
+        // {
+        //     return Ok(StartStudyResp.Success(session.Id, reviewingWordCount, studyingWordCount, wordQueue));
+        // }
         
         var words = studyWords.Select(x => x.WordText).ToList();
         // _ = Task.Run(() => aiRequest.GenerateAiFillInBlankAsync(words, userId.Value));

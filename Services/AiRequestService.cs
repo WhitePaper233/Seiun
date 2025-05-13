@@ -92,7 +92,6 @@ public class AiRequestService(
             logger.LogWarning("User {} failed generate ai article", userId);
             return;
         }
-        Console.WriteLine(aiArticle.Content);
 
         // 生成封面
         var aiArticleToRequest = aiArticle.Content.Length > 900 ? aiArticle.Content[..900] : aiArticle.Content;
