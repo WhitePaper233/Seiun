@@ -4,5 +4,5 @@ namespace Seiun.Repositories;
 
 public interface IReplyRepository : IBaseRepository<ReplyEntity>
 {
-    Task<IEnumerable<ReplyEntity>> GetListByCommentIdAsync(Guid commentId);
+	Task<IEnumerable<ReplyEntity>> GetListByCommentIdAsync(Guid commentId);
 }

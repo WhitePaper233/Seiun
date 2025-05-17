@@ -2,7 +2,7 @@ namespace Seiun.Utils.Enums;
 
 public enum ActionType
 {
-    Like = 1,
+	Like = 1,
 
-    Dislike = 0
+	Dislike = 0
 }

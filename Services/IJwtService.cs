@@ -4,5 +4,5 @@ namespace Seiun.Services;
 
 public interface IJwtService
 {
-    string GenerateToken(UserEntity userEntity);
+	string GenerateToken(UserEntity userEntity);
 }

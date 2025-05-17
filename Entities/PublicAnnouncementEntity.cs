@@ -7,18 +7,18 @@ namespace Seiun.Entities;
 
 public class PublicAnnouncementEntity : BaseEntity
 {
-    // 标题
-    [MaxLength(Constants.PublicAnnotation.MaxAnnotationLength,
-        ErrorMessage = ErrorMessages.ValidationError.OverPublicAnnouncementLength)]
-    public required string Title { get; set; }
+	// 标题
+	[MaxLength(Constants.PublicAnnotation.MaxAnnotationLength,
+	ErrorMessage = ErrorMessages.ValidationError.OverPublicAnnouncementLength)]
+	public required string Title { get; set; }
 
-    // 内容
-    [MaxLength(Constants.PublicAnnotation.MaxAnnotationLength,
-        ErrorMessage = ErrorMessages.ValidationError.OverPublicAnnouncementLength)]
-    public required string Content { get; set; }
+	// 内容
+	[MaxLength(Constants.PublicAnnotation.MaxAnnotationLength,
+	ErrorMessage = ErrorMessages.ValidationError.OverPublicAnnouncementLength)]
+	public required string Content { get; set; }
 
-    // 发布人
-    public required Guid AdminId { get; set; }
+	// 发布人
+	public required Guid AdminId { get; set; }
 
-    [ForeignKey(nameof(this.AdminId))] public virtual UserEntity Admin { get; set; } = null!;
+	[ForeignKey(nameof(this.AdminId))] public virtual UserEntity Admin { get; set; } = null!;
 }

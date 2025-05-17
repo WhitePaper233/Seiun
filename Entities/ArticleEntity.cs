@@ -8,61 +8,61 @@ namespace Seiun.Entities;
 
 public class ArticleEntity : BaseEntity
 {
-    // 标题
-    [MaxLength(Constants.Article.MaxArticleTitleLength,
-        ErrorMessage = ErrorMessages.ValidationError.OverArticleTitleMaxLength)]
-    public required string Title { get; set; }
+	// 标题
+	[MaxLength(Constants.Article.MaxArticleTitleLength,
+	ErrorMessage = ErrorMessages.ValidationError.OverArticleTitleMaxLength)]
+	public required string Title { get; set; }
 
-    // 简介
-    [MaxLength(Constants.Article.MaxArticleDescriptionLength,
-        ErrorMessage = ErrorMessages.ValidationError.OverArticleDescriptionMaxLength)]
-    public required string Description { get; set; }
+	// 简介
+	[MaxLength(Constants.Article.MaxArticleDescriptionLength,
+	ErrorMessage = ErrorMessages.ValidationError.OverArticleDescriptionMaxLength)]
+	public required string Description { get; set; }
 
-    // 文章
-    [MaxLength(Constants.Article.MaxArticleContentLength,
-        ErrorMessage = ErrorMessages.ValidationError.OverArticleContentMaxLength)]
-    public required string Content { get; set; }
+	// 文章
+	[MaxLength(Constants.Article.MaxArticleContentLength,
+	ErrorMessage = ErrorMessages.ValidationError.OverArticleContentMaxLength)]
+	public required string Content { get; set; }
 
-    // key vocabulary
-    [MaxLength(Constants.Article.MaxArticleVocabularyLength,
-        ErrorMessage = ErrorMessages.ValidationError.OverArticleVocabularyMaxLength)]
-    public required string Vocabulary { get; set; }
+	// key vocabulary
+	[MaxLength(Constants.Article.MaxArticleVocabularyLength,
+	ErrorMessage = ErrorMessages.ValidationError.OverArticleVocabularyMaxLength)]
+	public required string Vocabulary { get; set; }
 
-    // 图片
-    public List<string>? ImageFileNames { get; set; }
+	// 图片
+	public List<string>? ImageFileNames { get; set; }
 
-    // 封面
-    [MaxLength(Constants.Article.MaxImgFileNameLength,
-        ErrorMessage = ErrorMessages.ValidationError.OverImgFileNameLength)]
-    public string? CoverFileName { get; set; }
+	// 封面
+	[MaxLength(Constants.Article.MaxImgFileNameLength,
+	ErrorMessage = ErrorMessages.ValidationError.OverImgFileNameLength)]
+	public string? CoverFileName { get; set; }
 
-    // 发布者ID
-    public required Guid CreatorId { get; set; }
+	// 发布者ID
+	public required Guid CreatorId { get; set; }
 
-    // 置顶
-    public required bool IsPinned { get; set; }
+	// 置顶
+	public required bool IsPinned { get; set; }
 
-    // 置顶时间
-    public DateTimeOffset? PinTime { get; set; }
+	// 置顶时间
+	public DateTimeOffset? PinTime { get; set; }
 
-    [ForeignKey(nameof(this.CreatorId))] public virtual UserEntity Creator { get; set; } = null!;
+	[ForeignKey(nameof(this.CreatorId))] public virtual UserEntity Creator { get; set; } = null!;
 
-    [JsonIgnore] public virtual ICollection<ArticleLikeEntity> Likes { get; set; } = [];
+	[JsonIgnore] public virtual ICollection<ArticleLikeEntity> Likes { get; set; } = [];
 
-    [JsonIgnore] public virtual ICollection<CommentEntity> Comments { get; set; } = [];
+	[JsonIgnore] public virtual ICollection<CommentEntity> Comments { get; set; } = [];
 }
 
 public class ArticleLikeEntity : BaseEntity
 {
-    // 用户ID
-    public required Guid UserId { get; set; }
+	// 用户ID
+	public required Guid UserId { get; set; }
 
-    // 文章ID
-    public required Guid LikedArticleId { get; set; }
+	// 文章ID
+	public required Guid LikedArticleId { get; set; }
 
-    // 点赞时间
-    public required DateTimeOffset LikedTime { get; set; }
+	// 点赞时间
+	public required DateTimeOffset LikedTime { get; set; }
 
-    [ForeignKey(nameof(this.LikedArticleId))]
-    public virtual ArticleEntity LikedArticle { get; set; } = null!;
+	[ForeignKey(nameof(this.LikedArticleId))]
+	public virtual ArticleEntity LikedArticle { get; set; } = null!;
 }
