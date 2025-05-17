@@ -4,9 +4,9 @@ namespace Seiun.Entities;
 
 public class FinishedWordRecordEntity : BaseEntity
 {
-    public required Guid UserId { get; set; }
-    public required Guid WordId { get; set; }
-    public required Guid SessionId { get; set; }
+	public required Guid UserId { get; set; }
+	public required Guid WordId { get; set; }
+	public required Guid SessionId { get; set; }
 
-    [ForeignKey(nameof(this.UserId))] public virtual UserEntity User { get; set; } = null!;
+	[ForeignKey(nameof(this.UserId))] public virtual UserEntity User { get; set; } = null!;
 }

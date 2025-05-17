@@ -22,411 +22,425 @@ namespace Seiun.Controllers;
 [ApiController]
 [Route("/api/user")]
 public class UserController(ILogger<UserController> logger, IRepositoryService repository, IJwtService jwt)
-    : ControllerBase
+	: ControllerBase
 {
-    /// <summary>
-    ///     用户注册
-    /// </summary>
-    /// <param name="userRegister">用户注册信息DTO</param>
-    /// <returns>注册结果DTO</returns>
-    [HttpPost("register", Name = "Register")]
-    [ProducesResponseType(typeof(BaseResp), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(BaseResp), StatusCodes.Status409Conflict)]
-    [ProducesResponseType(typeof(BaseResp), StatusCodes.Status500InternalServerError)]
-    public async Task<IActionResult> Register([FromBody] UserRegister userRegister)
-    {
-        var user = await repository.UserRepository.GetByPhoneNumberAsync(userRegister.PhoneNumber);
-        if (user != null)
-            return Conflict(ResponseFactory.NewFailedBaseResponse(
-                StatusCodes.Status409Conflict,
-                ErrorMessages.Controller.User.PhoneNumberDuplicated
-            ));
+	/// <summary>
+	///     用户注册
+	/// </summary>
+	/// <param name="userRegister">用户注册信息DTO</param>
+	/// <returns>注册结果DTO</returns>
+	[HttpPost("register", Name = "Register")]
+	[ProducesResponseType(typeof(BaseResp), StatusCodes.Status200OK)]
+	[ProducesResponseType(typeof(BaseResp), StatusCodes.Status409Conflict)]
+	[ProducesResponseType(typeof(BaseResp), StatusCodes.Status500InternalServerError)]
+	public async Task<IActionResult> Register([FromBody] UserRegister userRegister)
+	{
+		var user = await repository.UserRepository.GetByPhoneNumberAsync(userRegister.PhoneNumber);
+		if (user != null)
+			return Conflict(ResponseFactory.NewFailedBaseResponse(
+			StatusCodes.Status409Conflict,
+			ErrorMessages.Controller.User.PhoneNumberDuplicated
+			));
 
-        var (passwordHash, passwordSalt) = PasswordUtils.CreatePasswordHash(userRegister.Password);
-        user = new UserEntity
-        {
-            UserName = $"User_{userRegister.PhoneNumber}",
-            NickName = RandomUtils.GenerateRandomString(Constants.User.MaxNickNameLength),
-            PhoneNumber = userRegister.PhoneNumber,
-            PasswordHash = passwordHash,
-            PasswordSalt = passwordSalt,
-            Role = UserRole.User,
-            Gender = Gender.Unknown,
-            IsBanned = false
-        };
+		var (passwordHash, passwordSalt) = PasswordUtils.CreatePasswordHash(userRegister.Password);
+		user = new UserEntity
+		{
+			UserName = $"User_{userRegister.PhoneNumber}",
+			NickName = RandomUtils.GenerateRandomString(Constants.User.MaxNickNameLength),
+			PhoneNumber = userRegister.PhoneNumber,
+			PasswordHash = passwordHash,
+			PasswordSalt = passwordSalt,
+			Role = UserRole.User,
+			Gender = Gender.Unknown,
+			IsBanned = false
+		};
 
-        repository.UserRepository.Create(user);
-        if (await repository.UserRepository.SaveAsync())
-            return Ok(ResponseFactory.NewSuccessBaseResponse(SuccessMessages.Controller.User.RegisterSuccess));
+		repository.UserRepository.Create(user);
+		if (await repository.UserRepository.SaveAsync())
+			return Ok(ResponseFactory.NewSuccessBaseResponse(SuccessMessages.Controller.User.RegisterSuccess));
 
-        logger.LogError("User {} register failed", user.PhoneNumber);
-        return StatusCode(StatusCodes.Status500InternalServerError, ResponseFactory.NewFailedBaseResponse(
-            StatusCodes.Status500InternalServerError,
-            ErrorMessages.Controller.User.RegisterFailed
-        ));
-    }
+		logger.LogError("User {} register failed", user.PhoneNumber);
+		return StatusCode(StatusCodes.Status500InternalServerError,
+		ResponseFactory.NewFailedBaseResponse(
+		StatusCodes.Status500InternalServerError,
+		ErrorMessages.Controller.User.RegisterFailed
+		));
+	}
 
-    /// <summary>
-    ///     用户登录
-    /// </summary>
-    /// <param name="userLogin">用户登录信息DTO</param>
-    /// <returns>登录结果DTO</returns>
-    [HttpPost("login", Name = "Login")]
-    [ProducesResponseType(typeof(UserLoginResp), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(UserLoginResp), StatusCodes.Status403Forbidden)]
-    [ProducesResponseType(typeof(UserLoginResp), StatusCodes.Status500InternalServerError)]
-    public async Task<IActionResult> Login([FromBody] UserLogin userLogin)
-    {
-        var user = userLogin switch
-        {
-            { UserName: { } userName } when !string.IsNullOrWhiteSpace(userName) =>
-                await repository.UserRepository.GetByUserNameAsync(userName),
-            { PhoneNumber: { } phoneNumber } when !string.IsNullOrWhiteSpace(phoneNumber) =>
-                await repository.UserRepository.GetByPhoneNumberAsync(phoneNumber),
-            { Email: { } email } when !string.IsNullOrWhiteSpace(email) =>
-                await repository.UserRepository.GetByEmailAsync(email),
-            _ => null
-        };
+	/// <summary>
+	///     用户登录
+	/// </summary>
+	/// <param name="userLogin">用户登录信息DTO</param>
+	/// <returns>登录结果DTO</returns>
+	[HttpPost("login", Name = "Login")]
+	[ProducesResponseType(typeof(UserLoginResp), StatusCodes.Status200OK)]
+	[ProducesResponseType(typeof(UserLoginResp), StatusCodes.Status403Forbidden)]
+	[ProducesResponseType(typeof(UserLoginResp), StatusCodes.Status500InternalServerError)]
+	public async Task<IActionResult> Login([FromBody] UserLogin userLogin)
+	{
+		var user = userLogin switch
+		{
+			{ UserName: {} userName } when !string.IsNullOrWhiteSpace(userName) =>
+				await repository.UserRepository.GetByUserNameAsync(userName),
+			{ PhoneNumber: {} phoneNumber } when !string.IsNullOrWhiteSpace(phoneNumber) =>
+				await repository.UserRepository.GetByPhoneNumberAsync(phoneNumber),
+			{ Email: {} email } when !string.IsNullOrWhiteSpace(email) =>
+				await repository.UserRepository.GetByEmailAsync(email),
+			_ => null
+		};
 
-        if (user == null)
-            return StatusCode(StatusCodes.Status403Forbidden, UserLoginResp.Fail(
-                StatusCodes.Status403Forbidden,
-                ErrorMessages.Controller.User.UserNotFound
-            ));
+		if (user == null)
+			return StatusCode(StatusCodes.Status403Forbidden,
+			UserLoginResp.Fail(
+			StatusCodes.Status403Forbidden,
+			ErrorMessages.Controller.User.UserNotFound
+			));
 
-        if (!PasswordUtils.VerifyPasswordHash(userLogin.Password, user.PasswordHash, user.PasswordSalt))
-            return StatusCode(StatusCodes.Status403Forbidden, UserLoginResp.Fail(
-                StatusCodes.Status403Forbidden,
-                ErrorMessages.Controller.User.UserLoginFailed
-            ));
+		if (!PasswordUtils.VerifyPasswordHash(userLogin.Password, user.PasswordHash, user.PasswordSalt))
+			return StatusCode(StatusCodes.Status403Forbidden,
+			UserLoginResp.Fail(
+			StatusCodes.Status403Forbidden,
+			ErrorMessages.Controller.User.UserLoginFailed
+			));
 
-        var token = jwt.GenerateToken(user);
-        var tokenInfo = new TokenInfo
-        {
-            Token = token,
-            UserId = user.Id.ToString(),
-            ExpireAt = DateTimeOffset.Now.AddHours(Constants.Token.TokenExpirationTime).ToUnixTimeSeconds()
-            // ExpireAt = DateTimeOffset.Now.AddSeconds(60).ToUnixTimeSeconds() // only test code
-        };
-        return Ok(UserLoginResp.Success(tokenInfo));
-    }
+		var token = jwt.GenerateToken(user);
+		var tokenInfo = new TokenInfo
+		{
+			Token = token,
+			UserId = user.Id.ToString(),
+			ExpireAt = DateTimeOffset.Now.AddHours(Constants.Token.TokenExpirationTime).ToUnixTimeSeconds()
+			// ExpireAt = DateTimeOffset.Now.AddSeconds(60).ToUnixTimeSeconds() // only test code
+		};
+		return Ok(UserLoginResp.Success(tokenInfo));
+	}
 
-    /// <summary>
-    ///     续签 JWT Token
-    /// </summary>
-    /// <returns>新 Token</returns>
-    [HttpGet("refresh-token", Name = "RefreshToken")]
-    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-    [ProducesResponseType(typeof(BaseResp), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(BaseResp), StatusCodes.Status403Forbidden)]
-    public async Task<IActionResult> RefreshToken()
-    {
-        var userId = User.GetUserId();
-        if (userId == null)
-            return StatusCode(StatusCodes.Status403Forbidden, TokenRefreshResp.Fail(
-                StatusCodes.Status403Forbidden,
-                ErrorMessages.Controller.Any.InvalidJwtToken
-            ));
+	/// <summary>
+	///     续签 JWT Token
+	/// </summary>
+	/// <returns>新 Token</returns>
+	[HttpGet("refresh-token", Name = "RefreshToken")]
+	[Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+	[ProducesResponseType(typeof(BaseResp), StatusCodes.Status200OK)]
+	[ProducesResponseType(typeof(BaseResp), StatusCodes.Status403Forbidden)]
+	public async Task<IActionResult> RefreshToken()
+	{
+		var userId = User.GetUserId();
+		if (userId == null)
+			return StatusCode(StatusCodes.Status403Forbidden,
+			TokenRefreshResp.Fail(
+			StatusCodes.Status403Forbidden,
+			ErrorMessages.Controller.Any.InvalidJwtToken
+			));
 
-        var user = await repository.UserRepository.GetByIdAsync(userId.Value);
-        if (user == null)
-            return StatusCode(StatusCodes.Status403Forbidden, TokenRefreshResp.Fail(
-                StatusCodes.Status403Forbidden,
-                ErrorMessages.Controller.User.UserNotFound
-            ));
+		var user = await repository.UserRepository.GetByIdAsync(userId.Value);
+		if (user == null)
+			return StatusCode(StatusCodes.Status403Forbidden,
+			TokenRefreshResp.Fail(
+			StatusCodes.Status403Forbidden,
+			ErrorMessages.Controller.User.UserNotFound
+			));
 
-        var token = jwt.GenerateToken(user);
-        var tokenInfo = new TokenInfo
-        {
-            Token = token,
-            UserId = user.Id.ToString(),
-            ExpireAt = DateTimeOffset.Now.AddHours(Constants.Token.TokenExpirationTime).ToUnixTimeSeconds()
-            // ExpireAt = DateTimeOffset.Now.AddSeconds(60).ToUnixTimeSeconds() // only test code
-        };
-        return Ok(TokenRefreshResp.Success(tokenInfo));
-    }
+		var token = jwt.GenerateToken(user);
+		var tokenInfo = new TokenInfo
+		{
+			Token = token,
+			UserId = user.Id.ToString(),
+			ExpireAt = DateTimeOffset.Now.AddHours(Constants.Token.TokenExpirationTime).ToUnixTimeSeconds()
+			// ExpireAt = DateTimeOffset.Now.AddSeconds(60).ToUnixTimeSeconds() // only test code
+		};
+		return Ok(TokenRefreshResp.Success(tokenInfo));
+	}
 
 
-    /// <summary>
-    ///     更新用户信息
-    /// </summary>
-    /// <param name="userUpdateProfile">更新信息DTO</param>
-    /// <returns>更新结果</returns>
-    [HttpPatch("update-profile", Name = "UpdateProfile")]
-    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-    [ProducesResponseType(typeof(BaseResp), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(BaseResp), StatusCodes.Status403Forbidden)]
-    [ProducesResponseType(typeof(BaseResp), StatusCodes.Status500InternalServerError)]
-    public async Task<IActionResult> UpdateProfile([FromBody] UserUpdateProfile userUpdateProfile)
-    {
-        var userId = User.GetUserId();
-        if (userId == null)
-            return StatusCode(StatusCodes.Status403Forbidden, ResponseFactory.NewFailedBaseResponse(
-                StatusCodes.Status403Forbidden,
-                ErrorMessages.Controller.Any.InvalidJwtToken
-            ));
+	/// <summary>
+	///     更新用户信息
+	/// </summary>
+	/// <param name="userUpdateProfile">更新信息DTO</param>
+	/// <returns>更新结果</returns>
+	[HttpPatch("update-profile", Name = "UpdateProfile")]
+	[Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+	[ProducesResponseType(typeof(BaseResp), StatusCodes.Status200OK)]
+	[ProducesResponseType(typeof(BaseResp), StatusCodes.Status403Forbidden)]
+	[ProducesResponseType(typeof(BaseResp), StatusCodes.Status500InternalServerError)]
+	public async Task<IActionResult> UpdateProfile([FromBody] UserUpdateProfile userUpdateProfile)
+	{
+		var userId = User.GetUserId();
+		if (userId == null)
+			return StatusCode(StatusCodes.Status403Forbidden,
+			ResponseFactory.NewFailedBaseResponse(
+			StatusCodes.Status403Forbidden,
+			ErrorMessages.Controller.Any.InvalidJwtToken
+			));
 
-        var user = await repository.UserRepository.GetByIdAsync(userId.Value);
-        if (user == null)
-            return StatusCode(StatusCodes.Status403Forbidden, ResponseFactory.NewFailedBaseResponse(
-                StatusCodes.Status403Forbidden,
-                ErrorMessages.Controller.User.UserNotFound
-            ));
+		var user = await repository.UserRepository.GetByIdAsync(userId.Value);
+		if (user == null)
+			return StatusCode(StatusCodes.Status403Forbidden,
+			ResponseFactory.NewFailedBaseResponse(
+			StatusCodes.Status403Forbidden,
+			ErrorMessages.Controller.User.UserNotFound
+			));
 
-        user.NickName = string.IsNullOrWhiteSpace(userUpdateProfile.NickName)
-            ? user.NickName
-            : userUpdateProfile.NickName;
-        user.Description = string.IsNullOrWhiteSpace(userUpdateProfile.Description)
-            ? user.Description
-            : userUpdateProfile.Description;
-        user.Gender = userUpdateProfile.Gender ?? user.Gender;
+		user.NickName = string.IsNullOrWhiteSpace(userUpdateProfile.NickName)
+			? user.NickName
+			: userUpdateProfile.NickName;
+		user.Description = string.IsNullOrWhiteSpace(userUpdateProfile.Description)
+			? user.Description
+			: userUpdateProfile.Description;
+		user.Gender = userUpdateProfile.Gender ?? user.Gender;
 
-        repository.UserRepository.Update(user);
-        if (!await repository.UserRepository.SaveAsync())
-            return StatusCode(StatusCodes.Status500InternalServerError, ResponseFactory.NewFailedBaseResponse(
-                StatusCodes.Status500InternalServerError,
-                ErrorMessages.Controller.User.ProfileUpdateFailed
-            ));
+		repository.UserRepository.Update(user);
+		if (!await repository.UserRepository.SaveAsync())
+			return StatusCode(StatusCodes.Status500InternalServerError,
+			ResponseFactory.NewFailedBaseResponse(
+			StatusCodes.Status500InternalServerError,
+			ErrorMessages.Controller.User.ProfileUpdateFailed
+			));
 
-        return Ok(ResponseFactory.NewSuccessBaseResponse(SuccessMessages.Controller.User.ProfileUpdateSuccess));
-    }
+		return Ok(ResponseFactory.NewSuccessBaseResponse(SuccessMessages.Controller.User.ProfileUpdateSuccess));
+	}
 
-    /// <summary>
-    ///     更新用户头像
-    /// </summary>
-    /// <param name="avatarFile">头像文件</param>
-    /// <returns>更新结果</returns>
-    [HttpPost("upload-avatar", Name = "UploadAvatar")]
-    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-    [ProducesResponseType(typeof(BaseResp), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(BaseResp), StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(typeof(BaseResp), StatusCodes.Status403Forbidden)]
-    [ProducesResponseType(typeof(BaseResp), StatusCodes.Status500InternalServerError)]
-    public async Task<IActionResult> UploadAvatar(IFormFile? avatarFile)
-    {
-        // 判断是否上传了头像
-        if (avatarFile == null || avatarFile.Length == 0)
-            return BadRequest(ResponseFactory.NewFailedBaseResponse(
-                StatusCodes.Status400BadRequest,
-                ErrorMessages.Controller.Any.FileNotUploaded
-            ));
+	/// <summary>
+	///     更新用户头像
+	/// </summary>
+	/// <param name="avatarFile">头像文件</param>
+	/// <returns>更新结果</returns>
+	[HttpPost("upload-avatar", Name = "UploadAvatar")]
+	[Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+	[ProducesResponseType(typeof(BaseResp), StatusCodes.Status200OK)]
+	[ProducesResponseType(typeof(BaseResp), StatusCodes.Status400BadRequest)]
+	[ProducesResponseType(typeof(BaseResp), StatusCodes.Status403Forbidden)]
+	[ProducesResponseType(typeof(BaseResp), StatusCodes.Status500InternalServerError)]
+	public async Task<IActionResult> UploadAvatar(IFormFile? avatarFile)
+	{
+		// 判断是否上传了头像
+		if (avatarFile == null || avatarFile.Length == 0)
+			return BadRequest(ResponseFactory.NewFailedBaseResponse(
+			StatusCodes.Status400BadRequest,
+			ErrorMessages.Controller.Any.FileNotUploaded
+			));
 
-        // 判断头像文件大小
-        if (avatarFile.Length > Constants.User.MaxAvatarSize)
-            return BadRequest(ResponseFactory.NewFailedBaseResponse(
-                StatusCodes.Status400BadRequest,
-                ErrorMessages.Controller.Any.FileTooLarge
-            ));
+		// 判断头像文件大小
+		if (avatarFile.Length > Constants.User.MaxAvatarSize)
+			return BadRequest(ResponseFactory.NewFailedBaseResponse(
+			StatusCodes.Status400BadRequest,
+			ErrorMessages.Controller.Any.FileTooLarge
+			));
 
-        // 判断头像文件类型
-        var fileExtension = Path.GetExtension(avatarFile.FileName).ToLower();
-        if (!Constants.User.AllowedAvatarExtensions.Contains(fileExtension))
-            return BadRequest(ResponseFactory.NewFailedBaseResponse(
-                StatusCodes.Status400BadRequest,
-                ErrorMessages.Controller.Any.FileFormatNotSupported
-            ));
+		// 判断头像文件类型
+		var fileExtension = Path.GetExtension(avatarFile.FileName).ToLower();
+		if (!Constants.User.AllowedAvatarExtensions.Contains(fileExtension))
+			return BadRequest(ResponseFactory.NewFailedBaseResponse(
+			StatusCodes.Status400BadRequest,
+			ErrorMessages.Controller.Any.FileFormatNotSupported
+			));
 
-        // 获取用户信息
-        var userId = User.GetUserId();
-        if (userId == null)
-            return StatusCode(StatusCodes.Status403Forbidden, ResponseFactory.NewFailedBaseResponse(
-                StatusCodes.Status403Forbidden,
-                ErrorMessages.Controller.Any.InvalidJwtToken
-            ));
+		// 获取用户信息
+		var userId = User.GetUserId();
+		if (userId == null)
+			return StatusCode(StatusCodes.Status403Forbidden,
+			ResponseFactory.NewFailedBaseResponse(
+			StatusCodes.Status403Forbidden,
+			ErrorMessages.Controller.Any.InvalidJwtToken
+			));
 
-        var user = await repository.UserRepository.GetByIdAsync(userId.Value);
-        if (user == null)
-            return StatusCode(StatusCodes.Status403Forbidden, ResponseFactory.NewFailedBaseResponse(
-                StatusCodes.Status403Forbidden,
-                ErrorMessages.Controller.User.UserNotFound
-            ));
+		var user = await repository.UserRepository.GetByIdAsync(userId.Value);
+		if (user == null)
+			return StatusCode(StatusCodes.Status403Forbidden,
+			ResponseFactory.NewFailedBaseResponse(
+			StatusCodes.Status403Forbidden,
+			ErrorMessages.Controller.User.UserNotFound
+			));
 
-        // 处理头像文件
-        // 读取头像文件
-        await using var avatarStream = avatarFile.OpenReadStream();
-        Image image;
-        try
-        {
-            image = await Image.LoadAsync(avatarStream);
-        }
-        catch
-        {
-            return BadRequest(ResponseFactory.NewFailedBaseResponse(
-                StatusCodes.Status400BadRequest,
-                ErrorMessages.Controller.Any.FileFormatNotSupported
-            ));
-        }
+		// 处理头像文件
+		// 读取头像文件
+		await using var avatarStream = avatarFile.OpenReadStream();
+		Image image;
+		try
+		{
+			image = await Image.LoadAsync(avatarStream);
+		}
+		catch
+		{
+			return BadRequest(ResponseFactory.NewFailedBaseResponse(
+			StatusCodes.Status400BadRequest,
+			ErrorMessages.Controller.Any.FileFormatNotSupported
+			));
+		}
 
-        // 判断头像文件尺寸
-        if (image.Width > Constants.User.AvatarMaxWidth || image.Height > Constants.User.AvatarMaxHeight)
-            return BadRequest(ResponseFactory.NewFailedBaseResponse(
-                StatusCodes.Status400BadRequest,
-                ErrorMessages.Controller.Any.ImageSizeTooLarge
-            ));
+		// 判断头像文件尺寸
+		if (image.Width > Constants.User.AvatarMaxWidth || image.Height > Constants.User.AvatarMaxHeight)
+			return BadRequest(ResponseFactory.NewFailedBaseResponse(
+			StatusCodes.Status400BadRequest,
+			ErrorMessages.Controller.Any.ImageSizeTooLarge
+			));
 
-        // 处理头像文件
-        await using var processedImageStream = new MemoryStream();
-        try
-        {
-            // 调整尺寸
-            image.Mutate(ipc => ipc.Resize(new ResizeOptions
-            {
-                Size = new Size(Constants.User.AvatarStorageSize, Constants.User.AvatarStorageSize),
-                Mode = ResizeMode.Max
-            }));
-            // 转换为 webp 格式
-            await image.SaveAsWebpAsync(processedImageStream);
-            processedImageStream.Seek(0, SeekOrigin.Begin);
-        }
-        catch (Exception e)
-        {
-            logger.LogError(e, "Failed to process avatar image");
-            return StatusCode(StatusCodes.Status500InternalServerError, ResponseFactory.NewFailedBaseResponse(
-                StatusCodes.Status500InternalServerError,
-                ErrorMessages.Controller.Any.UnknownFileProcessingError)
-            );
-        }
+		// 处理头像文件
+		await using var processedImageStream = new MemoryStream();
+		try
+		{
+			// 调整尺寸
+			image.Mutate(ipc => ipc.Resize(new ResizeOptions
+			{
+				Size = new Size(Constants.User.AvatarStorageSize, Constants.User.AvatarStorageSize),
+				Mode = ResizeMode.Max
+			}));
+			// 转换为 webp 格式
+			await image.SaveAsWebpAsync(processedImageStream);
+			processedImageStream.Seek(0, SeekOrigin.Begin);
+		}
+		catch (Exception e)
+		{
+			logger.LogError(e, "Failed to process avatar image");
+			return StatusCode(StatusCodes.Status500InternalServerError,
+			ResponseFactory.NewFailedBaseResponse(
+			StatusCodes.Status500InternalServerError,
+			ErrorMessages.Controller.Any.UnknownFileProcessingError)
+			);
+		}
 
-        // 上传头像文件
-        try
-        {
-            await repository.UserRepository.UpdateAvatarAsync(user, processedImageStream);
-        }
-        catch (Exception err)
-        {
-            logger.LogError(err, "Failed to update {} avatar", user.Id);
-            return StatusCode(StatusCodes.Status500InternalServerError, ResponseFactory.NewFailedBaseResponse(
-                StatusCodes.Status500InternalServerError,
-                ErrorMessages.Controller.User.ProfileUpdateFailed
-            ));
-        }
+		// 上传头像文件
+		try
+		{
+			await repository.UserRepository.UpdateAvatarAsync(user, processedImageStream);
+		}
+		catch (Exception err)
+		{
+			logger.LogError(err, "Failed to update {} avatar", user.Id);
+			return StatusCode(StatusCodes.Status500InternalServerError,
+			ResponseFactory.NewFailedBaseResponse(
+			StatusCodes.Status500InternalServerError,
+			ErrorMessages.Controller.User.ProfileUpdateFailed
+			));
+		}
 
-        return Ok(ResponseFactory.NewSuccessBaseResponse(SuccessMessages.Controller.User.AvatarUpdateSuccess));
-    }
+		return Ok(ResponseFactory.NewSuccessBaseResponse(SuccessMessages.Controller.User.AvatarUpdateSuccess));
+	}
 
-    /// <summary>
-    ///     获取用户信息
-    /// </summary>
-    /// <param name="userId">用户ID</param>
-    /// <returns>用户信息</returns>
-    [HttpGet("profile/{userId:Guid}", Name = "GetProfile")]
-    [ProducesResponseType(typeof(UserProfileResp), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(UserProfileResp), StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> GetProfile(Guid userId)
-    {
-        var user = await repository.UserRepository.GetByIdAsync(userId);
-        if (user == null)
-            return NotFound(UserProfileResp.Fail(
-                StatusCodes.Status404NotFound,
-                ErrorMessages.Controller.User.UserNotFound
-            ));
+	/// <summary>
+	///     获取用户信息
+	/// </summary>
+	/// <param name="userId">用户ID</param>
+	/// <returns>用户信息</returns>
+	[HttpGet("profile/{userId:Guid}", Name = "GetProfile")]
+	[ProducesResponseType(typeof(UserProfileResp), StatusCodes.Status200OK)]
+	[ProducesResponseType(typeof(UserProfileResp), StatusCodes.Status404NotFound)]
+	public async Task<IActionResult> GetProfile(Guid userId)
+	{
+		var user = await repository.UserRepository.GetByIdAsync(userId);
+		if (user == null)
+			return NotFound(UserProfileResp.Fail(
+			StatusCodes.Status404NotFound,
+			ErrorMessages.Controller.User.UserNotFound
+			));
 
-        return Ok(UserProfileResp.Success(user));
-    }
+		return Ok(UserProfileResp.Success(user));
+	}
 
-    /// <summary>
-    /// 获取今日用户打卡状态
-    /// </summary>
-    /// <returns>打卡状态</returns>
-    [HttpGet("checkin", Name = "GetCheckin")]
-    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-    [Authorize(Roles =
-        $"{nameof(UserRole.User)},{nameof(UserRole.Creator)},{nameof(UserRole.Admin)},{nameof(UserRole.SuperAdmin)}")]
-    [ProducesResponseType(typeof(UserCheckInResp), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(UserCheckInResp), StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> GetCheckin()
-    {
-        var userId = User.GetUserId();
-        if (userId == null)
-            return NotFound(UserCheckInResp.Fail(
-                StatusCodes.Status404NotFound,
-                ErrorMessages.Controller.User.UserNotFound
-            ));
+	/// <summary>
+	/// 获取今日用户打卡状态
+	/// </summary>
+	/// <returns>打卡状态</returns>
+	[HttpGet("checkin", Name = "GetCheckin")]
+	[Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+	[Authorize(Roles =
+		$"{nameof(UserRole.User)},{nameof(UserRole.Creator)},{nameof(UserRole.Admin)},{nameof(UserRole.SuperAdmin)}")]
+	[ProducesResponseType(typeof(UserCheckInResp), StatusCodes.Status200OK)]
+	[ProducesResponseType(typeof(UserCheckInResp), StatusCodes.Status404NotFound)]
+	public async Task<IActionResult> GetCheckin()
+	{
+		var userId = User.GetUserId();
+		if (userId == null)
+			return NotFound(UserCheckInResp.Fail(
+			StatusCodes.Status404NotFound,
+			ErrorMessages.Controller.User.UserNotFound
+			));
 
-        var userPlan = await repository.UserPlansRepository.GetUserPlanAsync(userId.Value);
-        if (userPlan == null)
-            return NotFound(UserCheckInResp.Fail(
-                StatusCodes.Status404NotFound,
-                ErrorMessages.Controller.UserPlan.UserPlanNotFound
-            ));
+		var userPlan = await repository.UserPlansRepository.GetUserPlanAsync(userId.Value);
+		if (userPlan == null)
+			return NotFound(UserCheckInResp.Fail(
+			StatusCodes.Status404NotFound,
+			ErrorMessages.Controller.UserPlan.UserPlanNotFound
+			));
 
-        var todayAllSessions = await repository.SessionRepository.GetTodayAllSessionsByUserIdAsync(userId.Value);
-        if (todayAllSessions == null)
-            return NotFound(UserCheckInResp.Fail(
-                StatusCodes.Status404NotFound,
-                ErrorMessages.Controller.WordSession.NotFoundSession
-            ));
+		var todayAllSessions = await repository.SessionRepository.GetTodayAllSessionsByUserIdAsync(userId.Value);
+		if (todayAllSessions == null)
+			return NotFound(UserCheckInResp.Fail(
+			StatusCodes.Status404NotFound,
+			ErrorMessages.Controller.WordSession.NotFoundSession
+			));
 
-        var lastCheckIn = await repository.UserCheckInRepository.LastCheckInAsync(userId.Value);
-        if (lastCheckIn == null || DateTimeOffset.UtcNow.Date != lastCheckIn.CreatedAt.Date)
-        {
-            var notCheckInStatus = new UserCheckInDetail
-            {
-                TodayUserIsCheckIn = false,
-                DailyPlan = userPlan.DailyPlan,
-                TodayPlanReviewedCount = todayAllSessions[0].ReviewingCount,
-                ToDayStudiedCount = todayAllSessions.Sum(s => s.StudyingCount - s.StudyingWords?.Count ?? 0),
-                ToDayReviewedCount = todayAllSessions.Sum(s => s.ReviewingCount - s.ReviewingWords?.Count ?? 0)
-            };
+		var lastCheckIn = await repository.UserCheckInRepository.LastCheckInAsync(userId.Value);
+		if (lastCheckIn == null || DateTimeOffset.UtcNow.Date != lastCheckIn.CreatedAt.Date)
+		{
+			var notCheckInStatus = new UserCheckInDetail
+			{
+				TodayUserIsCheckIn = false,
+				DailyPlan = userPlan.DailyPlan,
+				TodayPlanReviewedCount = todayAllSessions[0].ReviewingCount,
+				ToDayStudiedCount = todayAllSessions.Sum(s => s.StudyingCount - s.StudyingWords?.Count ?? 0),
+				ToDayReviewedCount = todayAllSessions.Sum(s => s.ReviewingCount - s.ReviewingWords?.Count ?? 0)
+			};
 
-            return Ok(UserCheckInResp.Success(notCheckInStatus));
-        }
+			return Ok(UserCheckInResp.Success(notCheckInStatus));
+		}
 
-        var checkInStatus = new UserCheckInDetail
-        {
-            TodayUserIsCheckIn = true,
-            DailyPlan = userPlan.DailyPlan,
-            TodayPlanReviewedCount = todayAllSessions[0].ReviewingCount,
-            ToDayStudiedCount = todayAllSessions.Sum(s => s.StudyingCount - s.StudyingWords?.Count ?? 0),
-            ToDayReviewedCount = todayAllSessions.Sum(s => s.ReviewingCount - s.ReviewingWords?.Count ?? 0)
-        };
+		var checkInStatus = new UserCheckInDetail
+		{
+			TodayUserIsCheckIn = true,
+			DailyPlan = userPlan.DailyPlan,
+			TodayPlanReviewedCount = todayAllSessions[0].ReviewingCount,
+			ToDayStudiedCount = todayAllSessions.Sum(s => s.StudyingCount - s.StudyingWords?.Count ?? 0),
+			ToDayReviewedCount = todayAllSessions.Sum(s => s.ReviewingCount - s.ReviewingWords?.Count ?? 0)
+		};
 
-        return Ok(UserCheckInResp.Success(checkInStatus));
-    }
+		return Ok(UserCheckInResp.Success(checkInStatus));
+	}
 
-    /// <summary>
-    /// 获取用户的连续打卡天数
-    /// </summary>
-    /// <returns>连续打卡天数</returns>
-    [HttpGet("checkin/consecutive", Name = "GetConsecutiveCheckInDays")]
-    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-    [Authorize(Roles =
-        $"{nameof(UserRole.User)},{nameof(UserRole.Creator)},{nameof(UserRole.Admin)},{nameof(UserRole.SuperAdmin)}")]
-    [ProducesResponseType(typeof(ConsecutiveCheckInDaysResp), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(ConsecutiveCheckInDaysResp), StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> GetConsecutiveCheckInDays()
-    {
-        var userId = User.GetUserId();
-        if (userId == null)
-            return NotFound(UserProfileResp.Fail(
-                StatusCodes.Status404NotFound,
-                ErrorMessages.Controller.User.UserNotFound
-            ));
+	/// <summary>
+	/// 获取用户的连续打卡天数
+	/// </summary>
+	/// <returns>连续打卡天数</returns>
+	[HttpGet("checkin/consecutive", Name = "GetConsecutiveCheckInDays")]
+	[Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+	[Authorize(Roles =
+		$"{nameof(UserRole.User)},{nameof(UserRole.Creator)},{nameof(UserRole.Admin)},{nameof(UserRole.SuperAdmin)}")]
+	[ProducesResponseType(typeof(ConsecutiveCheckInDaysResp), StatusCodes.Status200OK)]
+	[ProducesResponseType(typeof(ConsecutiveCheckInDaysResp), StatusCodes.Status404NotFound)]
+	public async Task<IActionResult> GetConsecutiveCheckInDays()
+	{
+		var userId = User.GetUserId();
+		if (userId == null)
+			return NotFound(UserProfileResp.Fail(
+			StatusCodes.Status404NotFound,
+			ErrorMessages.Controller.User.UserNotFound
+			));
 
-        var userCheckInRecords = await repository.UserCheckInRepository.GetUserAllCheckInsAsync(userId.Value);
-        if (userCheckInRecords.Count == 0)
-            return Ok(ConsecutiveCheckInDaysResp.Success(new ConsecutiveCheckInDaysDetail
-            {
-                Days = 0
-            }));
+		var userCheckInRecords = await repository.UserCheckInRepository.GetUserAllCheckInsAsync(userId.Value);
+		if (userCheckInRecords.Count == 0)
+			return Ok(ConsecutiveCheckInDaysResp.Success(new ConsecutiveCheckInDaysDetail
+			{
+				Days = 0
+			}));
 
-        var consecutiveDays = 0;
-        var lastDate = DateTimeOffset.UtcNow.Date;
+		var consecutiveDays = 0;
+		var lastDate = DateTimeOffset.UtcNow.Date;
 
-        foreach (var date in userCheckInRecords)
-            if (date.Date == lastDate)
-            {
-                consecutiveDays++;
-                lastDate = lastDate.AddDays(-1);
-            }
-            else if (date < lastDate)
-            {
-                break;
-            }
+		foreach (var date in userCheckInRecords)
+		{
+			if (date.Date == lastDate)
+			{
+				consecutiveDays++;
+				lastDate = lastDate.AddDays(-1);
+			}
+			else if (date < lastDate)
+			{
+				break;
+			}
+		}
 
-        return Ok(ConsecutiveCheckInDaysResp.Success(new ConsecutiveCheckInDaysDetail
-        {
-            Days = consecutiveDays
-        }));
-    }
+		return Ok(ConsecutiveCheckInDaysResp.Success(new ConsecutiveCheckInDaysDetail
+		{
+			Days = consecutiveDays
+		}));
+	}
 }

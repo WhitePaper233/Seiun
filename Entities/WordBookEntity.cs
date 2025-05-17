@@ -6,9 +6,9 @@ namespace Seiun.Entities;
 
 public class WordBookEntity : BaseEntity
 {
-    [MaxLength(Constants.WordBookName.MaxWordBookNameLength,
-        ErrorMessage = ErrorMessages.ValidationError.OverWordBookNameLength)]
-    public required string WordBookName { get; set; }
+	[MaxLength(Constants.WordBookName.MaxWordBookNameLength,
+	ErrorMessage = ErrorMessages.ValidationError.OverWordBookNameLength)]
+	public required string WordBookName { get; set; }
 
-    public virtual ICollection<WordWordBookEntity> Words { get; set; } = [];
+	public virtual ICollection<WordWordBookEntity> Words { get; set; } = [];
 }

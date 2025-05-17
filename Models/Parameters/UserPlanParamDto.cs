@@ -6,6 +6,6 @@ namespace Seiun.Models.Parameters;
 
 public class UpdatePlan
 {
-    [Required(ErrorMessage = ErrorMessages.ValidationError.DailyPlanRequired)]
-    public required int DailyPlan { get; set; }
+	[Required(ErrorMessage = ErrorMessages.ValidationError.DailyPlanRequired)]
+	public required int DailyPlan { get; set; }
 }
