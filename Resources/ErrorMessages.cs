@@ -187,6 +187,7 @@ public static class ErrorMessages
 		{
 			public const string CorrectAssignment = "error.controller.correct_assignment_failed";
 			public const string ExtractWords = "error.controller.extract_words_failed";
+			public const string NotFoundExtractWords = "error.controller.sse.not_found_extract_words";
 		}
 	}
 }

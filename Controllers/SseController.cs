@@ -177,7 +177,7 @@ public class SseController(
 				var notFoundRespJson = System.Text.Json.JsonSerializer.Serialize(
 				NotFound(ResponseFactory.NewFailedBaseResponse(
 				StatusCodes.Status404NotFound,
-				ErrorMessages.Controller.Sse.ExtractWords
+				ErrorMessages.Controller.Sse.NotFoundExtractWords
 				)));
 				await SseResponse.SseResp(Response, notFoundRespJson, cancellationToken);
 				HttpContext.Abort();
